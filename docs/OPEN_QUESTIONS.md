@@ -66,3 +66,9 @@ Is any old dev-DB data (imported staff phone numbers etc.) worth extracting, or 
 
 ### T6 — New database names
 Old `panchavati_dev/test` must stay untouched; new DBs named e.g. `panchavati3_dev/test` (confirm at P0).
+
+### T7 — Compact-v2 header digit style (new, 2026-10-06)
+The live React compact profile prints the header date in Latin digits (`10 सप्टेंबर 2026`) while the approved mockup uses Devanagari (`१० सप्टेंबर २०२६`). UI_SPEC assumes Devanagari display transform everywhere (R-17). Confirm no counter-evidence from SPI before implementation.
+
+### T8 — Stitch output licensing/ownership (new, 2026-10-06)
+Confirm the Stitch-generated designs may be committed into the repo as design artifacts. If not, keep only descriptive spec text + our own HTML reference implementation.

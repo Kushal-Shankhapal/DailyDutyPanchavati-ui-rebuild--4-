@@ -10,3 +10,4 @@ playwright-report/
 archive/
 changes/*/draft-notes*
 DailyDutyPanchavati-ui-rebuild/
+.tmp-preview/
