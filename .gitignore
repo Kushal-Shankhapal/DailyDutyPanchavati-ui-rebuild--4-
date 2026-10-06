@@ -1,0 +1,12 @@
+node_modules/
+dist/
+dist-server/
+test-results/
+playwright-report/
+.env
+.env.*
+!.env.example
+*.log
+archive/
+changes/*/draft-notes*
+DailyDutyPanchavati-ui-rebuild/
