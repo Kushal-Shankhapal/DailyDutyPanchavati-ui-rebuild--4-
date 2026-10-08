@@ -1,0 +1,368 @@
+/* ============================================================================
+   Panchavati Daily Duty Chart — compact-v3 design prototype (shared CSS)
+   Purpose: frozen visual/print baseline — refined successor to compact-v2 (see docs/DESIGN_REFINEMENT_BRIEF.md).
+   Baseline: design/_refs/compact-v2-mockup.html palette + grammar, with the
+   full SPI critique applied (colon Sr-PI, full रायटर, centered chowki headings,
+   side-by-side leave/court, office/court desks beside day/night core,
+   Last meaningful change: 2026-10-08 — round-4 fixes (explicit head grid placement, single-frame
+   .tbl-wrap); prototype-only edit-mode machinery (picker/toast/add-box/.ed/vac-line/closed-banner)
+   REMOVED per user decision — the mock is a pure visual reference, not a running editor.
+   Interaction grammar lives on in docs/DESIGN_INTERACTION_NOTES.md + docs/PRODUCT_UI_ARCHITECTURE.md.
+   Breakpoints (screen-scoped only; print always gets the desktop grammar):
+     base        = desktop ≥1121px (A4-landscape sheets)
+     ≤1120px     = compact desktop (fluid sheet, chowkis 3→2 across)
+     ≤1000px     = narrow   (core/desks stack, officers 4→2, g4 4→2)
+     ≤768px      = MOBILE PROJECTION (stacked sections, DAY|NIGHT sub-columns kept)
+     ≤420px      = small phone (single-column leaf blocks)
+   ============================================================================ */
+
+:root{
+  /* ink */
+  --ink:#1f2937; --ink-soft:#4b5563; --ink-faint:#6b7280;
+  /* structure */
+  --line:#c3ccd8; --line-soft:#e2e8f0; --fill:#eef2f7; --fill-2:#f8fafc;
+  /* navy family — structural headers, section numbers, role labels */
+  --navy:#0b3568; --navy-2:#1e3a5f; --navy-3:#2c5282; --navy-soft:#eaf0f8;
+  /* semantic accents — each ALWAYS paired with a text label + shape (grayscale rule) */
+  --bima:#9f1239;  --bima-bg:#fff1f2; --bima-line:#fecdd3; /* बिमा → crimson  */
+  --vac:#b45309;   --vac-bg:#fffbeb;  --vac-line:#fde68a;  /* रिक्त → amber   */
+  --stop:#b42318;                                   /* charge transfer → red   */
+  --closed:#334155; --closed-bg:#eaeff5;            /* बंद → slate + hatch      */
+  --ok:#15803d;   --ok-bg:#ecfdf3;   --ok-line:#bbf7d0;    /* FINALIZED       */
+  --warn:#b45309; --warn-bg:#fffbeb; --warn-line:#fde68a;  /* DRAFT           */
+  --info:#1d4ed8; --info-bg:#eff6ff; --info-line:#bfdbfe;  /* VALIDATED       */
+  --branch:#374151; --branch-bg:#eef2f7; --branch-line:#d1d9e6; /* branch tags */
+}
+
+*{box-sizing:border-box; margin:0; padding:0;}
+
+html{-webkit-text-size-adjust:100%;}
+body{
+  font-family:'Noto Sans Devanagari','Nirmala UI','Mangal',sans-serif;
+  color:var(--ink); background:#e5e7eb;
+  font-size:12px; line-height:1.35;
+  -webkit-print-color-adjust:exact; print-color-adjust:exact;
+}
+
+/* ---------------------------------------------------------------- toolbar --*/
+.toolbar{
+  position:sticky; top:0; z-index:30;
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  background:#111827; color:#e5e7eb; padding:8px 16px; font-size:13px;
+}
+.toolbar .tt{font-weight:700; letter-spacing:.2px;}
+.toolbar .tt small{font-weight:400; color:#9ca3af; margin-left:6px;}
+.toolbar .sp{margin-left:auto;}
+.toolbar button{
+  font:inherit; cursor:pointer; border:1px solid #4b5563;
+  background:#1f2937; color:#e5e7eb; padding:6px 14px; border-radius:4px;
+}
+.toolbar button:hover{background:#374151;}
+.toolbar button.on{background:var(--navy-3); border-color:var(--navy-3); color:#fff;}
+.toolbar .print{background:var(--navy); border-color:var(--navy); color:#fff;}
+.toolbar .print:hover{background:#082a52;}
+.toolbar .save{
+  font-size:12px; color:#9ca3af; padding:4px 10px; border:1px dashed #4b5563;
+  border-radius:4px; background:transparent; cursor:default;
+}
+.toolbar .save.saved{color:#86efac; border-color:#166534;}
+
+/* ------------------------------------------------------------------ pages --*/
+/* width uses % — 100vw would include the scrollbar and overflow horizontally */
+.page{
+  width:min(297mm, calc(100% - 24px));
+  min-height:210mm;
+  background:#fff; margin:8mm auto; padding:8mm 9mm 7mm;
+  position:relative; box-shadow:0 1px 6px rgba(0,0,0,.15);
+  page-break-after:always;
+}
+.page:last-child{page-break-after:auto;}
+
+/* --------------------------------------------------- header (critique #1) --*/
+/* centred title | lifecycle badge right (round-3 ①: corner station block
+   removed — identity lives in the page title)                               */
+.head{
+  display:grid; grid-template-columns:1fr auto 1fr; align-items:center;
+  gap:16px; padding:6px 0 10px; margin-bottom:10px;
+  border-bottom:2px solid var(--navy);
+}
+/* explicit placement — after the corner-station block was removed there are only
+   2 children; auto-placement would otherwise drop the title into the LEFT 1fr */
+.head .hc{grid-column:2; text-align:center;}
+.head .hr{grid-column:3;}
+.head .hc .h1{font-size:17px; font-weight:800; color:var(--navy); line-height:1.3;}
+.head .hc .h2{font-size:13.5px; font-weight:700; color:var(--ink); line-height:1.35;}
+.head .hc .h3{font-size:11.5px; font-weight:500; color:var(--ink-soft); line-height:1.4; margin-top:1px;}
+.head .hr{text-align:right;}
+
+/* lifecycle badge (UI_SPEC §15 vocabulary) */
+.lc{
+  font-size:9.5px; font-weight:800; letter-spacing:.6px;
+  padding:2px 8px; border-radius:3px; border:1px solid transparent;
+  white-space:nowrap; display:inline-block;
+}
+.lc-draft{color:var(--warn); background:var(--warn-bg); border-color:var(--warn-line);}
+.lc-validated{color:var(--info); background:var(--info-bg); border-color:var(--info-line);}
+.lc-finalized{color:var(--ok); background:var(--ok-bg); border-color:var(--ok-line);}
+
+/* ------------------------------------------------------ section headings --*/
+/* round-3 ④: numbered badges (१/२) removed — plain headings only            */
+.sec{display:flex; align-items:center; gap:7px; margin:9px 0 5px;}
+.sec h2{font-size:13px; font-weight:800; letter-spacing:.2px; color:var(--ink);}
+/* critique #7: explanatory right-hand subtitles and टीप footers are NOT
+   rendered at all (totals live beside the section title / column header).   */
+
+/* ------------------------------------------------------------- sr-PI box --*/
+.sr-pi-card{
+  width:fit-content; min-width:min(520px,100%); max-width:100%; margin:2px auto 9px;
+  border:1.5px solid var(--navy); border-radius:4px; background:#fff; overflow:hidden;
+}
+/* symmetric: title + ठाणे प्रमुख chip centred, evenly spaced (SPI feedback) */
+.sr-pi-header{
+  display:flex; justify-content:center; align-items:center; gap:14px;
+  background:var(--fill); border-bottom:1px solid var(--line); padding:6px 14px;
+}
+/* critique #2: colon, never the "—" dash; rank title carries its own colour */
+.sr-pi-title{font-size:14px; font-weight:800;}
+.sr-pi-title .rk{color:var(--navy);}
+.sr-pi-title .nm{color:var(--ink);}
+.sr-pi-body{display:flex; justify-content:center; gap:4px 24px; padding:7px 14px; font-size:12px; align-items:flex-start; flex-wrap:wrap;}
+.sr-pi-body .grp{display:flex; flex-direction:column; gap:3px;}
+.sr-pi-body .grp + .grp{border-left:1px solid var(--line-soft); padding-left:24px;}
+.sr-pi-body .lb{font-weight:700; color:var(--navy-2);}
+.sr-pi-body .ln{display:flex; gap:5px; align-items:baseline;}
+.sr-pi-body .ln .k{color:var(--ink-faint); font-size:11px;}
+.blank{display:inline-block; min-width:22mm; border-bottom:1px dotted var(--ink-faint); height:1em;}
+
+/* ----------------------------------------------------------------- grids --*/
+.grid{display:grid; gap:7px;}
+.fit{width:fit-content; max-width:100%; margin-left:auto; margin-right:auto;}
+.g-off{grid-template-columns:repeat(4,1fr);}
+.g-core{grid-template-columns:1fr 1fr;}
+.g-chowki{grid-template-columns:repeat(3,1fr);}
+.g-desk{grid-template-columns:1fr 1fr;}
+.g4{grid-template-columns:repeat(4,1fr);}   /* critique #6: was undefined → vertical */
+
+/* page-1 lower band: the four duty tables (दिवस/रात्र/कार्यालयीन/कोर्ट) share
+   the page width in four EQUAL columns (round-3 ③ — Excel-style shrink-to-fit
+   one-row band). Row labels wrap inside their column instead of widening it. */
+.p1-lower{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; align-items:start; margin-top:8px;}
+.p1-lower .dt th{white-space:normal;}
+
+/* ----------------------------------------------------------- block cards --*/
+.blk{
+  border:1px solid var(--line); border-radius:4px; overflow:hidden; background:#fff;
+  display:flex; flex-direction:column; box-shadow:0 1px 2px rgba(0,0,0,.03);
+}
+.blk > .bh{
+  display:flex; justify-content:space-between; align-items:center; gap:10px;
+  background:var(--fill); border-bottom:1px solid var(--line); padding:4px 8px;
+}
+.blk .bh .nm{font-size:12.5px; font-weight:700; line-height:1.25; color:var(--navy);}
+.blk .bh .nm small{display:block; font-weight:400; font-size:10px; color:var(--ink-faint);}
+.blk .body{padding:5px 8px; display:flex; flex-direction:column; gap:2.5px; flex:1;}
+
+/* chowki heading (critique #5): chowki name → अधि. <name> → timing,
+   centred and evenly spaced, symmetric across all six blocks               */
+.ch-head{
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+  background:var(--fill); border-bottom:1px solid var(--line);
+  padding:5px 8px; text-align:center;
+}
+.ch-head .nm{font-size:12.5px; font-weight:800; line-height:1.25; color:var(--navy);}
+.ch-head .of{font-size:10.5px; font-weight:600; color:var(--ink-soft); line-height:1.3;}
+.ch-head .of .tm{font-weight:400; color:var(--ink-faint);}
+
+/* table type scale (round-3 ②) — one consistent hierarchy everywhere:
+   section heading .sec h2 13px/800 → block heading .bh .nm / .ch-head .nm
+   12.5px/700–800 → column·shift title .sub-col-title 10.5px/700 → row label
+   .dt th 10.5px/700 (navy) → VALUE .dt td 11.5px/600. Values never use <b>. */
+.sr-pi-body .ln{font-weight:600;}
+.sr-pi-body .ln b{font-weight:600;}   /* writer line matches duty values */
+
+/* ------------------------------------------------------ label/value table --*/
+.dt{width:100%; border-collapse:collapse; font-size:11.5px;}
+.dt th{
+  font-size:10.5px; font-weight:700; color:var(--navy-2); text-align:left;
+  vertical-align:top; padding:2px 8px 2px 0; white-space:nowrap;
+}
+.dt td{padding:2px 0; font-weight:600; color:var(--ink); overflow-wrap:break-word;}
+.dt tr.g > th, .dt tr.g > td{border-top:1px solid var(--line-soft);}
+.dt tr.g:first-child > th, .dt tr.g:first-child > td{border-top:0;}
+.dt tr:not(.g) > td{border-top:1px dotted var(--line-soft);}
+.dt td.chg{color:var(--stop); font-weight:700; font-size:10.5px;}
+.core .dt th{padding-right:14px;}
+.core .dt td{padding-right:4px;}
+/* role labels use one consistent colour everywhere (critique #3) —
+   रायटर / ऑपरेटर / अंमलदार / बिमा / सेट repeat across every page           */
+.dt th.role{color:var(--navy-2);}
+.dt th.bima-lb{color:var(--bima);}
+
+/* charge / marshal footers — once per shift, never inside a BIMA row        */
+.fx{
+  font-size:10.5px; font-weight:700; color:var(--stop);
+  padding:3px 0 1px; border-top:1px dotted var(--line-soft); line-height:1.4;
+}
+.fx .lb{color:var(--closed); font-weight:700;}
+.fx .sl{color:var(--closed);}   /* the बंद word — slate, not red */
+/* marshal-post lines are slate + subordinate: a closed marshal post must
+   NEVER read as the chowki itself being बंद (SPI verification item) */
+.fx.mrsh{color:var(--closed); font-weight:600;}
+
+/* ------------------------------------------------- chowki shift sub-cols --*/
+.sub-shift-wrap{display:grid; grid-template-columns:1fr 1fr; gap:0;}
+.sub-col{padding:0 7px 0 0; min-width:0;}
+.sub-col + .sub-col{border-left:1px solid var(--line-soft); padding:0 0 0 7px;}
+.sub-col-title{
+  display:flex; justify-content:center; align-items:center; gap:6px;
+  font-size:10.5px; font-weight:700; color:var(--navy);
+  background:var(--fill-2); border-bottom:1px solid var(--line-soft);
+  padding:2px 4px; margin-bottom:3px;
+}
+.sub-col-title .tm{font-weight:400; color:var(--ink-faint); font-size:10px;}
+.sub-col.closed{
+  background:repeating-linear-gradient(45deg,#fff,#fff 6px,#f3f5f8 6px,#f3f5f8 12px);
+}
+/* static closed shift: hatched, but बंद + charge lines stay visible */
+.sub-col.shut{
+  background:repeating-linear-gradient(45deg,#fff,#fff 6px,#f3f5f8 6px,#f3f5f8 12px);
+}
+
+/* --------------------------------------------------------- person lines --*/
+.p{
+  display:flex; align-items:baseline; gap:5px; padding:1.5px 0;
+  font-size:11.5px; border-bottom:1px dotted var(--line-soft);
+}
+.p:last-child{border-bottom:0;}
+.p .r{color:var(--ink-soft); font-size:10px; font-weight:700; white-space:nowrap; min-width:34px;}
+.p .n{font-weight:600; color:var(--ink);}
+.p.lead{background:var(--fill-2); border-radius:2px; padding:2px 3px;}
+.role{margin-left:auto; font-size:9.5px; color:var(--ink-faint); white-space:nowrap;}
+.win{font-size:10px; color:var(--ink-faint); white-space:nowrap;}
+/* block-header time line (दिवस/रात्र पाळी): larger + higher contrast (SPI feedback) */
+.bh .win{font-size:11px; font-weight:600; color:var(--ink-soft);}
+.nil{color:var(--ink-faint); font-style:italic;}
+
+/* ----------------------------------------------------------------- chips --*/
+.chip{
+  font-size:9px; font-weight:700; padding:1px 5px; border-radius:3px;
+  white-space:nowrap; border:1px solid transparent; line-height:1.4;
+  display:inline-flex; align-items:center; gap:2px;
+}
+.c-ok{color:var(--ok); background:var(--ok-bg); border-color:var(--ok-line);}
+.c-stop{color:var(--stop); background:#fef3f2; border-color:#fecaca;}
+.c-bima{color:var(--bima); background:var(--bima-bg); border-color:var(--bima-line);}
+.c-vac{color:var(--vac); background:var(--vac-bg); border-color:var(--vac-line); border-style:dashed;}
+.c-off{color:var(--branch); background:var(--branch-bg); border-color:var(--branch-line);}
+.c-sr{color:var(--navy); background:#e0ecf8; border-color:#b4cbe5;}
+.c-closed{color:var(--closed); background:var(--closed-bg); border-color:#c9d3e0; border-style:dashed;}
+/* count chips (leave/court block headers): counts are counts — neutral, never
+   status-colored (SPI feedback: colored counts distract from the flow) */
+.chip.num{color:var(--ink-soft); background:var(--fill-2); border-color:var(--line);}
+
+/* ------------------------------------------------------------ data tables --*/
+.tbl{width:100%; border-collapse:collapse; font-size:11px; margin-top:2px;}
+.tbl th, .tbl td{border:1px solid var(--line); padding:3px 6px; text-align:left; vertical-align:top;}
+.tbl thead th{background:var(--fill); font-weight:700; font-size:10.5px; color:var(--ink);}
+.tbl tbody th{background:var(--fill-2); font-weight:600;}
+.tbl td.num, .tbl th.num{text-align:center; font-variant-numeric:tabular-nums; white-space:nowrap;}
+.tbl .tot td, .tbl .tot th{background:#e7edf5; font-weight:700;}
+.tbl .muted{color:var(--ink-faint);}
+.tbl-wrap{overflow:hidden; border-radius:3px;} /* no border here: the table's
+   own collapsed cell borders already frame it — wrapper border made a doubled
+   2px line on all four edges (user-reported on the four summary tables) */
+.two{display:grid; grid-template-columns:1fr 1fr; gap:7px;}
+.three{display:grid; grid-template-columns:1fr 1fr 1fr; gap:7px;}
+
+/* -------------------------------------------------------------- sign-off --*/
+.signoff{
+  display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-top:12px;
+  border-top:1.5px solid var(--navy); padding-top:8px; font-size:10.5px; color:var(--ink-soft);
+  text-align:center;   /* round-3 ⑥: sign-off items centred */
+}
+.signoff .sig{border-top:1px dotted var(--line); margin-top:20px; padding-top:3px;}
+.signoff b{color:var(--ink);}
+
+/* ============================== RESPONSIVE (screen only) ================== */
+
+/* ≤1120 — compact desktop: fluid sheet, chowkis 3→2 across */
+@media screen and (max-width:1120px){
+  .page{width:calc(100% - 16px); min-height:0; margin:8px auto; padding:10px 12px;}
+  .g-chowki{grid-template-columns:repeat(2,1fr);}
+}
+
+/* ≤1000 — narrow: core over desks, officers 4→2, leaf grids 4→2 */
+@media screen and (max-width:1000px){
+  .p1-lower{grid-template-columns:repeat(2,1fr);}
+  .g-off{grid-template-columns:repeat(2,1fr);}
+  .g4{grid-template-columns:repeat(2,1fr);}
+}
+
+/* ≤768 — MOBILE PROJECTION: same information grammar, stacked spatially.
+   DAY|NIGHT sub-columns inside chowki blocks are intentionally RETAINED.  */
+@media screen and (max-width:768px){
+  body{background:#dfe3e9;}
+  .page{
+    width:100%; margin:0 0 6px; padding:0;
+    box-shadow:none; border:0; page-break-after:auto;
+  }
+  .page + .page{border-top:2px solid var(--navy);}
+  .head{
+    position:sticky; top:52px; z-index:20; background:#fff;
+    grid-template-columns:1fr auto; gap:8px;
+    padding:8px 12px; margin:0; border-bottom:2px solid var(--navy);
+    box-shadow:0 1px 3px rgba(0,0,0,.08);
+  }
+  .head .hc{grid-column:1 / -1; grid-row:2; text-align:left; order:3;}
+  .head .hr{grid-column:2; grid-row:1; text-align:right;}
+  .head .hc .h1{font-size:15px;}
+  .sr-pi-card{width:calc(100% - 24px); margin:10px auto 8px;}
+  .sr-pi-body{flex-wrap:wrap; gap:10px 16px;}
+  .sr-pi-body .grp + .grp{border-left:0; padding-left:0;}
+  .sec{margin:12px 12px 6px;}
+  .g-off, .g-core, .g-chowki, .g4, .g-desk, .p1-lower, .p1-desks,
+  .two, .three, .signoff{grid-template-columns:1fr;}
+  .grid, .p1-lower, .p1-desks{gap:8px; padding:0 12px; width:auto; margin:8px 0;}
+  .fit{width:auto; margin:0; padding:0 12px;}
+  .p1-lower{margin-top:10px;}
+  .sub-shift-wrap{grid-template-columns:1fr 1fr;} /* DAY|NIGHT stays horizontal */
+  .tbl-wrap{overflow-x:auto; -webkit-overflow-scrolling:touch;}
+  .signoff{gap:6px; padding:8px 12px 14px;}
+  .signoff .sig{margin-top:10px;}
+  /* touch-sized edit affordances */
+  .toolbar{gap:8px; padding:7px 10px;}
+  .toolbar button{min-height:36px;}
+}
+
+/* ≤420 — small phone: leaf blocks go single column */
+@media screen and (max-width:420px){
+  .g4{grid-template-columns:1fr;}
+  .sub-shift-wrap{grid-template-columns:1fr;}
+  .sub-col{padding:0 0 4px;}
+  .sub-col + .sub-col{border-left:0; border-top:1px solid var(--line-soft); padding:4px 0 0;}
+}
+
+/* ============================================================ PRINT ======= */
+@page{size:A4 landscape; margin:0;}
+
+@media print{
+  body{background:#fff; font-size:11px;}
+  .no-print, .toolbar{display:none !important;}
+  .page{
+    width:297mm; min-height:210mm; margin:0; box-shadow:none;
+    padding:5mm 7mm; page-break-after:always;
+  }
+  .page:last-child{page-break-after:auto;}
+  .head{position:static; box-shadow:none; padding:3px 0 6px; margin-bottom:6px;}
+  .head .hc .h1{font-size:15px;} .head .hc .h2{font-size:12.5px;}
+  .head .hc .h3{font-size:11px;}
+  .sr-pi-card{margin:0 auto 6px;} .sr-pi-body{padding:5px 12px;}
+  .grid{gap:6px;} .p1-lower{margin-top:6px;}
+  .blk .body{padding:4px 6px; gap:2px;}
+  .dt{font-size:10.5px;} .dt th{font-size:10px; padding:1.5px 6px 1.5px 0;}
+  .dt td{padding:1.5px 0;}
+  /* page 1 carries the dense command band — print density above keeps it on ONE A4 sheet
+     (measured: p1 content extent 769px <= 794px A4-landscape height at 11px body) */
+  .tbl-wrap{overflow:visible;}
+  .dt td.v:hover{background:transparent; outline:none;}
+}

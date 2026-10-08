@@ -21,6 +21,14 @@ Station: पंचवटी पोलीस ठाणे, नाशिक शह
 
 Never: विमा, पोषि. Never translate: CCTNS, Dial 112 MERS, DB, MERS, rank codes, TOTAL, Office, ME.
 
+## Three distinct facts (verified 2026-10-08 against source Table 1)
+
+1. **BIMA** = person-level qualifier on an *assignment* (that constable's posting IS the beat). Exists only where a person row exists.
+2. **Marshal post** = a *separate operational post* with its own staffing — the source chart carries a dedicated marshal column (काटया मारूती मार्शल, पंचवटी कारंजा मार्शल, मालेगांव स्टँड मार्शल, फुले नगर मार्शल, मेरी मार्शल). It can be बंद with charge transferred while the neighbouring chowki is fully staffed.
+3. **Chowki closure** = the *chowki* itself closed, charge to another chowki.
+
+Source evidence (कारंजा day shift, Table 1): chowki column shows `सपोनि प्रशांत बोरसे 16 ते 21` + `चौकी चा चार्ज काटया मारूती चौकी कडे` while the marshal column independently shows `पंचवटी कारंजा मार्शल → बंद → चार्ज मालेगाव स्टँड कडे`. The DB therefore carries three explicit fields — `assignment.is_bima`, marshal-post `location_operational_state`, chowki `location_operational_state` — never inferred by parsing notes.
+
 ## Entities
 
 ### Masters

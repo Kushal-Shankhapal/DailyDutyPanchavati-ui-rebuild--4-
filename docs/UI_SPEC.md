@@ -290,7 +290,21 @@ Text+shape redundancy mandatory (grayscale rule). Never color-only.
 
 ## 18. Responsive rules
 
-Desktop-first (clerk workstation). Minimum comfortable width 1280px; the board compresses chowki blocks 3→2→1 across as width shrinks. Panels stack. **Tablets/phones: view-only** — editing is a workstation activity (Coming Soon for mobile editing). Print CSS is separate and always landscape for the board.
+Desktop-first (clerk workstation). Minimum comfortable width 1280px. Print CSS is separate and always landscape for the board.
+
+**Measured breakpoint contract** (verified in browser against `design/compv3.css`, 2026-10-07; supersedes the earlier prose "3→2→1" wording):
+
+| Width | Projection |
+|---|---|
+| ≥1121px | A4-landscape sheets, chowkis 3 across, officers 4, page-1 lower band = core left + desks right |
+| ≤1120px | fluid sheet, chowkis 3→2 across |
+| ≤1000px | core/desks stack, officers 4→2, leaf grids (g4) 4→2 |
+| ≤768px | **mobile projection**: stacked sections, sticky station header, DAY\|NIGHT sub-columns RETAINED, wide tables scroll inside their wrapper (never page-level), touch targets ≥36px |
+| ≤420px | small phone: chowki shift sub-columns stack vertically |
+
+Horizontal overflow must be zero at every breakpoint; Marathi always wraps, never truncates.
+
+**Mobile editing decision:** the Mobile Today/Editor projection is designed and prototyped (deliverable B; edit affordances sized ≥36px at 390px verified), but **v1 ships tablets/phones view-only — mobile editing stays disabled "Coming Soon" per §21**. The interaction grammar (DESIGN_INTERACTION_NOTES.md) is spatial-independent, so enabling mobile editing later requires no redesign — flipping the gate only. *(Open for user decision: enable mobile editing in v1 or keep view-only.)*
 
 ## 19. Print relationship
 

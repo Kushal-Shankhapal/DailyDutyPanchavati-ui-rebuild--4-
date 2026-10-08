@@ -55,8 +55,8 @@ Single shared clerk user for MVP (old system pattern). RBAC deferred until stati
 ### T2 — Concurrency
 Single-user local deployment; last-save-wins is acceptable now; optimistic locking only if multi-client use appears.
 
-### T3 — Printer reality
-Target A4 landscape compact board + continuation pages. Actual station printer (A4 laser? color or mono?) unconfirmed — grayscale-safe design covers both.
+### T3 — Printer reality — ✅ RESOLVED 2026-10-08 (user)
+Station prints in **color**. Color accents render as designed; the grayscale-safe semantic design (shape + text label + color, never color alone) is kept anyway as defense for mono printouts/photocopies. Target stays A4 landscape compact board + continuation pages.
 
 ### T4 — Event model growth
 Only रंगीत तालीम-type events have evidence. Do not add recurrence, approval flows, or external integrations until a second real event shape appears.
@@ -67,8 +67,32 @@ Is any old dev-DB data (imported staff phone numbers etc.) worth extracting, or 
 ### T6 — New database names
 Old `panchavati_dev/test` must stay untouched; new DBs named e.g. `panchavati3_dev/test` (confirm at P0).
 
-### T7 — Compact-v2 header digit style (new, 2026-10-06)
-The live React compact profile prints the header date in Latin digits (`10 सप्टेंबर 2026`) while the approved mockup uses Devanagari (`१० सप्टेंबर २०२६`). UI_SPEC assumes Devanagari display transform everywhere (R-17). Confirm no counter-evidence from SPI before implementation.
+### T7 — Header digit style — ✅ RESOLVED 2026-10-08 (user)
+Devanagari display transform everywhere confirmed (R-17 stands). Latin digits in the old React profile were a defect, not a style.
 
-### T8 — Stitch output licensing/ownership (new, 2026-10-06)
-Confirm the Stitch-generated designs may be committed into the repo as design artifacts. If not, keep only descriptive spec text + our own HTML reference implementation.
+### T8 — Stitch output — ✅ CLOSED 2026-10-08 (user)
+Moot. Stitch designs are old/outdated and superseded by the frozen compact-v3 baseline; they are neither used nor committed as design authority. No licensing question remains.
+
+## From the PRODUCT_UI_ARCHITECTURE pass (2026-10-08)
+
+Each carries a recommended default (docs/PRODUCT_UI_ARCHITECTURE.md §14); none blocks P0. A question leaves only via evidence or explicit user decision.
+
+### T9 — Template edit permissions
+Any clerk may edit template labels/properties for MVP (single shared user, T1); schema keeps `created_by` so RBAC can arrive without migration. Alternative: प्रभारी-only. Confirm when multi-user becomes real.
+
+### T10 — EN↔MR staff-name transliteration
+Default: manual dual-entry (`name_mr` required, `name_en` optional) + assisted transliteration later (suggestion + explicit accept, never silent overwrite). Library/service choice deferred until a real phase needs it. Distinct from label translation (`LabelLocalizer`).
+
+### T11 — Staff eligibility matrix source (SME-gated)
+What makes a staff member eligible for which post (for the `फक्त पात्र कर्मचारी` picker filter)? No evidence yet — toggle ships disabled (Coming Soon); rules enter the DB only with SME input. Likely home: rank→post matrix on `ranks`/`duty_definitions`.
+
+### T12 — Custom template version sharing
+Default: station-shared (one station, one clerk). Revisit only if multi-clerk arrives.
+
+### T13 — Chart B-detail storage shape — ✅ RESOLVED 2026-10-08 (user, hybrid)
+**Hybrid model, decided before P0:** normalized B tables (assignments, availability, location states, notices, scan rows, manpower, events + `charts.presentation_overrides`) are the editing source of truth for CRUD/search/integrity. The ChartDocument is a typed projection for render. At FINALIZE the complete document is materialized into `chart_versions.document_json` — an immutable snapshot; reprints/PDFs of finalized charts render from that snapshot only, never from today's master or template data. Amendments start fresh drafts in the normalized tables. Full statement: docs/PRODUCT_UI_ARCHITECTURE.md §15.
+
+## From the P0 seed pass (2026-10-08)
+
+### T14 — नगदी कारकुन seat pairing (10/09 seed)
+SEMANTIC/10.md Table 1 col 4 (content authority) flows: … पोनि.प्रशासन॰रायटर → पोहवा 936 अहिरराव → पोनि.तपास॰रायटर (**no person**) → नगदी कारकुन (**no person**) → मुद्देमाल कारकुन … . The compact-v3 mock visually paired पोहवा 1347 जाधव with a nearby desk instead. The P0 seed follows the source flow and represents both empty seats as explicit `VACANT_RIKT` slots (vacant ≠ closed ≠ बिमा — slot state, never a person). If the mock pairing reflects clerk reality rather than the 10/09 source page, it is a chart-edit concern (clerk fills the seat), not a seed/schema concern. SME to confirm the intended desk pairing when the editor exists; no schema change either way.

@@ -1,11 +1,13 @@
 <!--
-Purpose: Ready-to-paste Stitch generation brief for the one controlled UI exploration pass.
-Current role: Input to the Stitch session; output screens are reviewed against UI_SPEC.md, not against taste.
-Last meaningful change: Created 2026-10-06 (Phase 1 UI/UX pass).
-Constraint/dependency: UI_SPEC.md §1–§21 is the contract; sample data is the real 10/09 shape with anonymized names.
+Purpose: SUPERSEDED — was the Stitch generation brief for the one controlled UI exploration pass.
+Current role: Historical only. Do not use; `docs/DESIGN_REFINEMENT_BRIEF.md` replaced it on 2026-10-06.
+Last meaningful change: 2026-10-06 — marked superseded after the user's design-refinement decision (implementation-led refinement of compact-v2 instead of a blank-canvas tool pass).
+Constraint/dependency: Kept for traceability; UI_TRACEABILITY references moved to the new brief.
 -->
 
-# STITCH_BRIEF — one controlled visual pass
+> **⚠ SUPERSEDED (2026-10-06).** This brief framed the next step as buying "layout + hierarchy + density decisions" from Stitch. That decision has changed: the layout/hierarchy/density work already exists in compact-v2 (HTML mockup + live React profile), so the active contract is **`docs/DESIGN_REFINEMENT_BRIEF.md`** — *validate and refine the existing compact-v2 design against real data, responsive constraints, and interaction requirements*. Date convention in the new brief: reference १० सप्टेंबर २०२६ · product ०६ ऑक्टोबर २०२६ · tomorrow ०७ ऑक्टोबर २०२६ (this file mixed them). Kept for traceability only.
+
+# STITCH_BRIEF — one controlled visual pass (SUPERSEDED)
 
 How to use: paste the COMMON BLOCK first as the project context/design-system prompt, then generate screens one at a time with each screen block. Review each output against UI_SPEC.md (the section numbers below) before accepting. Expect 2–3 iterations per screen, not pixel perfection — we are buying **layout + hierarchy + density decisions**, which then get rewritten into `UI_SPEC.md` amendments and implemented in React by the coding agent.
 

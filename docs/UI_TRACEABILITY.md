@@ -9,6 +9,8 @@ Constraint/dependency: UI_SPEC.md is the element authority; ⬜/🔨/✅ statuse
 
 Status: ⬜ specified · 🔨 implemented · ✅ verified (name the check/inspection)
 
+> 2026-10-07: design prototypes now exist (`design/panchavati-compv3.html`, `design/panchavati-compv3-stress.html`, `design/compv3.css`, `design/compv3-edit.js`). Rows below describe the **React app** and stay ⬜ until app code lands; prototype-level verification is recorded separately in "Design prototype verification" at the bottom and in docs/DESIGN_DELTA.md §5.
+
 ## Core states & chips
 
 | UI element | Domain source | Requirement | Status | Verification |
@@ -64,3 +66,14 @@ Status: ⬜ specified · 🔨 implemented · ✅ verified (name the check/inspec
 | No explanatory footers/टीप on manpower/officer/scan panels | critique items | render inspection |
 | `रायटर` spelled full (never `राय.`) in board cells | critique item | string check on renderer output |
 | Sr-PI box uses colon, never "—" dash | critique item | render inspection |
+
+## Design prototype verification (2026-10-07, browser-audited — not yet app code)
+
+| Check | Result |
+|---|---|
+| Realistic file @1440: grids (g-off 4 / p1-lower 2 / g-chowki 3 / g4 4 / two 2), pageW 1123, Sr-PI centered, colon yes, `राय.` 0, footers 0, काटया बिमा 0 & बंद 0, truncations 0, overflowX 0 | ✅ `preview_evaluate` geometry audit |
+| Print fit (print-media rules injected): all 5 pages = 794px, page-1 content extent 769px ≤ 794 | ✅ measured |
+| Breakpoint sweep 1025 / 768 / 390 on stress file: 2col → stacked → single-col, DAY\|NIGHT retained ≤768, overflowX 0, truncations 0 after `100vw→%` fix | ✅ geometry audit + mobile screenshot |
+| Stress semantics: 5 रिक्त lines, 10 बंद cells (काटया 0), 5 बिमा rows (काटया 0 — violation found & fixed), 4 charge lines, 0 footers | ✅ DOM counts |
+| Edit flows (picker / mini-create / replace / clear / बिमा toggle / बंद per shift / contextual `+`) exercised | ✅ manual, zero console errors |
+| Console at all widths, both files | ✅ zero errors/warnings |

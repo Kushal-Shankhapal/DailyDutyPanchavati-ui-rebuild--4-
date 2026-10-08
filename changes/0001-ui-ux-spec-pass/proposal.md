@@ -1,8 +1,8 @@
 <!--
 Purpose: Active work unit: Phase 1 UI/UX specification pass (product freeze before implementation).
 Current role: Tracks the UI spec work unit from decision to approval.
-Last meaningful change: Created 2026-10-06 when the user paused P0 and ordered a UI/design pass first.
-Constraint/dependency: Implements no code; produces UI_SPEC.md + UI_TRACEABILITY.md + STITCH_BRIEF.md.
+Last meaningful change: 2026-10-07 — design-refinement extension (compact-v3 prototypes, deliverables A–F) recorded.
+Constraint/dependency: Implements no app code; produces UI_SPEC.md + UI_TRACEABILITY.md + design prototypes + DESIGN_REFINEMENT_BRIEF deliverables.
 -->
 
 # changes/0001 — UI/UX Specification Pass
@@ -15,9 +15,14 @@ Pause implementation. Sequence: **MD analysis → lock product/domain decisions 
 
 | Artifact | Status |
 |---|---|
-| docs/UI_SPEC.md (21 sections) | written, awaiting approval |
-| docs/UI_TRACEABILITY.md | written, awaiting approval |
-| docs/STITCH_BRIEF.md (8 screens + review protocol) | written, ready to run |
+| docs/UI_SPEC.md (21 sections) | written, §18 revised 2026-10-07, awaiting approval |
+| docs/UI_TRACEABILITY.md | written + prototype-verification section 2026-10-07, awaiting approval |
+| docs/STITCH_BRIEF.md (8 screens + review protocol) | SUPERSEDED 2026-10-06 by DESIGN_REFINEMENT_BRIEF.md |
+| docs/DESIGN_REFINEMENT_BRIEF.md (user's brainstorm + SPI critique + A–F output contract) | written |
+| design/compv3.css + panchavati-compv3.html (realistic, deliverables A/B/C) | built + browser-verified 2026-10-07 |
+| design/panchavati-compv3-stress.html (deliverable D) | built + browser-verified 2026-10-07 |
+| design/compv3-edit.js (deliverable E interactions) | built + exercised 2026-10-07 |
+| docs/DESIGN_INTERACTION_NOTES.md (E) + docs/DESIGN_DELTA.md (F) | written 2026-10-07 |
 | Mockup inspection (rendered, DOM-mapped, screenshot) | done 2026-10-06 |
 | Old repo dev-server inspection (port 3000, compact profile + duty-board) | done 2026-10-06, server stopped |
 
@@ -29,9 +34,17 @@ Pause implementation. Sequence: **MD analysis → lock product/domain decisions 
 
 ## Open items before P0
 
-1. User approval of UI_SPEC.md §approval-checklist.
-2. Run Stitch pass (STITCH_BRIEF.md) → review → fold accepted decisions into UI_SPEC.md.
-3. Answer OPEN_QUESTIONS T7 (Devanagari header digits) and T8 (Stitch artifact licensing).
+1. User review of the two compact-v3 prototypes (realistic + stress) — accept/reject; fallback per user = Figma Make.
+2. User approval of UI_SPEC.md §approval-checklist.
+3. Decide UI_SPEC §18 mobile question: keep mobile editing Coming Soon (recommended, current text) or enable it in v1 (design already supports it).
+4. Answer OPEN_QUESTIONS T7 (Devanagari header digits) and T8 (was Stitch licensing — likely moot now Stitch is superseded).
+
+## Verification evidence (design pass, 2026-10-07)
+
+- Print fit: page-1 content extent 769px ≤ 794px (A4 landscape), all 5 pages exactly 794px, print-media rules injected for measurement.
+- Breakpoints 1440/1025/768/390: correct grid collapses, overflowX 0, truncations 0 (after fixing `100vw`→`100%` scrollbar overflow).
+- Source fidelity: काटया मारूती = 0 बिमा rows / 0 बंद / charge once per shift in both prototypes (stress file had a काटया-बिमा violation; found and fixed during audit).
+- Console: zero errors/warnings on both files at all tested widths.
 
 ## Exit criteria
 
