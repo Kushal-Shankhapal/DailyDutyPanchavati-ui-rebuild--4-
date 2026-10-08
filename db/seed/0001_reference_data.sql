@@ -391,3 +391,20 @@ SELECT t.template_id, 'Initial version — compact-v3 visual baseline', 'seed'
 FROM chart_templates t
 WHERE t.name = 'Panchavati Compact v3'
   AND NOT EXISTS (SELECT 1 FROM template_versions tv WHERE tv.template_id = t.template_id);
+
+-- Template owns column DISPLAY ORDER (Layer C: heading order/visibility — architecture
+-- element-classification table). Fill-if-empty only: never clobber clerk template edits.
+-- matrixColumns keys = manpower_records.column_key values; label = rendered heading.
+UPDATE template_versions tv
+SET layout = tv.layout || '{
+  "matrixColumns": [
+    {"key":"PI","label":"PI"}, {"key":"API","label":"API"}, {"key":"PSI","label":"PSI"},
+    {"key":"GPS","label":"GPS"}, {"key":"ASI","label":"ASI"}, {"key":"LASI","label":"LASI"},
+    {"key":"LASI#2","label":"LASI"}, {"key":"HC","label":"HC"}, {"key":"LHC","label":"LHC"},
+    {"key":"PN","label":"PN"}, {"key":"LPN","label":"LPN"}, {"key":"PC","label":"PC"},
+    {"key":"LPC","label":"LPC"}, {"key":"OFFICE","label":"Office"}, {"key":"ME","label":"ME"}
+  ],
+  "shiftSummaryColumns": ["अधिकारी", "अंमलदार", "महिला अंमलदार", "एकूण"]
+}'::jsonb
+WHERE (tv.layout = '{}'::jsonb OR tv.layout IS NULL)
+  AND tv.template_id = (SELECT template_id FROM chart_templates WHERE name = 'Panchavati Compact v3');

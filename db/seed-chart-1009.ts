@@ -80,10 +80,10 @@ async function emitColumn(
       const loc = await locationFor(pool, cell.code);
       await pool.query(
         `INSERT INTO daily_assignments
-           (chart_id, shift, duty_id, duty_title_mr, location_id, allocation_state, sort_order, notes_mr)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+           (chart_id, shift, duty_id, duty_title_mr, location_id, allocation_state, sort_order, column_no, notes_mr)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
         [chartId, shift, dutyId ?? ctx.dutyId, cell.code ? null : cell.d, loc,
-         "vac" in cell ? "VACANT_RIKT" : "ALLOCATED", order, null],
+         "vac" in cell ? "VACANT_RIKT" : "ALLOCATED", order, col, null],
       );
       continue;
     }
@@ -97,19 +97,19 @@ async function emitColumn(
       await pool.query(
         `INSERT INTO daily_assignments
            (chart_id, shift, duty_id, duty_title_mr, staff_id, allocation_state, is_bima,
-            start_time, end_time, sort_order, notes_mr)
-         VALUES ($1,$2,$3,$4,$5,'ALLOCATED',$6,$7,$8,$9,$10)`,
+            start_time, end_time, sort_order, column_no, notes_mr)
+         VALUES ($1,$2,$3,$4,$5,'ALLOCATED',$6,$7,$8,$9,$10,$11)`,
         [chartId, shift, ctx.dutyId, ctx.dutyId ? null : ctx.title, staffId, bima,
-         st, en, order, note ?? null],
+         st, en, order, col, note ?? null],
       );
       continue;
     }
     // narrative cell → assignment text row under current context (display only)
     await pool.query(
       `INSERT INTO daily_assignments
-         (chart_id, shift, duty_id, duty_title_mr, allocation_state, sort_order, notes_mr)
-       VALUES ($1,$2,$3,$4,'ALLOCATED',$5,$6)`,
-      [chartId, shift, ctx.dutyId, ctx.dutyId ? null : ctx.title, order, cell.t],
+         (chart_id, shift, duty_id, duty_title_mr, allocation_state, sort_order, column_no, notes_mr)
+       VALUES ($1,$2,$3,$4,'ALLOCATED',$5,$6,$7)`,
+      [chartId, shift, ctx.dutyId, ctx.dutyId ? null : ctx.title, order, col, cell.t],
     );
   }
 }
@@ -640,12 +640,12 @@ export async function seedChart1009(pool: pg.Pool): Promise<void> {
   }
 
   // Manpower matrix (Table 4) — verbatim values, stored authoritative (never recalculated)
-  for (const [row, vals] of MX) {
+  for (const [mIdx, [row, vals]] of MX.entries()) {
     if (vals.length !== MX_COLS.length) throw new Error(`matrix row ${row}: ${vals.length} cells`);
     for (let i = 0; i < MX_COLS.length; i++) {
       await pool.query(
-        `INSERT INTO manpower_records (chart_id, row_key, column_key, value_text)
-         VALUES ($1,$2,$3,$4)`, [chartId, row, MX_COLS[i], vals[i]]);
+        `INSERT INTO manpower_records (chart_id, row_key, column_key, value_text, display_order)
+         VALUES ($1,$2,$3,$4,$5)`, [chartId, row, MX_COLS[i], vals[i], mIdx * 10]);
     }
   }
 

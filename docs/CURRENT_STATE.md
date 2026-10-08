@@ -1,13 +1,13 @@
 <!--
 Purpose: Current implementation truth for the clean-rebuild repo.
 Current role: First-read state file; updated at the end of every working session.
-Last meaningful change: 2026-10-08 — P0 (DB foundation) COMPLETED: scaffold, migrations 0001–0006, seeds, 10/09 chart seed, 19-test invariant suite, doctor/verify, README.
+Last meaningful change: 2026-10-08 — P1 started: ChartDocument projection + finalize snapshot slice verified (31 tests total); migration 0007 (assignment column_no, manpower display_order).
 Constraint/dependency: Must reflect verified facts only; speculation belongs in OPEN_QUESTIONS.md.
 -->
 
 # CURRENT_STATE
 
-> Updated: 2026-10-08 · Phase: **P0 COMPLETE — DB foundation verified** (`npm run verify` green: typecheck + 19 invariant tests + doctor on both DBs). User gave explicit P0 GO 2026-10-08 after architecture approval. Visual baseline FROZEN at compact-v3 (user-owned). Built: repo scaffold (package/tsconfig/vitest), migrations 0001–0006 on `panchavati3_dev` + `panchavati3_test`, Layer-A reference seeds, 10/09 chart seed from SEMANTIC/10.md, invariant test suite, doctor/verify scripts, README contract. Next phase (P1: ChartDocument projection + server/UI) NOT started — awaiting user go.
+> Updated: 2026-10-08 · Phase: **P1 IN PROGRESS — slice 1 (ChartDocument projection + finalize snapshot) verified** (`npm run check` green: typecheck + 31 tests + doctor; 7 migrations). P0 was completed and committed the same day (2 commits: code `cc1ecf9`, docs `eedf45a`). User gave explicit P0 GO 2026-10-08 after architecture approval. Visual baseline FROZEN at compact-v3 (user-owned). Built: repo scaffold (package/tsconfig/vitest), migrations 0001–0006 on `panchavati3_dev` + `panchavati3_test`, Layer-A reference seeds, 10/09 chart seed from SEMANTIC/10.md, invariant test suite, doctor/verify scripts, README contract. Next phase (P1: ChartDocument projection + server/UI) NOT started — awaiting user go.
 
 ## Repository
 
@@ -90,9 +90,18 @@ Built and verified:
 
 Seed-time corrections made against source: PI name spelling `आंधळे` (SEMANTIC) over `आंधाळे`; two desk/scan person refs PC 2357 (पोशि, not हवा) per Table 1 col4 + Table 12.
 
+## P1 slice 1 (2026-10-08 — user GO, completed same day)
+
+1. **Migration 0007** (both DBs, reversible): `daily_assignments.column_no` (source duty-column identity — was unrepresentable, sort_order alone is ambiguous across column stacks) + `manpower_records.display_order` (source matrix row order). Template seed now fills `layout.matrixColumns` (15 keys) + `shiftSummaryColumns` (fill-if-empty, never clobbers clerk edits) — column heading order is Layer C per architecture.
+2. **`server/chart-document.ts`** — typed `ChartDocument` (15 top-level sections), `projectChart()` (normalized B → document with Layer-A values resolved at projection time so snapshots render without live FKs), `weekdayMr()` (D-rule, computed never stored), `resolveNode()` (overrides → pinned template → undefined), `getSnapshot()` (reprint read path).
+3. **`server/finalize.ts`** — `finalizeChart()` (Pool or in-tx client; row lock → project → version_no = prev+1 → JSON snapshot → FINALIZED; round-trips through getSnapshot before returning) + `reopenForAmendment()` (FINALIZED→DRAFT, snapshot untouched).
+4. **`tests/chart-document.test.ts`** — 12 tests: projection fidelity vs seeded source (counts, column stacks {DAY 35/26/36/38, NIGHT 30/28/19}, रिक्त/बिमा/बंद facts, matrix row+template column order with verbatim cells), template pinning (chart keeps pin when head moves) + override resolution, finalize snapshot ≡ projection (deep equal), freeze + double-finalize refusal, master-edit independence (snapshot unchanged, live projection differs — why reprints use snapshots), amendment chain (v2 amended_from v1, v1 immutable + content). All mutating tests roll back.
+
+Bugs caught and fixed while making the gate green: `a.duty_code` vs join alias, `loc_id` alias missing → `Number(undefined)`=NaN (now fail-loud in `locOf`), bigint→string in tests.
+
 ## Next step (user-driven)
 
-**P1 go/no-go is with the user** — ChartDocument projection (typed, from normalized B tables), server domain layer (Fastify), then authoring UI per PRODUCT_UI_ARCHITECTURE. Chart redesign is closed; mock edits only if the user reports a visual defect. Deferred-with-defaults: T9 (template rights), T10 (transliteration), T11 (eligibility, SME-gated), T12 (template sharing); T14 (desk pairing) SME-confirm when editor exists.
+**Continuing P1** — ChartDocument → HTML renderer (print/preview projection of the same document), server layer, then authoring UI per PRODUCT_UI_ARCHITECTURE. Chart redesign is closed; mock edits only if the user reports a visual defect. Deferred-with-defaults: T9 (template rights), T10 (transliteration), T11 (eligibility, SME-gated), T12 (template sharing); T14 (desk pairing) SME-confirm when editor exists.
 
 ## Session log
 

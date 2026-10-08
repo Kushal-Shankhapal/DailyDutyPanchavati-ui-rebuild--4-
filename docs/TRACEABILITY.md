@@ -1,7 +1,7 @@
 <!--
 Purpose: Traceability map: source evidence → requirement → implementation → verification.
 Current role: Coverage ledger; grows with each implemented slice.
-Last meaningful change: 2026-10-08 — P0 columns filled for R-01..R-07, R-10, R-11, R-13 (DB layer + invariant tests).
+Last meaningful change: 2026-10-08 — P0 columns filled; P1 slice 1 added ChartDocument projection + snapshot verification to R-13.
 Constraint/dependency: Implementation/Test columns stay honest — "—" until code exists; never pre-ticked.
 -->
 
@@ -37,7 +37,7 @@ Status legend: ⬜ requirement recorded · 🔨 implemented · ✅ verified (tes
 | R-10 | रिक्त ≠ बंद ≠ बिमा, all explicit | EV-02, EV-06 | 🔨 0003 CHECKs + `location_operational_states` + 0004 | ✅ 8 tests: CHECK rejections, schema-shape, bima/vacant row audits |
 | R-11 | No autonomous scheduling/replacement (any mode) | EV-06 | 🔨 no code path exists; AGENTS/README contract | ✅ static scan test (auto-assign identifiers + Math.random absent) |
 | R-12 | Copy-previous never modifies source; copy policy matrix respected | EV-03, EV-06 | — (P1: copy feature) | — |
-| R-13 | Finalized snapshot immutable; reprint from snapshot | EV-06 | 🔨 0004 triggers (append-only + FINALIZED freeze) | ✅ 3 tests: UPDATE/DELETE rejected, freeze on 7 tables, snapshot insert still allowed |
+| R-13 | Finalized snapshot immutable; reprint from snapshot | EV-06 | 🔨 0004 triggers + `server/finalize.ts` + `server/chart-document.ts` (getSnapshot) | ✅ 6 tests: triggers (append-only/freeze), snapshot ≡ projection, master-edit independence, amendment v2→v1 chain, v1 immutable |
 | R-14 | Masters CRUD end-to-end; deactivate over delete | EV-06 | — | — |
 | R-15 | Today/tomorrow/history flows | EV-06 | — | — |
 | R-16 | Compact print readable + grayscale-safe; Marathi never truncated | EV-06, EV-07 | — | — |
