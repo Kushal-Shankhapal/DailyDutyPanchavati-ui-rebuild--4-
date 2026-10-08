@@ -91,6 +91,7 @@ export interface DocScanRow {
   sequence: number;
   startTime: string | null;
   endTime: string | null;
+  location: DocLocation | null;  // चौकी हद्द from the station-stable scan config
   person: DocPerson | null;
   noteMr: string | null;
 }
@@ -318,16 +319,21 @@ export async function projectChart(db: Queryable, chartId: number): Promise<Char
             to_char(d.start_time,'HH24:MI:SS') AS start_time,
             to_char(d.end_time,'HH24:MI:SS') AS end_time,
             d.note_mr,
-            d.staff_id, s.name_mr AS staff_name, s.rank_code, r.short_form_mr AS rank_short, s.buckle_no
+            d.staff_id, s.name_mr AS staff_name, s.rank_code, r.short_form_mr AS rank_short, s.buckle_no,
+            cl.location_id AS loc_id, cl.location_code AS loc_code, cl.name_mr AS loc_name, cl.kind AS loc_kind
        FROM scan_schedule_daily d
        LEFT JOIN staff_members s ON s.staff_id = d.staff_id
        LEFT JOIN ranks r ON r.rank_code = s.rank_code
+       LEFT JOIN scan_schedule_config cfg
+              ON cfg.session_code = d.session_code AND cfg.sequence = d.sequence
+       LEFT JOIN locations cl ON cl.location_id = cfg.location_id
       WHERE d.chart_id = $1 ORDER BY d.sequence`, [chartId])).rows
     .map((r): DocScanRow => ({
       sessionCode: r.session_code as string,
       sequence: Number(r.sequence),
       startTime: (r.start_time as string | null) ?? null,
       endTime: (r.end_time as string | null) ?? null,
+      location: r.loc_id == null ? null : locOf(r),
       person: personOf(r),
       noteMr: (r.note_mr as string | null) ?? null,
     }));

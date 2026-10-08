@@ -142,7 +142,12 @@ FROM (VALUES
   ('NIGHT_PANCHAVATI1','पंचवटी 1 मोबाईल','NIGHT_DEPLOYMENT','NIGHT',NULL,16),
   ('NIGHT_KALARAM','काळाराम मंदिर गार्ड ड्युटी','NIGHT_DEPLOYMENT','NIGHT','FIXED_KALARAM',17),
   ('NIGHT_GOOD_MORNING','गुड मॉर्निंग पथक','NIGHT_DEPLOYMENT','NIGHT',NULL,18),
-  ('NIGHT_RAMKUND','रामकुंड परिसरात पेट्रोलिंग','NIGHT_DEPLOYMENT','NIGHT','FIXED_RAMKUND',19)
+  ('NIGHT_RAMKUND','रामकुंड परिसरात पेट्रोलिंग','NIGHT_DEPLOYMENT','NIGHT','FIXED_RAMKUND',19),
+  ('NIGHT_MARSHAL_KATYA','काटया मारूती मार्शल','NIGHT_DEPLOYMENT','NIGHT','MARSHAL_KATYA_MARUTI',20),
+  ('NIGHT_MARSHAL_KARANJA','पंचवटी कारंजा मार्शल','NIGHT_DEPLOYMENT','NIGHT','MARSHAL_KARANJA',21),
+  ('NIGHT_MARSHAL_MALEGAON','मालेगांव स्टॅड मार्शल','NIGHT_DEPLOYMENT','NIGHT','MARSHAL_MALEGAON_STAND',22),
+  ('NIGHT_MARSHAL_PHULE','फुले नगर मार्शल','NIGHT_DEPLOYMENT','NIGHT','MARSHAL_PHULENAGAR',23),
+  ('NIGHT_MARSHAL_MERI','मेरी मार्शल','NIGHT_DEPLOYMENT','NIGHT','MARSHAL_MERI',24)
 ) AS v(code, title, section, shift, loc, ord)
 ON CONFLICT (duty_code) DO UPDATE SET
   title_mr = EXCLUDED.title_mr, section_code = EXCLUDED.section_code,
@@ -407,4 +412,10 @@ SET layout = tv.layout || '{
   "shiftSummaryColumns": ["अधिकारी", "अंमलदार", "महिला अंमलदार", "एकूण"]
 }'::jsonb
 WHERE (tv.layout = '{}'::jsonb OR tv.layout IS NULL)
+  AND tv.template_id = (SELECT template_id FROM chart_templates WHERE name = 'Panchavati Compact v3');
+
+-- Court-desk split for the page-1 band (Layer C display grouping; merge, never clobber).
+UPDATE template_versions tv
+SET layout = tv.layout || '{"courtDutyCodes":["OFFICE_MISSING","OFFICE_ATC","OFFICE_WARRANT","OFFICE_SESSION_SUMMONS","OFFICE_SUMMONS"]}'::jsonb
+WHERE NOT (tv.layout ? 'courtDutyCodes')
   AND tv.template_id = (SELECT template_id FROM chart_templates WHERE name = 'Panchavati Compact v3');
