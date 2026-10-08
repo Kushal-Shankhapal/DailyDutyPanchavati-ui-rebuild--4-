@@ -1,0 +1,31 @@
+{
+  "name": "panchavati-daily-duty",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Panchavati Police Station daily duty chart — clean rebuild (P0: database foundation)",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "db:create": "node scripts/create-dbs.mjs",
+    "db:migrate": "tsx db/migrate.ts",
+    "db:seed:reference": "tsx db/seed-reference.ts",
+    "db:seed:chart": "tsx db/seed-chart-1009.ts",
+    "db:seed": "npm run db:seed:reference && npm run db:seed:chart",
+    "db:setup": "npm run db:create && npm run db:migrate && npm run db:seed",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "doctor": "node scripts/doctor.mjs",
+    "verify": "npm run typecheck && npm test && npm run doctor",
+    "check": "npm run verify"
+  },
+  "dependencies": {
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/pg": "^8.11.10",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
