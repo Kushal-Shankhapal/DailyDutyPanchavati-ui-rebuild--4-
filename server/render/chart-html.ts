@@ -172,7 +172,7 @@ function stateFx(states: DocLocationState[], locationId: number | null, shift: "
 // ---- page sections ---------------------------------------------------------------
 function headHtml(doc: ChartDocument): string {
   const [y, m, d] = doc.chartDate.split("-");
-  const dateLine = `दिनांक: ${toMr(Number(d))} ${MONTHS_MR[Number(m) - 1]} ${toMr(y)} · वार: ${h(doc.weekdayMr)}`;
+  const dateLine = `दिनांक: ${toMr(d)} ${MONTHS_MR[Number(m) - 1]} ${toMr(y)} · वार: ${h(doc.weekdayMr)}`;
   const lc = doc.lifecycle.toLowerCase();
   return `<div class="head">
     <div class="hc">
