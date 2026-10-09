@@ -41,7 +41,7 @@ describe("renderChart (10/09)", () => {
 
   it("matrix cells stay verbatim (escaped, Latin digits, OCR artifacts preserved)", () => {
     expect(html).toContain("12&lt;br&gt;04 Proण्");
-    expect(html).toContain(">..<</td>"); // '..' cells verbatim (muted)
+    expect(html).toContain(">..</td>"); // '..' cells verbatim (muted)
     expect(html).toContain("muted");
     expect(html).toContain("मनुष्यबळ स्थिती दर्शक मॅट्रिक्स");
   });

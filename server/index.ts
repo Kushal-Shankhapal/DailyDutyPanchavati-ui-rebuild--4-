@@ -5,9 +5,12 @@
 //   that enforce invariants; no police data leaves the machine.
 import Fastify from "fastify";
 import cors from "@fastify/cors";
+import fs from "node:fs";
+import path from "node:path";
 import { makePool, DEV_DB } from "./db.js";
 import { projectChart, getSnapshot, weekdayMr, type ChartDocument } from "./chart-document.js";
 import { finalizeChart, reopenForAmendment } from "./finalize.js";
+import { renderChart } from "./render/chart-html.js";
 
 const port = Number(process.env.PORT ?? 3100);
 const pool = makePool(DEV_DB);
@@ -20,6 +23,38 @@ await app.register(cors, {
 
 // Health
 app.get("/health", async () => ({ ok: true, service: "panchavati" }));
+
+// Static CSS serve
+app.get("/design/compv3.css", async (req, reply) => {
+  const css = fs.readFileSync(path.join(process.cwd(), "design", "compv3.css"), "utf8");
+  reply.header("Content-Type", "text/css; charset=utf-8").send(css);
+});
+
+// Root redirects to today's baseline chart (10 Sept 2026)
+app.get("/", async (req, reply) => {
+  reply.redirect("/charts/2026-09-10");
+});
+
+// Live ChartBoard View (HTML screen + print preview & edit shell)
+app.get("/charts/:date", async (req, reply) => {
+  const { date } = req.params as { date: string };
+  const rows = await pool.query(
+    `SELECT chart_id, lifecycle FROM daily_charts WHERE chart_date = $1`, [date],
+  );
+  if (rows.rows.length !== 1) return reply.code(404).send(`<h3>No chart found for ${date}</h3>`);
+
+  const { chart_id, lifecycle } = rows.rows[0];
+  let doc: ChartDocument;
+  if (lifecycle === "FINALIZED") {
+    doc = (await getSnapshot(pool, chart_id)).document;
+  } else {
+    doc = await projectChart(pool, chart_id);
+  }
+  const { html } = renderChart(doc);
+  reply.header("Content-Type", "text/html; charset=utf-8").send(
+    html.replace("__CSS_HREF__", "/design/compv3.css")
+  );
+});
 
 // Resolve a chart by date (today's view)
 app.get("/api/charts/:date", async (req, reply) => {
@@ -63,7 +98,7 @@ app.put("/api/charts/:date", async (req, reply) => {
     await client.query("BEGIN");
     // Re-fetch within tx so we operate on a consistent snapshot.
     // All writes are explicit; no auto-scheduling (invariant 4).
-    if (patch.lassignments !== undefined) {
+    if (patch.assignments !== undefined) {
       // Clear existing assignments for this chart and re-insert from patch
       await client.query(`DELETE FROM daily_assignments WHERE chart_id = $1`, [ch[0].chart_id]);
       for (const a of patch.assignments) {

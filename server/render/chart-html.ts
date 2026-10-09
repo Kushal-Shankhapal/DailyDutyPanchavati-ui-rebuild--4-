@@ -13,9 +13,25 @@ import type {
 
 // ---- display helpers -------------------------------------------------------------
 const DEV_DIGITS = "०१२३४५६७८९";
-/** Devanagari digit display transform (T7) — display ONLY, never touches the store. */
+/** Devanagari digit display transform (T7) — display ONLY, never touches the store.
+ *  Protected tokens (Dial 112, etc.) are never digit-transformed per AGENTS.md. */
 export function toMr(s: string): string {
-  return s.replace(/[0-9]/g, (d) => DEV_DIGITS[Number(d)]);
+  const protectedTokens = ["Dial 112"];
+  let res = s;
+  const stash: string[] = [];
+  for (const token of protectedTokens) {
+    if (res.includes(token)) {
+      const key = `__PROT_${String.fromCharCode(65 + stash.length)}__`;
+      res = res.replaceAll(token, key);
+      stash.push(token);
+    }
+  }
+  res = res.replace(/[0-9]/g, (d) => DEV_DIGITS[Number(d)]);
+  stash.forEach((token, idx) => {
+    const key = `__PROT_${String.fromCharCode(65 + idx)}__`;
+    res = res.replaceAll(key, token);
+  });
+  return res;
 }
 const h = (s: string): string =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -98,7 +114,7 @@ function valueHtml(r: DocAssignment): string {
   if (r.person) {
     let s = personLine(r.person);
     const tr = timeRange(r.startTime, r.endTime);
-    if (tr) s += ` <span class="win">· ${tr}</span>`;
+    if (tr) s += ` <span class="win duty-time">· ${tr}</span>`;
     if (r.notesMr) s += ` <span class="win">${raw(r.notesMr)}</span>`;
     return s;
   }
@@ -440,9 +456,61 @@ ${p1Lower}`);
 <body>
 
 <div class="toolbar no-print">
-  <span class="tt">पंचवटी दैनिक कर्तव्य तक्ता<small>ChartDocument render · ${doc.chartDate} · ${doc.lifecycle}</small></span>
+  <span class="tt">पंचवटी दैनिक कर्तव्य तक्ता<small>· ${doc.chartDate} · ${doc.lifecycle}</small></span>
+  <div style="display:inline-flex; align-items:center; gap:8px; margin-left:12px;">
+    <a href="/charts/2026-09-09" style="color:#9ca3af; text-decoration:none; padding:3px 6px; border:1px solid #374151; border-radius:3px;">◀ ९ सप्टें</a>
+    <span style="font-weight:700; color:#fff;">${toMr(doc.chartDate.split("-")[2])} ${MONTHS_MR[Number(doc.chartDate.split("-")[1]) - 1]}</span>
+    <a href="/charts/2026-09-11" style="color:#9ca3af; text-decoration:none; padding:3px 6px; border:1px solid #374151; border-radius:3px;">११ सप्टें ▶</a>
+  </div>
   <span class="sp"></span>
-  <button class="print" onclick="window.print()">प्रिंट / PDF (A4)</button>
+  <button id="mode-btn" onclick="toggleMode()">✏️ संपादन (Edit Mode)</button>
+  ${doc.lifecycle === "DRAFT" ? `<button id="finalize-btn" class="print" style="background:#15803d; border-color:#15803d;" onclick="finalizeChart('${doc.chartDate}')">✅ अंतिम करा (Finalize)</button>` : `<span class="lc lc-finalized">FINALIZED</span>`}
+  <button class="print" onclick="window.print()">🖨 प्रिंट / PDF (A4)</button>
+</div>
+
+<div id="staff-flyer" class="flyer-overlay no-print" style="display:none;" onclick="if(event.target===this)closeFlyer()">
+  <div class="flyer-card">
+    <div class="flyer-header">
+      <h3 id="flyer-title">कर्मचारी नेमणूक (Staff Allocation)</h3>
+      <button class="flyer-close" onclick="closeFlyer()">✕</button>
+    </div>
+    <div class="flyer-body">
+      <div id="flyer-target-info" style="font-size:12px; font-weight:700; color:#1e293b; padding-bottom:6px; border-bottom:1px solid #e2e8f0;"></div>
+      
+      <div class="flyer-opt" onclick="flyerEditDetails()">
+        <h4>[१] सध्याच्या कर्मचाऱ्याची माहिती बदला (Edit Master)</h4>
+        <p>नाव, हुद्दा, बकल नंबर किंवा संपर्क माहिती संपादित करा</p>
+      </div>
+
+      <div class="flyer-opt" style="cursor:default;">
+        <h4>[२] हजर कर्मचारी निवडा (Select Existing Staff)</h4>
+        <p>२00+ कर्मचाऱ्यांच्या रोस्टरमधून शोधा</p>
+        <input type="text" id="flyer-search" class="flyer-search" placeholder="🔍 नाव, बकल नंबर किंवा हुद्दा शोधा..." oninput="filterStaff(this.value)">
+        <div id="flyer-roster" class="flyer-list">
+          <div style="padding:10px; text-align:center; color:#94a3b8; font-size:11px;">शोधण्यासाठी टाईप करा...</div>
+        </div>
+      </div>
+
+      <div class="flyer-opt" style="cursor:default;">
+        <h4>[३] ➕ नवीन कर्मचारी जोडा (Add New Staff)</h4>
+        <p>मास्टर रोस्टरमध्ये नवीन नोंद करून तात्काळ नियुक्त करा</p>
+        <div class="flyer-mini-form">
+          <input type="text" id="new-name-mr" placeholder="पूर्ण नाव मराठीत (उदा. पोशि ४५२ पवार)">
+          <select id="new-rank">
+            <option value="PC">पोलीस शिपाई (PC / पोशि)</option>
+            <option value="HC">पोलीस हवालदार (HC / पोहवा)</option>
+            <option value="PN">पोलीस नाईक (PN / पोना)</option>
+            <option value="ASI">सहाय्यक पोलीस उपनिरीक्षक (ASI / सपोउनि)</option>
+            <option value="PSI">पोलीस उपनिरीक्षक (PSI / पोउनि)</option>
+            <option value="API">सहाय्यक पोलीस निरीक्षक (API / सपोनि)</option>
+            <option value="PI">पोलीस निरीक्षक (PI / पोनि)</option>
+          </select>
+          <input type="text" id="new-buckle" placeholder="बकल नंबर (ऐच्छिक)">
+          <button type="button" class="flyer-btn-submit" onclick="submitNewStaff()">सेव्ह व नियुक्त करा</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 ${page1}
@@ -455,6 +523,151 @@ ${page4}
 
 ${page5}
 
+<script>
+let currentTargetEl = null;
+let allStaff = [];
+
+function toggleMode() {
+  document.body.classList.toggle('mode-edit');
+  const isEdit = document.body.classList.contains('mode-edit');
+  const btn = document.getElementById('mode-btn');
+  if (isEdit) {
+    btn.innerHTML = '👁 पूर्वावलोकन (Preview Mode)';
+    btn.classList.add('on');
+    attachSlotListeners();
+  } else {
+    btn.innerHTML = '✏️ संपादन (Edit Mode)';
+    btn.classList.remove('on');
+    closeFlyer();
+  }
+}
+
+function attachSlotListeners() {
+  document.querySelectorAll('.dt td, .p .n').forEach(el => {
+    if (!el.dataset.hasFlyer) {
+      el.dataset.hasFlyer = 'true';
+      el.addEventListener('click', (e) => {
+        if (!document.body.classList.contains('mode-edit')) return;
+        openFlyer(el);
+      });
+    }
+  });
+}
+
+async function openFlyer(el) {
+  currentTargetEl = el;
+  const text = el.innerText.trim();
+  document.getElementById('flyer-target-info').innerText = 'निवडलेले पद: ' + (text || '[रिक्त जागा]');
+  document.getElementById('staff-flyer').style.display = 'flex';
+  if (allStaff.length === 0) {
+    try {
+      const res = await fetch('/api/masters');
+      if (res.ok) {
+        const data = await res.json();
+        allStaff = data.staff || [];
+      }
+    } catch (e) {
+      console.warn('Could not load master staff:', e);
+    }
+  }
+  filterStaff('');
+}
+
+function closeFlyer() {
+  document.getElementById('staff-flyer').style.display = 'none';
+  currentTargetEl = null;
+}
+
+function filterStaff(q) {
+  const container = document.getElementById('flyer-roster');
+  if (!allStaff.length) {
+    container.innerHTML = '<div style="padding:10px; color:#94a3b8; font-size:11px;">मास्टर डेटा उपलब्ध नाही</div>';
+    return;
+  }
+  const query = q.trim().toLowerCase();
+  const matched = allStaff.filter(s => 
+    !query || 
+    (s.name_mr && s.name_mr.includes(query)) ||
+    (s.name_en && s.name_en.toLowerCase().includes(query)) ||
+    (s.buckle_no && String(s.buckle_no).includes(query)) ||
+    (s.rank_code && s.rank_code.toLowerCase().includes(query))
+  ).slice(0, 30);
+
+  if (!matched.length) {
+    container.innerHTML = '<div style="padding:8px; color:#94a3b8; font-size:11px;">कोणताही कर्मचारी सापडला नाही</div>';
+    return;
+  }
+  container.innerHTML = matched.map(s => {
+    const buckle = s.buckle_no ? ' ' + s.buckle_no : '';
+    const label = (s.rank_code || '') + buckle + ' ' + (s.name_mr || '');
+    return '<div class="flyer-item" onclick="selectStaff(\\'' + label.replace(/'/g, "\\\\'") + '\\')">' + label + '</div>';
+  }).join('');
+}
+
+function selectStaff(label) {
+  if (currentTargetEl) {
+    currentTargetEl.innerText = label;
+  }
+  closeFlyer();
+}
+
+function flyerEditDetails() {
+  if (!currentTargetEl) return;
+  const current = currentTargetEl.innerText.trim();
+  const next = prompt('कर्मचारी नाव / पद संपादित करा:', current);
+  if (next !== null && next.trim() !== '') {
+    currentTargetEl.innerText = next.trim();
+  }
+  closeFlyer();
+}
+
+async function submitNewStaff() {
+  const nameMr = document.getElementById('new-name-mr').value.trim();
+  const rank = document.getElementById('new-rank').value;
+  const buckle = document.getElementById('new-buckle').value.trim();
+  if (!nameMr) {
+    alert('कृपया पूर्ण नाव प्रविष्ट करा');
+    return;
+  }
+  try {
+    const res = await fetch('/api/masters/staff', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name_mr: nameMr, rank_code: rank, buckle_no: buckle || undefined })
+    });
+    if (res.ok) {
+      const label = rank + (buckle ? ' ' + buckle : '') + ' ' + nameMr;
+      if (currentTargetEl) currentTargetEl.innerText = label;
+      closeFlyer();
+    } else {
+      const err = await res.json();
+      alert('त्रुटी: ' + (err.error || 'नोंदणी अयशस्वी'));
+    }
+  } catch (e) {
+    alert('नेटवर्क त्रुटी: ' + e.message);
+  }
+}
+
+async function finalizeChart(date) {
+  if (!confirm(date + ' चा कर्तव्य तक्ता अंतिम (Finalize) करायचा का? हा तक्ता नंतर वाचनीय (Read-only) होईल.')) return;
+  try {
+    const res = await fetch('/api/charts/' + date + '/finalize', { method: 'POST' });
+    if (res.ok) {
+      alert('तक्ता यशस्वीरीत्या अंतिम करण्यात आला!');
+      location.reload();
+    } else {
+      const err = await res.json();
+      alert('त्रुटी: ' + (err.error || 'अंतिम करणे अयशस्वी'));
+    }
+  } catch (e) {
+    alert('त्रुटी: ' + e.message);
+  }
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeFlyer();
+});
+</script>
 </body>
 </html>`;
 
