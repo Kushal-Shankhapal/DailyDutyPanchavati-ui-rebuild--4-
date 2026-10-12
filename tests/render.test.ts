@@ -59,7 +59,14 @@ describe("renderChart (10/09)", () => {
       "रात्रगस्त सुचना", "पो.नि.सुनिल पवार (गुन्हे)", "मेरी पोलीस चौकी",
       "तयार करणारे हजेरी लेखनिक", "अधिकारी कर्तव्य सारांश",
     ]) expect(html, `missing: ${needle}`).toContain(needle);
-    expect((html.match(/<div class="page">/g) ?? []).length).toBe(5);
+    // one printed A4 sheet per .page box: the mock's five sections, plus the notices sheet
+    // (the mock draws no notice section at all, the source keeps them on the night page).
+    expect((html.match(/<div class="page( dense)?">/g) ?? []).length).toBe(6);
+    // print-density sheets: the two composite pages whose real source volume exceeds one
+    // A4 at the mock's screen type scale (allowed to tighten in print, never to drop rows)
+    expect((html.match(/<div class="page dense">/g) ?? []).length).toBe(2);
+    // (`.h2` may carry data-label/data-default — editable names; markup text is the contract)
+    expect(html).toMatch(/<div class="sec"><h2[^>]*>सूचना व निर्देश<\/h2><\/div>/);
     for (const o of doc.officerSummary) {
       expect(html, `missing officer row: ${o.officerText}`).toContain(o.officerText);
     }

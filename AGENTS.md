@@ -1,7 +1,7 @@
 <!--
 Purpose: Stable agent working contract for this repository.
 Current role: Defines reading order, authority order, hard rules and session discipline for any agent or human.
-Last meaningful change: Created 2026-10-06 at clean-rebuild start (audit phase, no app code yet).
+Last meaningful change: 2026-10-12 — SESSION_HANDOFF.md added to the reading order (session continuity).
 Constraint/dependency: Supersedes old repos' AGENTS.md; aligned with Desktop/01_CONSOLIDATED_ANALYSIS.md baseline.
 -->
 
@@ -12,11 +12,12 @@ One station: Panchavati Police Station, Nashik City. Marathi-first, Unicode. One
 ## Reading order (before any task)
 
 1. `docs/CURRENT_STATE.md` — what is actually built and verified right now
-2. `docs/DOMAIN.md` — entities and rules
-3. `docs/ARCHITECTURE.md` — how the pieces fit
-4. `docs/OPEN_QUESTIONS.md` — what must not be guessed
-5. The task's relevant slice of code
-6. `reference/` evidence only when the task touches chart content or print
+2. `docs/SESSION_HANDOFF.md` — long-form state, traps, open designs (read before resuming work)
+3. `docs/DOMAIN.md` — entities and rules
+4. `docs/ARCHITECTURE.md` — how the pieces fit
+5. `docs/OPEN_QUESTIONS.md` — what must not be guessed
+6. The task's relevant slice of code
+7. `reference/` evidence only when the task touches chart content or print
 
 `docs/INITIAL_AUDIT.md` is the historical decision baseline for why this repo exists and what was reused/discarded from the old repos.
 

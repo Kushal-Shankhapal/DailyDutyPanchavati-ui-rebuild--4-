@@ -55,7 +55,7 @@ INSERT INTO locations (location_code, name_mr, kind, display_order, active) VALU
   ('MARSHAL_MALEGAON_STAND','मालेगांव स्टॅड मार्शल','MARSHAL_POST',13,TRUE),
   ('MARSHAL_PHULENAGAR','फुले नगर मार्शल','MARSHAL_POST',14,TRUE),
   ('MARSHAL_MERI','मेरी मार्शल','MARSHAL_POST',15,TRUE),
-  ('FIXED_KALARAM','काळाराम मंदिर गार्ड','FIXED_POINT',21,TRUE),
+  ('FIXED_KALARAM','काळाराम मंदीर गार्ड','FIXED_POINT',21,TRUE),
   ('FIXED_RAMKUND','रामकुंड','FIXED_POINT',22,TRUE),
   ('FIXED_MARKET_YARD','मार्केट यार्ड पोलीस मदत केंद्र','FIXED_POINT',23,TRUE)
 ON CONFLICT (location_code) DO UPDATE SET
@@ -104,7 +104,7 @@ FROM (VALUES
   ('DAY_PHULE','फुलेनगर पोलीस चौकी','DAY_DEPLOYMENT','DAY','CHOWKI_PHULENAGAR',15),
   ('DAY_MERI','मेरी पोलीस चौकी','DAY_DEPLOYMENT','DAY','CHOWKI_MERI',16),
   ('DAY_WOMEN_DESK','महिला कक्ष','DAY_DEPLOYMENT','DAY',NULL,17),
-  ('DAY_KALARAM','काळाराम मंदिर गार्ड ड्युटी','DAY_DEPLOYMENT','DAY','FIXED_KALARAM',18),
+  ('DAY_KALARAM','काळाराम मंदीर गार्ड ड्युटी','DAY_DEPLOYMENT','DAY','FIXED_KALARAM',18),
   ('DAY_CYBER','सायबर सेल','DAY_DEPLOYMENT','DAY',NULL,19),
   ('DAY_PANCHAVATI1','पंचवटी 1 मोबाईल','DAY_DEPLOYMENT','DAY',NULL,20),
   ('DAY_MARSHAL_KATYA','काटया मारूती मार्शल','DAY_DEPLOYMENT','DAY','MARSHAL_KATYA_MARUTI',21),
@@ -140,7 +140,7 @@ FROM (VALUES
   ('NIGHT_PHULE','फुलेनगर पोलीस चौकी','NIGHT_DEPLOYMENT','NIGHT','CHOWKI_PHULENAGAR',14),
   ('NIGHT_MERI','मेरी पोलीस चौकी','NIGHT_DEPLOYMENT','NIGHT','CHOWKI_MERI',15),
   ('NIGHT_PANCHAVATI1','पंचवटी 1 मोबाईल','NIGHT_DEPLOYMENT','NIGHT',NULL,16),
-  ('NIGHT_KALARAM','काळाराम मंदिर गार्ड ड्युटी','NIGHT_DEPLOYMENT','NIGHT','FIXED_KALARAM',17),
+  ('NIGHT_KALARAM','काळाराम मंदीर गार्ड ड्युटी','NIGHT_DEPLOYMENT','NIGHT','FIXED_KALARAM',17),
   ('NIGHT_GOOD_MORNING','गुड मॉर्निंग पथक','NIGHT_DEPLOYMENT','NIGHT',NULL,18),
   ('NIGHT_RAMKUND','रामकुंड परिसरात पेट्रोलिंग','NIGHT_DEPLOYMENT','NIGHT','FIXED_RAMKUND',19),
   ('NIGHT_MARSHAL_KATYA','काटया मारूती मार्शल','NIGHT_DEPLOYMENT','NIGHT','MARSHAL_KATYA_MARUTI',20),
@@ -418,4 +418,76 @@ WHERE (tv.layout = '{}'::jsonb OR tv.layout IS NULL)
 UPDATE template_versions tv
 SET layout = tv.layout || '{"courtDutyCodes":["OFFICE_MISSING","OFFICE_ATC","OFFICE_WARRANT","OFFICE_SESSION_SUMMONS","OFFICE_SUMMONS"]}'::jsonb
 WHERE NOT (tv.layout ? 'courtDutyCodes')
+  AND tv.template_id = (SELECT template_id FROM chart_templates WHERE name = 'Panchavati Compact v3');
+
+-- Page-1 officer boxes (.g-off grid): each station-officer post is bound by the source's own
+-- role/qualifier token (SEMANTIC/10.md Table 1 col 1) and to the office-column writer row the
+-- source names for that branch (col 4). Display grouping only (Layer C) — no operational data.
+-- Replaces the earlier flat officerBoxWriters object (shape change → replace, still idempotent).
+UPDATE template_versions tv
+SET layout = (tv.layout - 'officerBoxWriters') || '{
+  "officerBoxes": [
+    {"label": "तपास",  "writerDutyTitle": "पोनि.तपास॰रायटर",      "writerRole": "रायटर"},
+    {"label": "प्रषा",  "writerDutyTitle": "पोनि.प्रशासन॰रायटर",   "writerRole": "रायटर"},
+    {"label": "गुन्हे", "writerDutyTitle": "पोनि.गुन्हे॰रायटर",     "writerRole": "रायटर"},
+    {"label": "विशेष", "title": "विशेष तपास पथक", "writerDutyTitle": "", "writerRole": "रायटर"}
+  ]
+}'::jsonb
+WHERE tv.template_id = (SELECT template_id FROM chart_templates WHERE name = 'Panchavati Compact v3');
+
+-- Page-3 section split (SEMANTIC 10.md Table 3): leave classes vs court/bandobast classes.
+-- group_key values are the source's own column groups; unlisted keys fall into the first section.
+UPDATE template_versions tv
+SET layout = tv.layout || '{
+  "availabilitySections": [
+    {"title": "रजा, साप्ताहिक सुट्टी व गैरहजर",
+     "groupKeys": ["साप्ताहिक सुट्टी", "किरकोळ रजा", "अर्जित रजा"]},
+    {"title": "कोर्ट पैरवी व विशेष क्षेत्रीय बंदोबस्त",
+     "groupKeys": ["इतर ड्युटी"]}
+  ]
+}'::jsonb
+WHERE NOT (tv.layout ? 'availabilitySections')
+  AND tv.template_id = (SELECT template_id FROM chart_templates WHERE name = 'Panchavati Compact v3');
+
+-- Scan sessions (page 5): fixed session structure per SEMANTIC/10.md Tables 10/11/13
+-- (patrol mobile + beat-marshal per session; beat lists are the source rows deduplicated).
+-- Fixed configuration (Page1and2 Analysis classification), fill-if-missing only.
+UPDATE template_versions tv
+SET layout = tv.layout || '{
+  "scanSessions": [
+    {"session": "01) सकाळ 09:00 ते 15:00", "patrol": "चौकीचे ईन्चार्ज अंमलदार", "beat": "मेरी, फुलेनगर, काटया मारूती, कारंजा, मालेगाव"},
+    {"session": "02) दुपार 15:00 ते 21:00", "patrol": "सी.आर., डेल्टा व डी.बी. मोबाईल", "beat": "मेरी, फुलेनगर, काटया मारूती, कारंजा, मालेगाव"},
+    {"session": "03) रात्र 21:00 ते 09:00", "patrol": "सी.आर. मोबाईल / डी.बी. मोबाईल", "beat": "मेरी मार्शल, मालेगाव स्टँड मार्शल"}
+  ]
+}'::jsonb
+WHERE NOT (tv.layout ? 'scanSessions')
+  AND tv.template_id = (SELECT template_id FROM chart_templates WHERE name = 'Panchavati Compact v3');
+
+-- Beat-marshal posts FOLD INTO their paired chowki on page 2 (approved mock: no standalone
+-- marshal block — the marshal's own बंद/charge prints as a `मार्शल:` line inside the chowki's
+-- sub-col and its staff rows merge into the same column; every source row still renders, so
+-- the no-loss rule holds). Display grouping only (Layer C); chart data untouched.
+-- Chowki location code → marshal post location code. सरदार चौकी has no marshal post in the
+-- source, so it is absent here and keeps no marshal line — exactly the mock. Fill-if-missing.
+UPDATE template_versions tv
+SET layout = tv.layout || '{
+  "marshalPostForChowki": {
+    "CHOWKI_KATYA_MARUTI":    "MARSHAL_KATYA_MARUTI",
+    "CHOWKI_KARANJA":         "MARSHAL_KARANJA",
+    "CHOWKI_MALEGAON_STAND":  "MARSHAL_MALEGAON_STAND",
+    "CHOWKI_PHULENAGAR":      "MARSHAL_PHULENAGAR",
+    "CHOWKI_MERI":            "MARSHAL_MERI"
+  }
+}'::jsonb
+WHERE NOT (tv.layout ? 'marshalPostForChowki')
+  AND tv.template_id = (SELECT template_id FROM chart_templates WHERE name = 'Panchavati Compact v3');
+
+-- Posts that belong to page 1's कोर्ट, समन्स, वॉरंट व विशेष कक्ष desk instead of a page-2 block.
+-- Location-less posts (मोबाईल / सायबर सेल / महिला कक्ष) already fold by having no location; a
+-- FIXED_POINT carries one (काळाराम मंदीर गार्ड) but is still a desk post — the approved mock
+-- shows six chowki blocks on page 2 and nothing else. Location kinds listed here are display
+-- grouping only (Layer C); every source row still renders exactly once. Fill-if-missing.
+UPDATE template_versions tv
+SET layout = tv.layout || '{"specialDeskLocationKinds": ["FIXED_POINT"]}'::jsonb
+WHERE NOT (tv.layout ? 'specialDeskLocationKinds')
   AND tv.template_id = (SELECT template_id FROM chart_templates WHERE name = 'Panchavati Compact v3');

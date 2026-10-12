@@ -1,13 +1,21 @@
 <!--
 Purpose: Current implementation truth for the clean-rebuild repo.
 Current role: First-read state file; updated at the end of every working session.
-Last meaningful change: 2026-10-08 — P1 started: ChartDocument projection + finalize snapshot slice verified (31 tests total); migration 0007 (assignment column_no, manpower display_order).
+Last meaningful change: 2026-10-12 (later pass) — user-facing authoring round: Arjish-style app header + date selector, local pseudo-login for the हजेरी लेखनिक, chowki-band text-overflow + edit-hover-flicker fixes, per-chart editable names (185 elements), and the अधिकारी box add; 77 tests green (`npm run check`), print:audit 6/6.
 Constraint/dependency: Must reflect verified facts only; speculation belongs in OPEN_QUESTIONS.md.
 -->
 
 # CURRENT_STATE
 
-> Updated: 2026-10-08 · Phase: **P1 IN PROGRESS — slice 1 (ChartDocument projection + finalize snapshot) verified** (`npm run check` green: typecheck + 31 tests + doctor; 7 migrations). P0 was completed and committed the same day (2 commits: code `cc1ecf9`, docs `eedf45a`). User gave explicit P0 GO 2026-10-08 after architecture approval. Visual baseline FROZEN at compact-v3 (user-owned). Built: repo scaffold (package/tsconfig/vitest), migrations 0001–0006 on `panchavati3_dev` + `panchavati3_test`, Layer-A reference seeds, 10/09 chart seed from SEMANTIC/10.md, invariant test suite, doctor/verify scripts, README contract. Next phase (P1: ChartDocument projection + server/UI) NOT started — awaiting user go.
+> Updated: 2026-10-12 · Phase: **P1 — renderer fidelity + authoring round done** (`npm run check` green: typecheck + **77** tests + doctor; 8 migrations).
+>
+> **Live routes:** `npm run dev` (default `PORT=3100`; **IMPORTANT — other checkouts on this machine also listen on 3100/3000 (old `Desktop\DailyDutyPanchavati`, nested `DailyDutyPanchavati-ui-rebuild`); confirm the PID before judging a URL**). `GET /charts/:date` renders the chart, `GET /design/panchavati-compv3.html` serves the frozen visual baseline for side-by-side review, `npm run render:chart` writes `.tmp-preview/chart-<date>.html`.
+>
+> **Print pagination (2026-10-12):** one `.page` box = one A4 landscape sheet. Verified with `npm run print:audit` (headless Chrome, print media via CDP): 6 sheets, extents 750/518/680/551/608/705px vs 775px printable height — all fit. Cross-checked with `chrome --print-to-pdf`: 6 PDF pages for 6 boxes (was 8: two sheets spilled). Pages 1 and 3 carry `.page.dense` so `web/authoring.css` tightens row metrics **in print only** (screen keeps the mock's scale); the notices section prints on its own sheet. The 10/09 source chart itself is 6 sheets (`reference/ORIGINAL_VISUAL/10.pdf`), the mock is 5 with sample data. No row, name or value is dropped or truncated — no-loss stays 212/212.
+>
+> **Renderer fidelity (2026-10-11/12):** page 1 (Sr-PI card with `.rk` + रायटर/चालक/RTPC groups, 4 officer boxes `.g-off`, 4-column day/night/office/court band — the same 8 blocks the mock has, in the same grids), page 2 (the mock's 6 chowki blocks; each beat-marshal post folds into its paired chowki as a `मार्शल:` `.fx` line + merged staff rows; desk posts — पंचवटी १ मोबाईल / सायबर सेल / महिला कक्ष / वायरलेस महिला अंमलदार / काळाराम मंदीर गार्ड ड्युटी — render as role groups inside page 1's court/special desk), page 3 (leave section + court/bandobast section + notices), page 4 (matrix + summary + ledger — unchanged), page 5 (officer summary + sessions beside hourly scan + sign-off). Compact chart names (rank + buckle + surname) everywhere; source role column (`role_mr`) drives row labels. A4-landscape geometry 1122×794; page 2 exactly one sheet like the mock — pages 1 and 3 grow past one sheet with the full source volume (measured, OPEN_QUESTIONS T18).
+>
+> **Historical status line (kept for provenance):** 2026-10-08 · Phase: **P1 IN PROGRESS — slice 1 (ChartDocument projection + finalize snapshot) verified** (`npm run check` green: typecheck + 31 tests + doctor; 7 migrations). P0 was completed and committed the same day (2 commits: code `cc1ecf9`, docs `eedf45a`). User gave explicit P0 GO 2026-10-08 after architecture approval. Visual baseline FROZEN at compact-v3 (user-owned). Built: repo scaffold (package/tsconfig/vitest), migrations 0001–0006 on `panchavati3_dev` + `panchavati3_test`, Layer-A reference seeds, 10/09 chart seed from SEMANTIC/10.md, invariant test suite, doctor/verify scripts, README contract. Next phase (P1: ChartDocument projection + server/UI) NOT started — awaiting user go.
 
 ## Repository
 
@@ -99,9 +107,55 @@ Seed-time corrections made against source: PI name spelling `आंधळे` (S
 
 Bugs caught and fixed while making the gate green: `a.duty_code` vs join alias, `loc_id` alias missing → `Number(undefined)`=NaN (now fail-loud in `locOf`), bigint→string in tests.
 
+## P1 authoring + chrome round (2026-10-12, later pass — all user asks from the 10/12 message)
+
+Built and browser-verified on the live route (each item also covered by tests where noted):
+
+1. **Chowki-band text fixes (user: “everything should end in its line”)** — the chowki in-charge
+   no longer repeats as the sub-col's first row (it is the `.ch-head .of` line only; the duplicate
+   dragged a wrapped time chip along), and `.fx` state lines split into `.st` (nowrap) + `.dst`
+   (wraps) so no line breaks mid-phrase or leaves an orphan word. Verified: every `.fx` line is
+   1–2 balanced lines, zero spill.
+2. **Edit-mode hover flicker fixed (user report)** — the hover `::after` ✎ glyph re-flowed cells.
+   Affordance is now outline + tint only; geometry identical hovered or not (`getComputedStyle`
+   `::after.content === 'none'` on `[data-label]`, 185/185 elements).
+3. **Arjish-style app header + date selector** — `#appbar` (emblem + station/product identity +
+   date button with Marathi weekday + dropdown of real chart dates + lifecycle badge + actions +
+   clerk chip), navy `#0e1e38`, sticky, `.no-print`; `GET /api/charts` (note: `chart_date::text`,
+   pg returns a JS `Date` otherwise); logo served from `web/assets/Police_Logo.png`.
+4. **Pseudo-login (local-only)** — `लॉगिन` chip → flyer with the chart's own हजेरी लेखनिक candidates
+   (10/09: गुंबाडे / पवार / गांगुर्डे) or name+rank+buckle form; buckle field only for
+   `cadre = CONSTABULARY`; state in `localStorage['pd_clerk']`; no server call, no schema change.
+5. **Per-chart editable names (user: table/chart/column/left-row names)** — renderer emits
+   `data-label` (stable key) + `data-default` (SOURCE text) + `data-override` (which scope is
+   active) on **185 elements**: chart title, all section/table titles, desk/block/sub-col names,
+   matrix/summary/officer/scan column headers, left-row group+role labels, sign-off labels.
+   Storage `daily_charts.presentation_overrides.labels` (element) / `.labelsAll` (everywhere this
+   default text appears) → projected into `doc.template.overrides` so snapshots carry their names;
+   `PATCH /api/charts/:date/labels` (FINALIZED → 409, blank clears, 160-char cap).
+   UI: edit mode → dotted-outline hover → click/Enter → popover with फक्त हे / सर्वत्र radio
+   (pre-selected from `data-override`) → PATCH → reload. D-rule values (date/weekday line) are
+   NOT rename-able; people's names and matrix cell VALUES are never touched.
+6. **अधिकारी box add (user: “just like the chowki box”)** — button enabled (Coming Soon gone);
+   `POST /api/charts/:date/officer` → `addOfficerBox()` writes `presentation_overrides.officerBoxes`
+   entry + ONE `VACANT_RIKT` seat whose `duty_title` is the writer title (the seed's own grammar for
+   the vacant तपास writer: label row = the fillable seat, `data-asn` clickable). Renderer appends
+   extra boxes after the template's; office-walk hardened so a FILLED seat stays in ITS box instead
+   of drifting into the preceding one (verified live: assign → renders in-box, not in office desk).
+   Duplicate label → 409; blank → 400; no invented person/timing/BIMA.
+
+Verification status: `npm run check` green (typecheck + 77 tests + doctor ×2 DBs) after ALL edits;
+`npm run print:audit` 6/6 sheets still fit (attributes add no layout); live browser E2E for rename
+(element scope → reload; scope=all → reload; blank → revert to default; night desk untouched),\ officer-box add → fill → in-box render, and DB restored to baseline (212 rows,
+`presentation_overrides = {}`) after testing. Known limitation: the FINALIZED 409 path of the two
+new routes is enforced in code but not exercised by a test (no finalized chart exists to try it on);
+curl-argv on Windows mangles Devanagari — use the browser or file-based payloads for manual API tests.
+
 ## Next step (user-driven)
 
-**Continuing P1** — ChartDocument → HTML renderer (print/preview projection of the same document), server layer, then authoring UI per PRODUCT_UI_ARCHITECTURE. Chart redesign is closed; mock edits only if the user reports a visual defect. Deferred-with-defaults: T9 (template rights), T10 (transliteration), T11 (eligibility, SME-gated), T12 (template sharing); T14 (desk pairing) SME-confirm when editor exists.
+**Renderer parity is the blocking milestone.** The renderer reproduces the mock's section grammar and look, including the two folds the mock draws (marshal posts inside their paired chowki; desk posts inside page 1's special desk — OPEN_QUESTIONS T15 resolved), and every `.page` box now prints as exactly one A4 sheet (T18 resolved: print-only density on the two composite pages + the notices on their own sheet; the source chart itself is 6 sheets). Page 2 is exactly the mock's six-chowki sheet. Byte-parity with the mock's five sample-data pages is impossible without dropping source rows — visual/design parity plus complete content is the rule.
+
+After that: assignment defaults (suggestions, not auto-fill), 11/09 chart seed + event annex page, print verification of both days, and the still-open P1 items. Done this round: per-chart editable names, अधिकारी box add, header/date selector, pseudo-login. Deferred-with-defaults: T9 (template rights), T10 (transliteration), T11 (eligibility, SME-gated), T12 (template sharing); T14 (desk pairing) SME-confirm when editor exists.
 
 ## Session log
 
@@ -113,3 +167,7 @@ Bugs caught and fixed while making the gate green: `a.duty_code` vs join alias, 
 | 2026-10-07 (round 2) | User feedback applied: add-boxes, वेळ header, chowki sub-titles, neutral count chips; 4 edit-JS defects fixed (toggle crash, + row loss, rowspan growth, pending-row ordering) | Full edit battery + geometry/print/mobile re-audits on both files; console clean |
 | 2026-10-07 (round 3) | Six chart fixes (corner block out, type scale, 4-col page-1 band, badges off, sign-off centered, marshal explained) + completeness adds (पिटर मोबा., कक्ष देखरेख, 12 scan rows); marshal question answered from source | Div-balance script + geometry/print/breakpoint audits @1300/1025/768/390 + edit battery on both files (print extents 657 & 725 ≤ 794) |
 | 2026-10-08 (P0) | DB foundation: scaffold, migrations 0001–0006, Layer-A seeds, 10/09 chart seed (SEMANTIC authority), 19-test invariant suite, doctor/verify, README contract, T14 | `npm run verify` green end-to-end (typecheck + 19 tests + doctor ×2 DBs); seed re-run idempotent with identical counts on dev+test |
+| 2026-10-09 (P1) | Fastify server (`/charts/:date`, `/api/charts/:date`, slot PATCH, chowki POST, finalize/amend), `server/render/chart-html.ts` (5-page projection + print), `web/chart-authoring.js` + `authoring.css` (edit mode, staff picker, slot persistence), assignment domain layer (`server/assignments.ts`) | Browser E2E on the live route: render → edit mode → picker → PATCH → reload persistence; typecheck + 62 tests green |
+| 2026-10-11 (1010) | Renderer fidelity pass against `design/panchavati-compv3.html`: compact chart names, `role_mr` migration 0008 + seed role column, block keying by location/post title, `.fx` absorption of continuation labels, officer band (card + `.g-off` boxes) with the officer rows removed from the generic desk, court desk title, page-3 leave/court sections, page-5 session table; mock served read-only for review | `npm run check` green (typecheck + **72** tests + doctor ×2 DBs, 8 migrations); no-loss 212/212; 5-page render inspected in the browser at 1440px vs the mock (pages 4–5 exactly 794px = A4 landscape) |
+| 2026-10-12 (1010 r2/r3) | Mock-draw folds implemented (T15 resolved): `layout.marshalPostForChowki` folds each beat-marshal post into its paired chowki (`मार्शल:` `.fx` line + merged staff rows; सरदार चौकी correctly has none) and `layout.specialDeskLocationKinds: ["FIXED_POINT"]` folds काळाराम into page 1's special desk together with the location-less posts, so page 2 is exactly the mock's 6 chowki blocks; dual-shift desk titles carry the source's दिवसपाळी/रात्रपाळी wording (dual = distinct shifts, not group count). Seed-time correction: `काळाराम मंदिर` → **`काळाराम मंदीर`** (location + both duty titles) — `reference/EXCEL_RECONSTRUCTION/.../sheet001.htm` cell text and `reference/SEMANTIC/10.md` lines 37/87 both carry the long ी, the short-ि form was a seed typo. **Print pagination fixed (T18 resolved):** `.page.dense` print-density in `web/authoring.css` for the two composite pages + the notices section on its own sheet | `npm run check` green (typecheck + **74** tests + doctor ×2 DBs); no-loss 212/212; `npm run print:audit` = all 6 sheets fit one A4 (print media, headless Chrome); `chrome --print-to-pdf` = 6 pages for 6 boxes (was 8) |
+| 2026-10-12 (authoring round) | User asks all built: chowki-band line fixes + hover-flicker fix; Arjish AppNav-style header + date dropdown (`/api/charts`, logo asset); local pseudo-login (हजेरी लेखनिक picker, CONSTABULARY-only buckle); **per-chart editable names** (`data-label`/`data-default`/`data-override` on 185 elements, `PATCH …/labels`, फक्त हे/सर्वत्र popover, `presentation_overrides.labels[All]`); **अधिकारी box add** (enabled button, `POST …/officer` → `addOfficerBox` = override entry + one fillable रिक्त writer seat, office-walk hardened so filled seats stay in their box); handoff doc `docs/SESSION_HANDOFF.md` written for the next session | `npm run check` green (**77** tests, +3 new: rename resolution, addOfficerBox txn, enabled-button contract); `npm run print:audit` 6/6; live browser E2E (rename both scopes + revert, box add → fill → in-box render); dev DB restored to 212 rows + `presentation_overrides = {}` after testing |

@@ -69,7 +69,19 @@ npm run typecheck          # tsc --noEmit (strict)
 npm run doctor             # objective environment diagnostics (exit 1 on any failure)
 npm run verify             # typecheck + test + doctor — THE gate before claiming done
 npm run check              # alias of verify (the command AGENTS.md tells agents to run)
+
+npm run dev                # Fastify server (PORT=3100) — /charts/:date, /api/charts/:date
+npm run render:chart       # writes .tmp-preview/chart-<date>.html (static, no server)
+npm run print:audit        # print-fit audit: every .page box vs one A4 sheet, in a real engine
+                           #   (tools/print-audit.mjs — headless Chrome over CDP, loopback only;
+                           #    needs `npm run dev`; CHROME_PATH overrides the browser path)
 ```
+
+Print-fit rule: the frozen baseline keeps the screen view roomy and only tightens in print, so
+sheet fit can only be judged under print media — `npm run print:audit` reports each sheet's extent
+and exits 1 if a sheet overflows. Pages the renderer marks `.page.dense` (the two composite pages
+whose real 10/09 volume exceeds the mock's screen type scale) tighten row metrics in print only;
+no row, name or value is ever dropped or truncated to make a sheet fit.
 
 Fresh-machine setup: `npm install && npm run db:setup`, then
 `NODE_ENV=test npm run db:migrate && NODE_ENV=test npm run db:seed` for the test DB,

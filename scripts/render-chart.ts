@@ -37,7 +37,10 @@ try {
   const outDir = path.join(root, ".tmp-preview");
   fs.mkdirSync(outDir, { recursive: true });
   const outFile = path.join(outDir, `chart-${dateArg}${useSnapshot ? "-snapshot" : ""}.html`);
-  fs.writeFileSync(outFile, html.replace("__CSS_HREF__", "../design/compv3.css"), "utf8");
+  fs.writeFileSync(outFile, html
+    .replace("__CSS_HREF__", "../design/compv3.css")
+    .replace("__AUTH_CSS_HREF__", "../web/authoring.css")
+    .replace("__AUTH_JS_SRC__", "../web/chart-authoring.js"), "utf8");
   console.log(`✔ rendered ${dateArg} (${useSnapshot ? "snapshot" : "projection"}): rows ${stats.rowsRendered}/${stats.rowsTotal} → ${path.relative(root, outFile)}`);
 } finally {
   await pool.end();

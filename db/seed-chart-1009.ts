@@ -94,10 +94,13 @@ async function emitColumn(
       const bima = f.includes("bima");
       const w = f.find((x) => x.startsWith("w="))?.slice(2);
       const [st, en] = w ? w.split("-") : [null, null];
+      // The source cell's 3rd element is the chart's ROLE column (रायटर / ऑपरेटर /
+      // (तपास)…) — typed into role_mr so the renderer can use it as the row label the
+      // source prints, instead of echoing it after the name. Display only, never parsed.
       await pool.query(
         `INSERT INTO daily_assignments
            (chart_id, shift, duty_id, duty_title_mr, staff_id, allocation_state, is_bima,
-            start_time, end_time, sort_order, column_no, notes_mr)
+            start_time, end_time, sort_order, column_no, role_mr)
          VALUES ($1,$2,$3,$4,$5,'ALLOCATED',$6,$7,$8,$9,$10,$11)`,
         [chartId, shift, ctx.dutyId, ctx.dutyId ? null : ctx.title, staffId, bima,
          st, en, order, col, note ?? null],
@@ -232,7 +235,7 @@ const DAY3: Cell[] = [
   { p: ["PC", "1644"] },
   { p: ["PC", "2312"] },
   { t: "Dial 112 MERS set" },
-  { d: "महिला कक्ष" },
+  { d: "महिला कक्ष", code: "DAY_WOMEN_DESK" },
   { d: "वायरलेस महिला अंमलदार" },
   { d: "काळाराम मंदीर गार्ड ड्युटी", code: "DAY_KALARAM" },
   { p: ["ASI", "दत्तु बुधाजी शेळके"] },

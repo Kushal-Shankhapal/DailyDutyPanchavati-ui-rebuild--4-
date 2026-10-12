@@ -16,9 +16,16 @@ export type Queryable = pg.Pool | pg.PoolClient;
 // ---- embedded master values (render-ready; snapshot never needs a live FK join) ----
 export interface DocPerson {
   staffId: number;
-  nameMr: string;
+  nameMr: string;              // FULL name (staff master / Staff_Info docx — never shortened in storage)
   rankCode: string;            // protected token (PI, PC, ...) — never translated
   rankShortFormMr: string | null;
+  /** Rank cadre from ranks master — display-derivation input for the compact chart name
+   *  form (OFFICER cadre → given+surname, name-keyed constabulary → surname). Optional:
+   *  snapshots taken before this field may not carry it. */
+  cadre?: string | null;
+  /** Full rank name without the "(short)" suffix — verified from ranks master (tooltip full form).
+   *  Optional: snapshots taken before this field existed may not carry it. */
+  rankNameMr?: string | null;
   buckleNo: string | null;
 }
 export interface DocLocation {
@@ -36,6 +43,11 @@ export interface DocAssignment {
   sortOrder: number;
   dutyCode: string | null;
   dutyTitleMr: string | null;  // row label when present, else duty_definitions.title_mr
+  /** TRUE when this labelled row's text comes from the duty DEFINITION (a post head the
+   *  seed created with a duty_code), FALSE when the label is source cell text carried on
+   *  the row (continuation labels like बंद/चार्ज/एम.टी.सेक्षन). Structure signal only —
+   *  never derived from text matching. */
+  labelFromDuty?: boolean;
   location: DocLocation | null;
   unit: DocUnit | null;
   person: DocPerson | null;
@@ -46,6 +58,10 @@ export interface DocAssignment {
   startTime: string | null;    // HH:MM:SS (typed split windows)
   endTime: string | null;
   notesMr: string | null;      // display only — never parsed
+  /** Source chart's ROLE column for this row (रायटर / ऑपरेटर / (तपास) …) — the label the
+   *  source prints in the row's left cell. Display only, never parsed. Optional: snapshots
+   *  taken before the role column existed may not carry it. */
+  roleMr?: string | null;
 }
 
 export interface DocLocationState {
@@ -160,6 +176,14 @@ export function resolveNode(doc: ChartDocument, nodeId: string): Record<string, 
 }
 
 // ---- projection ------------------------------------------------------------------
+// Rank full form: master stores "वरिष्ठ पोलीस निरीक्षक (वपोनि)" — tooltip shows the part
+// before the verified short-form suffix. Display derivation only; masters never mutated.
+function rankFullName(full: string | null): string | null {
+  if (!full) return null;
+  const stripped = full.replace(/\s*\([^)]*\)\s*$/, "").trim();
+  return stripped || null;
+}
+
 function personOf(r: Record<string, unknown>): DocPerson | null {
   if (r.staff_id == null) return null;
   return {
@@ -167,6 +191,8 @@ function personOf(r: Record<string, unknown>): DocPerson | null {
     nameMr: r.staff_name as string,
     rankCode: r.rank_code as string,
     rankShortFormMr: (r.rank_short as string | null) ?? null,
+    rankNameMr: rankFullName((r.rank_name as string | null) ?? null),
+    cadre: (r.rank_cadre as string | null) ?? null,
     buckleNo: (r.buckle_no as string | null) ?? null,
   };
 }
@@ -197,11 +223,11 @@ export async function projectChart(db: Queryable, chartId: number): Promise<Char
             d.duty_code, d.title_mr AS duty_def_title, a.duty_title_mr,
             a.location_id AS loc_id, l.location_code AS loc_code, l.name_mr AS loc_name, l.kind AS loc_kind,
             a.unit_code, u.name_mr AS unit_name,
-            a.staff_id, s.name_mr AS staff_name, s.rank_code, r.short_form_mr AS rank_short, s.buckle_no,
+            a.staff_id, s.name_mr AS staff_name, s.rank_code, r.short_form_mr AS rank_short, r.name_mr AS rank_name, r.cadre AS rank_cadre, s.buckle_no,
             a.allocation_state, a.is_bima, a.status, a.source,
             to_char(a.start_time,'HH24:MI:SS') AS start_time,
             to_char(a.end_time,'HH24:MI:SS') AS end_time,
-            a.notes_mr
+            a.notes_mr, a.role_mr
        FROM daily_assignments a
        LEFT JOIN duty_definitions d ON d.duty_id = a.duty_id
        LEFT JOIN locations l ON l.location_id = a.location_id
@@ -217,6 +243,7 @@ export async function projectChart(db: Queryable, chartId: number): Promise<Char
     sortOrder: Number(r.sort_order),
     dutyCode: (r.duty_code as string | null) ?? null,
     dutyTitleMr: (r.duty_title_mr as string | null) ?? (r.duty_def_title as string | null) ?? null,
+    labelFromDuty: r.duty_title_mr == null && r.duty_code != null,
     location: r.loc_id == null ? null : locOf(r),
     unit: r.unit_code == null ? null : { unitCode: r.unit_code as string, nameMr: r.unit_name as string },
     person: personOf(r),
@@ -227,6 +254,7 @@ export async function projectChart(db: Queryable, chartId: number): Promise<Char
     startTime: (r.start_time as string | null) ?? null,
     endTime: (r.end_time as string | null) ?? null,
     notesMr: (r.notes_mr as string | null) ?? null,
+    roleMr: (r.role_mr as string | null) ?? null,
   }));
 
   const locationStates = (await db.query(
@@ -248,7 +276,7 @@ export async function projectChart(db: Queryable, chartId: number): Promise<Char
 
   const availability = (await db.query(
     `SELECT a.sort_order, a.group_key, a.category,
-            a.staff_id, s.name_mr AS staff_name, s.rank_code, r.short_form_mr AS rank_short, s.buckle_no,
+            a.staff_id, s.name_mr AS staff_name, s.rank_code, r.short_form_mr AS rank_short, r.name_mr AS rank_name, r.cadre AS rank_cadre, s.buckle_no,
             to_char(a.window_start,'YYYY-MM-DD') AS window_start,
             to_char(a.window_end,'YYYY-MM-DD') AS window_end,
             to_char(a.time_start,'HH24:MI:SS') AS time_start,
@@ -319,7 +347,7 @@ export async function projectChart(db: Queryable, chartId: number): Promise<Char
             to_char(d.start_time,'HH24:MI:SS') AS start_time,
             to_char(d.end_time,'HH24:MI:SS') AS end_time,
             d.note_mr,
-            d.staff_id, s.name_mr AS staff_name, s.rank_code, r.short_form_mr AS rank_short, s.buckle_no,
+            d.staff_id, s.name_mr AS staff_name, s.rank_code, r.short_form_mr AS rank_short, r.name_mr AS rank_name, r.cadre AS rank_cadre, s.buckle_no,
             cl.location_id AS loc_id, cl.location_code AS loc_code, cl.name_mr AS loc_name, cl.kind AS loc_kind
        FROM scan_schedule_daily d
        LEFT JOIN staff_members s ON s.staff_id = d.staff_id
@@ -340,8 +368,8 @@ export async function projectChart(db: Queryable, chartId: number): Promise<Char
 
   const suddenChanges = (await db.query(
     `SELECT c.seq, c.detail_mr, c.note_mr, c.created_at,
-            o.staff_id AS o_id, o.name_mr AS o_name, o.rank_code AS o_rank, ro.short_form_mr AS o_short, o.buckle_no AS o_buckle,
-            n.staff_id AS n_id, n.name_mr AS n_name, n.rank_code AS n_rank, rn.short_form_mr AS n_short, n.buckle_no AS n_buckle
+            o.staff_id AS o_id, o.name_mr AS o_name, o.rank_code AS o_rank, ro.short_form_mr AS o_short, ro.name_mr AS o_rankname, ro.cadre AS o_cadre, o.buckle_no AS o_buckle,
+            n.staff_id AS n_id, n.name_mr AS n_name, n.rank_code AS n_rank, rn.short_form_mr AS n_short, rn.name_mr AS n_rankname, rn.cadre AS n_cadre, n.buckle_no AS n_buckle
        FROM sudden_duty_changes c
        LEFT JOIN staff_members o ON o.staff_id = c.original_staff_id
        LEFT JOIN ranks ro ON ro.rank_code = o.rank_code
@@ -352,11 +380,17 @@ export async function projectChart(db: Queryable, chartId: number): Promise<Char
       seq: Number(r.seq),
       original: r.o_id == null ? null : {
         staffId: Number(r.o_id), nameMr: r.o_name as string, rankCode: r.o_rank as string,
-        rankShortFormMr: (r.o_short as string | null) ?? null, buckleNo: (r.o_buckle as string | null) ?? null,
+        rankShortFormMr: (r.o_short as string | null) ?? null,
+        rankNameMr: rankFullName((r.o_rankname as string | null) ?? null),
+        cadre: (r.o_cadre as string | null) ?? null,
+        buckleNo: (r.o_buckle as string | null) ?? null,
       },
       replacement: r.n_id == null ? null : {
         staffId: Number(r.n_id), nameMr: r.n_name as string, rankCode: r.n_rank as string,
-        rankShortFormMr: (r.n_short as string | null) ?? null, buckleNo: (r.n_buckle as string | null) ?? null,
+        rankShortFormMr: (r.n_short as string | null) ?? null,
+        rankNameMr: rankFullName((r.n_rankname as string | null) ?? null),
+        cadre: (r.n_cadre as string | null) ?? null,
+        buckleNo: (r.n_buckle as string | null) ?? null,
       },
       detailMr: r.detail_mr as string,
       noteMr: (r.note_mr as string | null) ?? null,
@@ -371,7 +405,7 @@ export async function projectChart(db: Queryable, chartId: number): Promise<Char
   for (const e of eventRows) {
     const eas = (await db.query(
       `SELECT ea.staff_id, ea.role_mr, ea.sort_order,
-              s.name_mr AS staff_name, s.rank_code, r.short_form_mr AS rank_short, s.buckle_no
+              s.name_mr AS staff_name, s.rank_code, r.short_form_mr AS rank_short, r.name_mr AS rank_name, r.cadre AS rank_cadre, s.buckle_no
          FROM event_assignments ea
          LEFT JOIN staff_members s ON s.staff_id = ea.staff_id
          LEFT JOIN ranks r ON r.rank_code = s.rank_code

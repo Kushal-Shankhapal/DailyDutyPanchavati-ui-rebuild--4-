@@ -1,7 +1,7 @@
 <!--
 Purpose: Traceability map: source evidence → requirement → implementation → verification.
 Current role: Coverage ledger; grows with each implemented slice.
-Last meaningful change: 2026-10-08 — P0 columns filled; P1 slice 1 added ChartDocument projection + snapshot verification to R-13.
+Last meaningful change: 2026-10-12 — authoring/chrome round added (editable names, अधिकारी box, header/date, pseudo-login); R-18 officer button now enabled (feature finished).
 Constraint/dependency: Implementation/Test columns stay honest — "—" until code exists; never pre-ticked.
 -->
 
@@ -56,3 +56,32 @@ Status legend: ⬜ requirement recorded · 🔨 implemented · ✅ verified (tes
 ## Old-invariant carryover
 
 The 12 old INV rules (old repo `docs/decisions/INVARIANTS.md`) are carried into ARCHITECTURE §"Invariants" (renumbered 1–12 there); their old verification mechanisms (DB CHECKs, static scanner, DB tests, snapshot-replay test) are reused per-slice as implementation lands.
+
+## Renderer fidelity pass (2026-10-11, work unit 1010)
+
+| Req | Requirement | Evidence | Implementation | Test |
+|---|---|---|---|---|
+| R-16 | Compact print readable; sections match the approved mock; Marathi never truncated | EV-06/07 + `design/panchavati-compv3.html` | `server/render/chart-html.ts` (page 1 officer band `.sr-pi-card`+`.g-off`, page 2 one block per post, page 3 leave/court sections, page 5 session+scan `.two`) | 🔨 `tests/render-fidelity.test.ts` (10 tests) — structure, no stray blocks, no officer duplication, section presence |
+| R-17 | Marathi-first display; protected tokens; role labels from the source | EV-06 | `chartName()` compact chart names + `roleMr` row labels (migration 0008) + `disp()`/`raw()` scoping | 🔨 `render.test.ts` (protected tokens), `render-fidelity.test.ts` (compact names, `>रायटर</th>`), `authoring.test.ts` (abbr tooltips) |
+| R-18 | Unfinished features disabled, never half-built | EV-06 | chowki add-box enabled (working); officer add-box was Coming Soon until its feature shipped 2026-10-12 — it is now enabled AND complete (nothing half-built is exposed) | `authoring.test.ts` (enabled + routed, `not.toContain("Coming Soon")`, no inline handlers) |
+| — | No information loss on the chart (`रिक्त` ≠ `बंद` ≠ `बिमा`) | EV-02/03 | renderer no-loss accounting: every assignment row counted exactly once — continuation labels absorb into the typed `.fx` state line only when that line exists | 🔨 `render.test.ts` (212/212), `scripts/render-chart.ts` fails loud on any mismatch |
+
+## Renderer fidelity rounds 2–3 (2026-10-12, work unit 1010)
+
+| Req | Requirement | Evidence | Implementation | Test |
+|---|---|---|---|---|
+| R-16a | Page 2 shows the mock's six-chowki band; each beat-marshal post prints inside its paired chowki (own typed बंद/चार्ज state preserved) | `design/panchavati-compv3.html` page 2; `reference/SEMANTIC/10.md` col 3 | `foldMarshalPosts()` + `layout.marshalPostForChowki` (reference seed) + `stateFx(..., marshal)` `.fx.mrsh` line | 🔨 `tests/render-fidelity.test.ts` (6 chowki heads, `मार्शल:` `.fx` lines, no marshal block) + `render.test.ts` no-loss 212/212 |
+| R-16b | Desk posts (मोबाईल / सायबर सेल / महिला कक्ष / काळाराम) print as role groups in page 1's special desk, never as page-2 blocks | mock page 1 `कोर्ट, समन्स, वॉरंट व विशेष कक्ष`; `reference/SEMANTIC/10.md` col 3 | `walkBlocks()` desk-post branch + `specialDeskRows()` + `layout.specialDeskLocationKinds` (FIXED_POINT) | 🔨 `render-fidelity.test.ts` (no special leaks as a block; desk carries each title, dual shifts carry दिवसपाळी/रात्रपाळी) |
+| R-17a | Authoritative spelling for काळाराम (long ी) — Excel reconstruction + SEMANTIC agree against the seed's short ि | `reference/EXCEL_RECONSTRUCTION/10th_sept_daily_duty_chart_page_1/HTML/.../sheet001.htm` (codepoints 092E 0902 0926 0940 0930); `reference/SEMANTIC/10.md:37,87` | `db/seed/0001_reference_data.sql` location `FIXED_KALARAM` + `DAY_KALARAM`/`NIGHT_KALARAM` titles (idempotent `ON CONFLICT DO UPDATE`) | 🔨 `render-fidelity.test.ts` asserts the desk label; doctor seed-count sanity |
+| R-19 | Print pagination: one `.page` = one A4 sheet, no spilled content | mock pages all 794px; `reference/ORIGINAL_VISUAL/10.pdf` = 6 sheets | `web/authoring.css` print-density block (`.page.dense`, row metrics only — nothing dropped/truncated) + notices on their own sheet; renderer marks pages 1 and 3 `dense` | 🔨 `npm run print:audit` (headless Chrome print media: all 6 sheets ≤ 775px) + `chrome --print-to-pdf` = 6 pages; `render.test.ts` (6 boxes, 2 dense, notices sheet) |
+
+## Authoring + chrome round (2026-10-12, user asks from the 10/12 message)
+
+| Req | Requirement (user words) | Evidence | Implementation | Test / verification |
+|---|---|---|---|---|
+| R-20a | "everything should end in its line, no overflow — same for all chowki boxes" | user screenshot (wrapped stray time chip, duplicate in-charge) | renderer prints the in-charge ONCE in `.ch-head .of`; `stateFx` splits `.st` (nowrap) + `.dst` (wraps); `web/authoring.css` `.fx/.dt text-wrap:pretty` | 🔨 `render-fidelity.test.ts` (in-charge once per block, state spans) + measured in browser: 1–2 balanced lines, zero spill |
+| R-20b | edit mode must not flicker/reflow on hover — "just the dotted hover box" | user report (hover `::after` ✎ re-flowed cells) | slot hover no longer injects content; `[data-label]:hover` = outline + tint only | 🔨 browser: `::after.content === 'none'`, geometry stable; authoring.css has no hover `content:` on slots/labels |
+| R-20c | "my header and date selector from arjish repo" (Arjish AppNav) | `<ws>/DailyDutyPanchavati-ui-rebuild/src/web/components/AppNav.tsx` (user-named path, in-project) | `#appbar` markup in `chart-html.ts` + styles in `authoring.css` + `initDateMenu()`; `GET /api/charts` (`chart_date::text`); `web/assets/Police_Logo.png` route | 🔨 browser: bar 56px sticky, dropdown lists dates, click navigates; `print:audit` unaffected (`.no-print`) |
+| R-20d | pseudo-login: choose name/rank/buckle (buckle only where applicable); top-right shows "लॉगिन: …" | user; sign-off line तक्ता तयार करणारे हजेरी लेखनिक; `ranks.cadre` | `localStorage['pd_clerk']` + `#ab-user` chip + `openLogin()` (chart candidates + form; buckle only for CONSTABULARY) | 🔨 browser: chip renders/persists, buckle hidden for OFFICER ranks; no server call, no schema change |
+| R-20e | "make every table, chart or column name, left rows name editable … for that version of the chart" (both scopes) | user | `makeNames()` → `data-label`/`data-default`/`data-override` on 185 elements; `presentation_overrides.labels`/`labelsAll`; `PATCH /api/charts/:date/labels` (409 FINALIZED); rename flyer | 🔨 `authoring.test.ts` (key coverage + `override resolution: element > text > default` + no-loss unchanged) + browser E2E both scopes + blank revert |
+| R-20f | "add the ability to add adhikari box, just like the chowki box" | user; officer-box grammar in `design/panchavati-compv3.html` + seed writer rows | `addOfficerBox()` (override entry + ONE रिक्त writer seat = the label row, DAY col 4) + `POST /api/charts/:date/officer` + enabled button/flyer + office-walk fill fix | 🔨 `authoring.test.ts` (`addOfficerBox domain`, rollback, dup/blank refused) + browser E2E: add → fill → person renders in ITS box; dev DB restored to 212/`{}` |

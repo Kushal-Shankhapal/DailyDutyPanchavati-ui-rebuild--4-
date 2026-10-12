@@ -8,6 +8,8 @@
     "node": ">=20"
   },
   "scripts": {
+    "dev": "tsx watch server/index.ts",
+    "start": "tsx server/index.ts",
     "db:create": "node scripts/create-dbs.mjs",
     "db:migrate": "tsx db/migrate.ts",
     "db:seed:reference": "tsx db/seed-reference.ts",
@@ -18,6 +20,7 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "doctor": "node scripts/doctor.mjs",
+    "print:audit": "node tools/print-audit.mjs",
     "verify": "npm run typecheck && npm test && npm run doctor",
     "check": "npm run verify"
   },
