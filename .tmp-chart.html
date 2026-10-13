@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>पंचवटी दैनिक कर्तव्य तक्ता — 2026-09-10</title>
+<link rel="stylesheet" href="/design/compv3.css">
+<link rel="stylesheet" href="/authoring.css">
+<link rel="stylesheet" href="/chart-presentation.css">
+</head>
+<body data-chart-date="2026-09-10" data-lifecycle="DRAFT">
+
+<div class="toolbar no-print" id="appbar">
+  <div class="ab-l">
+    <img class="ab-logo" src="/assets/police-logo.png" alt="महाराष्ट्र पोलीस" width="34" height="34">
+    <div class="ab-st">
+      <b><span data-lang="mr">पंचवटी पोलीस ठाणे</span><span data-lang="en">Panchavati Police Station</span></b>
+      <span><span data-lang="mr">नाशिक शहर</span><span data-lang="en">Nashik City</span></span>
+    </div>
+    <nav class="ab-nav" aria-label="मुख्य नेव्हिगेशन">
+      <div class="ab-group">
+        <button type="button" class="ab-gbtn active" aria-expanded="false"><span data-lang="mr">दैनिक कर्तव्य तक्ते</span><span data-lang="en">Daily Duty Charts</span><span class="cv">▾</span></button>
+        <div class="ab-menu" role="menu">
+          <a role="menuitem" href="#sheet-1"><span data-lang="mr">पृष्ठ १ — दैनिक कर्तव्य तक्ता</span><span data-lang="en">Sheet 1 — Daily duty chart</span></a>
+          <a role="menuitem" href="#sheet-2"><span data-lang="mr">पृष्ठ २ — चौक्या, गस्त व स्कॅनिंग</span><span data-lang="en">Sheet 2 — Chowkis, patrol &amp; scanning</span></a>
+          <a role="menuitem" href="#sheet-3"><span data-lang="mr">पृष्ठ ३ — कोर्ट, समन्स व विशेष कक्ष</span><span data-lang="en">Sheet 3 — Court, summons &amp; special desks</span></a>
+          <a role="menuitem" href="#sheet-4"><span data-lang="mr">पृष्ठ ४ — रजा व इतर ड्युटी</span><span data-lang="en">Sheet 4 — Leave &amp; other duties</span></a>
+          <a role="menuitem" href="#sheet-5"><span data-lang="mr">पृष्ठ ५ — सूचना व अधिकारी सारांश</span><span data-lang="en">Sheet 5 — Notices &amp; officer summary</span></a>
+          <a role="menuitem" href="#sheet-6"><span data-lang="mr">पृष्ठ ६ — मनुष्यबळ व सारांश</span><span data-lang="en">Sheet 6 — Manpower &amp; summary</span></a>
+          <a role="menuitem" class="ab-live" href="/charts/2026-09-10"><span data-lang="mr">संपूर्ण तक्ता (सर्व पृष्ठे)</span><span data-lang="en">Full chart (all sheets)</span></a>
+        </div>
+      </div>
+      <div class="ab-group">
+        <button type="button" class="ab-gbtn" aria-expanded="false"><span data-lang="mr">कार्यवाही</span><span data-lang="en">Operations</span><small class="wip">WIP</small><span class="cv">▾</span></button>
+        <div class="ab-menu" role="menu">
+          <a role="menuitem" href="#" data-wip="कार्यकारी डॅशबोर्ड"><span data-lang="mr">कार्यकारी डॅशबोर्ड</span><span data-lang="en">Executive dashboard</span><small>WIP</small></a>
+          <a role="menuitem" href="#" data-wip="कर्तव्य फलक"><span data-lang="mr">कर्तव्य फलक (दिवसनिहाय)</span><span data-lang="en">Duty board (day-wise)</span><small>WIP</small></a>
+          <a role="menuitem" href="#" data-wip="बंदोबस्त व विशेष मोहीम"><span data-lang="mr">बंदोबस्त व विशेष मोहीम</span><span data-lang="en">Bandobast &amp; special operations</span><small>Coming Soon</small></a>
+          <a role="menuitem" href="#" data-wip="ऐतिहासिक शोध"><span data-lang="mr">ऐतिहासिक शोध</span><span data-lang="en">Historical search</span><small>Coming Soon</small></a>
+          <a role="menuitem" href="#" data-wip="इव्हेंट अ‍ॅनेक्स"><span data-lang="mr">इव्हेंट अ‍ॅनेक्स</span><span data-lang="en">Event annex</span><small>Coming Soon</small></a>
+        </div>
+      </div>
+      <div class="ab-group">
+        <button type="button" class="ab-gbtn" aria-expanded="false"><span data-lang="mr">डेटा</span><span data-lang="en">Data</span><small class="wip">WIP</small><span class="cv">▾</span></button>
+        <div class="ab-menu" role="menu">
+          <a role="menuitem" href="#" data-wip="मास्टर डेटा"><span data-lang="mr">मास्टर डेटा (कर्मचारी, चौक्या, हुद्दे)</span><span data-lang="en">Master data (staff, chowkis, duties)</span><small>WIP</small></a>
+          <a role="menuitem" href="#" data-wip="दस्तऐवज आयात / OCR"><span data-lang="mr">दस्तऐवज आयात / OCR</span><span data-lang="en">Document import / OCR</span><small>Coming Soon</small></a>
+          <a role="menuitem" href="#" data-wip="प्रतवारी (11/09 पासून)"><span data-lang="mr">जुने तक्ते प्रतवारी (११/०९ पासून)</span><span data-lang="en">Older charts comparison (from 11/09)</span><small>Coming Soon</small></a>
+          <a role="menuitem" href="#" data-wip="अहवाल व निर्यात"><span data-lang="mr">अहवाल व PDF निर्यात</span><span data-lang="en">Reports &amp; PDF export</span><small>Coming Soon</small></a>
+        </div>
+      </div>
+      <div class="ab-group">
+        <button type="button" class="ab-gbtn" aria-expanded="false"><span data-lang="mr">समाकलन</span><span data-lang="en">Integrations</span><small class="wip">WIP</small><span class="cv">▾</span></button>
+        <div class="ab-menu" role="menu">
+          <a role="menuitem" href="#" data-wip="WhatsApp अलर्ट"><span data-lang="mr">WhatsApp वर तक्ता पाठवा</span><span data-lang="en">Send chart on WhatsApp</span><small>Coming Soon</small></a>
+          <a role="menuitem" href="#" data-wip="Telegram अलर्ट"><span data-lang="mr">Telegram अलर्ट</span><span data-lang="en">Telegram alerts</span><small>Coming Soon</small></a>
+          <a role="menuitem" href="#" data-wip="बहु-ठाणे"><span data-lang="mr">इतर ठाणी (बहु-ठाणे)</span><span data-lang="en">Other stations (multi-station)</span><small>Coming Soon</small></a>
+          <a role="menuitem" href="#" data-wip="टेम्पलेट बिल्डर"><span data-lang="mr">तक्ता टेम्पलेट बिल्डर</span><span data-lang="en">Chart template builder</span><small>Coming Soon</small></a>
+        </div>
+      </div>
+    </nav>
+  </div>
+  <div class="ab-r">
+    <div class="ab-lang" role="group" aria-label="भाषा निवड">
+      <button type="button" data-lang-set="mr">मराठी</button>
+      <button type="button" data-lang-set="en">EN</button>
+    </div>
+    <button type="button" class="ab-user" id="ab-user" title="तक्ता तयार करणारे हजेरी लेखनिक">लॉगिन</button>
+  </div>
+</div>
+
+<div class="chart-toolbar no-print">
+  <div class="ct-title"><span><span data-lang="mr">पंचवटी दैनिक कर्तव्य तक्ता</span><span data-lang="en">Panchavati daily duty chart</span></span><strong>१०/०९/२०२६, गुरुवार</strong></div>
+  <div class="ct-actions">
+    <div class="ab-datewrap">
+      <button type="button" class="ab-datebtn" id="date-btn" aria-haspopup="listbox" aria-expanded="false" title="तारीख निवडा">
+        <span class="d">१०/०९/२०२६</span><span class="w">गुरुवार</span><span class="cv">▾</span>
+      </button>
+      <div class="ab-datemenu" id="date-menu" role="listbox" hidden></div>
+    </div>
+    <span class="lc lc-draft"><span data-lang="mr">मसुदा</span><span data-lang="en">DRAFT</span></span>
+    <button id="mode-btn">संपादन</button><button id="finalize-btn" class="finalize">अंतिम करा</button>
+    <button class="print" onclick="window.print()">प्रिंट</button>
+  </div>
+</div>
+
+<div class="page dense command" id="sheet-1">
+  <div class="head">
+    <div class="hc">
+      <div class="h1" data-label="head.h1" data-default="नाशिक शहर पोलीस आयुक्तालय" data-presentation="head.h1" data-presentation-kind="label">नाशिक शहर पोलीस आयुक्तालय</div>
+      <div class="h2" data-label="head.h2" data-default="दैनिक कर्तव्य वाटप" data-presentation="head.h2" data-presentation-kind="label">दैनिक कर्तव्य वाटप</div>
+      <div class="h3">१० सप्टेंबर २०२६, गुरुवार</div>
+    </div>
+    <div class="hr"><span class="lc lc-draft">DRAFT</span></div>
+  </div>
+  <div class="sr-pi-card">
+    <div class="sr-pi-header">
+      <div class="sr-pi-title"><span class="rk"><abbr class="abbr" data-full="वरिष्ठ पोलीस निरीक्षक" aria-label="वरिष्ठ पोलीस निरीक्षक" tabindex="0">वपोनि</abbr>:</span> <span class="nm">गजेंद्र पाटील</span></div>
+      <span class="chip c-sr">ठाणे प्रमुख</span>
+    </div>
+    <div class="sr-pi-body">
+       <div class="grp" data-presentation="support.srpi.writer" data-presentation-kind="support">
+         <span class="lb">रायटर:</span>
+         <div class="ln"><span><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> १३४७ जाधव</span></div>
+       </div>
+       <div class="grp" data-presentation="support.srpi.driver" data-presentation-kind="support">
+         <span class="lb">चालक:</span>
+         <div class="ln"><span class="k">दिवस:</span><span class="blank"></span></div>
+         <div class="ln"><span class="k">रात्र:</span><span class="blank"></span></div>
+       </div>
+       <div class="grp" data-presentation="support.srpi.rtpc" data-presentation-kind="support">
+         <span class="lb">RTPC:</span>
+         <div class="ln"><span class="k">दिवस:</span><span class="blank"></span></div>
+         <div class="ln"><span class="k">रात्र:</span><span class="blank"></span></div>
+       </div>
+       <div class="grp presentation-support-empty" aria-hidden="true" data-presentation="support.srpi.operator" data-presentation-kind="support"></div>
+    </div>
+  </div>
+<div class="grid g-off fit">
+    <div class="blk">
+       <div class="bh"><div class="nm"><abbr class="abbr" data-full="पोलीस निरीक्षक" aria-label="पोलीस निरीक्षक" tabindex="0">पोनि</abbr> सुनिल पवार</div><span class="chip c-off" data-label="box.तपास" data-default="तपास" data-presentation="box.तपास" data-presentation-kind="label">तपास</span></div>
+      <div class="body"><table class="dt"><tbody>
+        <tr class="g"><th class="role" data-label="box.तपास.role" data-default="रायटर" data-presentation="box.तपास.role" data-presentation-kind="label">रायटर</th><td class="slot" data-asn="529" data-shift="DAY"><span class="chip c-vac">रिक्त</span></td></tr>
+      </tbody></table></div>
+    </div>
+    <div class="blk">
+       <div class="bh"><div class="nm"><abbr class="abbr" data-full="पोलीस निरीक्षक" aria-label="पोलीस निरीक्षक" tabindex="0">पोनि</abbr> नितीन आंधळे</div><span class="chip c-off" data-label="box.प्रषा" data-default="प्रषा" data-presentation="box.प्रषा" data-presentation-kind="label">प्रषा</span></div>
+      <div class="body"><table class="dt"><tbody>
+        <tr class="g"><th class="role" data-label="box.प्रषा.role" data-default="रायटर" data-presentation="box.प्रषा.role" data-presentation-kind="label">रायटर</th><td class="slot" data-asn="528" data-shift="DAY" data-staff="17"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> ९३६ अहिरराव</td></tr>
+      </tbody></table></div>
+    </div>
+    <div class="blk">
+       <div class="bh"><div class="nm"><abbr class="abbr" data-full="पोलीस निरीक्षक" aria-label="पोलीस निरीक्षक" tabindex="0">पोनि</abbr> सुधीर पाटील</div><span class="chip c-off" data-label="box.गुन्हे" data-default="गुन्हे" data-presentation="box.गुन्हे" data-presentation-kind="label">गुन्हे</span></div>
+      <div class="body"><table class="dt"><tbody>
+        <tr class="g"><th class="role" data-label="box.गुन्हे.role" data-default="रायटर" data-presentation="box.गुन्हे.role" data-presentation-kind="label">रायटर</th><td class="slot" data-asn="526" data-shift="DAY" data-staff="100"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २३५७ साबळे</td></tr>
+      </tbody></table></div>
+    </div>
+    <div class="blk">
+       <div class="bh"><div class="nm" data-label="box.विशेष.nm" data-default="विशेष तपास पथक" data-presentation="box.विशेष.nm" data-presentation-kind="section">विशेष तपास पथक</div><span class="chip c-off" data-label="box.विशेष" data-default="विशेष" data-presentation="box.विशेष" data-presentation-kind="label">विशेष</span></div>
+      <div class="body"><table class="dt"><tbody>
+        <tr class="g"><th class="role" data-label="box.विशेष.role" data-default="रायटर" data-presentation="box.विशेष.role" data-presentation-kind="label">रायटर</th><td><span class="blank"></span></td></tr>
+      </tbody></table></div>
+    </div>
+    <button type="button" class="add-box add-box-tile" data-add="officer" title="नवीन अधिकारी बॉक्स जोडा (संपादन मोड)">+ अधिकारी बॉक्स</button>
+  </div>
+<div class="grid g-core">
+      <div class="blk core">
+      <div class="bh"><div class="nm" data-label="p1.desk.day" data-default="दिवस पाळी कर्तव्य" data-presentation="p1.desk.day" data-presentation-kind="section">दिवस पाळी कर्तव्य</div><span class="win">वेळ: ०९:०० ते २१:००</span></div>
+      <div class="body"><table class="dt"><tbody>
+<tr class="g"><th class="role" rowspan="1" data-label="grp.430" data-default="ठाणे अंमलदार कक्ष देखरेख" data-presentation="grp.430" data-presentation-kind="label">ठाणे अंमलदार कक्ष देखरेख</th><td class="slot" data-asn="431" data-shift="DAY" data-staff="147"><abbr class="abbr" data-full="पोलीस निरीक्षक" aria-label="पोलीस निरीक्षक" tabindex="0">पोनि</abbr> सुनिल पवार</td></tr>
+<tr class="g"><th class="role" rowspan="1" data-label="grp.432" data-default="(पंचवटी पो.स्टे.)" data-presentation="grp.432" data-presentation-kind="label">(पंचवटी पो.स्टे.)</th><td class="slot" data-asn="433" data-shift="DAY" data-staff="158"><abbr class="abbr" data-full="परिविक्षाधीन महिला पोलीस उपनिरीक्षक" aria-label="परिविक्षाधीन महिला पोलीस उपनिरीक्षक" tabindex="0">परि.मपोउनि</abbr> अर्चना वाघ</td></tr>
+<tr class="g"><th class="role" rowspan="1" data-label="grp.434" data-default="ठाणे अंमलदार" data-presentation="grp.434" data-presentation-kind="label">ठाणे अंमलदार</th><td class="slot" data-asn="435" data-shift="DAY" data-staff="27"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> १४५२ लांडे</td></tr>
+<tr class="g"><th class="role" rowspan="1" data-label="grp.436" data-default="हजरपाळी" data-presentation="grp.436" data-presentation-kind="label">हजरपाळी</th><td class="slot" data-asn="437" data-shift="DAY" data-staff="112"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २५७१ देशमुख</td></tr>
+<tr class="g"><th class="role" rowspan="1" data-label="grp.438" data-default="CCTNS" data-presentation="grp.438" data-presentation-kind="label">CCTNS</th><td class="slot" data-asn="439" data-shift="DAY" data-staff="48"><abbr class="abbr" data-full="महिला पोलीस हवालदार" aria-label="महिला पोलीस हवालदार" tabindex="0">मपोहवा</abbr> २०८१ पवार</td></tr>
+<tr class="g"><th class="role" rowspan="1" data-label="grp.440" data-default="वायरलेस" data-presentation="grp.440" data-presentation-kind="label">वायरलेस</th><td class="slot" data-asn="441" data-shift="DAY" data-staff="127"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> १४२१ शेळके</td></tr>
+<tr class="g"><th class="role" rowspan="2" data-label="grp.442" data-default="पिटर मोबाईल" data-presentation="grp.442" data-presentation-kind="label">पिटर मोबाईल</th><td class="slot" data-asn="443" data-shift="DAY" data-staff="68"><abbr class="abbr" data-full="चालक पोलीस शिपाई" aria-label="चालक पोलीस शिपाई" tabindex="0">चापोशि</abbr> १२४३ महाले</td></tr>
+<tr><td class="slot" data-asn="444" data-shift="DAY" data-staff="99"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २३५१ निमजे</td></tr>
+<tr class="g"><th class="role" rowspan="1" data-label="grp.445" data-default="सी.आर. मोबाईल" data-presentation="grp.445" data-presentation-kind="label">सी.आर. मोबाईल</th><td class="slot" data-asn="446" data-shift="DAY" data-staff="54"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २९७ जाधव</td></tr>
+<tr class="g"><th class="role" rowspan="2" data-label="grp.447" data-default="डेल्टा मोबाईल" data-presentation="grp.447" data-presentation-kind="label">डेल्टा मोबाईल</th><td class="slot" data-asn="448" data-shift="DAY" data-staff="77"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> १७०९ गडदे</td></tr>
+<tr><td class="slot" data-asn="449" data-shift="DAY" data-staff="121"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> ८५२ दिवाणे</td></tr>
+<tr class="g"><th class="role" rowspan="5" data-label="grp.450" data-default="गुन्हे शोध पथक/DB" data-presentation="grp.450" data-presentation-kind="label">गुन्हे शोध पथक/DB</th><td class="slot" data-asn="451" data-shift="DAY" data-staff="32"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> १८६७ नांदुर्डीकर</td></tr>
+<tr><td class="slot" data-asn="452" data-shift="DAY" data-staff="50"><abbr class="abbr" data-full="पोलीस नाईक" aria-label="पोलीस नाईक" tabindex="0">पोना</abbr> ६०७ लोणारे</td></tr>
+<tr><td class="slot" data-asn="453" data-shift="DAY" data-staff="79"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> १८८१ जाधव</td></tr>
+<tr><td class="slot" data-asn="454" data-shift="DAY" data-staff="88"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २१४४ पवार</td></tr>
+<tr><td class="slot" data-asn="455" data-shift="DAY" data-staff="70"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> १३४५ पाटील</td></tr>
+<tr class="g"><th class="role" rowspan="3" data-label="grp.456" data-default="पो.स्टे. लॉकअप गार्ड" data-presentation="grp.456" data-presentation-kind="label">पो.स्टे. लॉकअप गार्ड</th><td class="slot" data-asn="457" data-shift="DAY" data-staff="167"><abbr class="abbr" data-full="महिला सहाय्यक पोलीस उपनिरीक्षक" aria-label="महिला सहाय्यक पोलीस उपनिरीक्षक" tabindex="0">मसपोउनि</abbr> गावित</td></tr>
+<tr><td class="slot" data-asn="458" data-shift="DAY" data-staff="2"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> २४५ वाघमारे</td></tr>
+<tr><td class="slot" data-asn="459" data-shift="DAY" data-staff="144"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> २८२९ शेलार</td></tr>
+</tbody></table></div>
+    </div>
+      <div class="blk core">
+      <div class="bh"><div class="nm" data-label="p1.desk.night" data-default="रात्र पाळी कर्तव्य" data-presentation="p1.desk.night" data-presentation-kind="section">रात्र पाळी कर्तव्य</div><span class="win">वेळ: २१:०० ते ०९:००</span></div>
+      <div class="body"><table class="dt"><tbody>
+<tr class="g"><th class="role" colspan="2" data-label="grp.560" data-default="(चेकिंग-1 )" data-presentation="grp.560" data-presentation-kind="label">(चेकिंग-१ )</th></tr>
+<tr class="g"><th class="role" rowspan="1" data-label="grp.561" data-default="रात्र गस्त अधिकारी" data-presentation="grp.561" data-presentation-kind="label">रात्र गस्त अधिकारी</th><td class="slot" data-asn="562" data-shift="NIGHT" data-staff="152"><abbr class="abbr" data-full="सहाय्यक पोलीस निरीक्षक" aria-label="सहाय्यक पोलीस निरीक्षक" tabindex="0">सपोनि</abbr> हेमंत मोहिते</td></tr>
+<tr class="g"><th class="role" rowspan="1" data-label="grp.563" data-default="ठाणे अंमलदार" data-presentation="grp.563" data-presentation-kind="label">ठाणे अंमलदार</th><td class="slot" data-asn="564" data-shift="NIGHT" data-staff="163"><abbr class="abbr" data-full="सहाय्यक पोलीस निरीक्षक" aria-label="सहाय्यक पोलीस निरीक्षक" tabindex="0">सपोउनि</abbr> शेवाळे</td></tr>
+<tr class="g"><th class="role" rowspan="2" data-label="grp.565" data-default="हजरपाळी" data-presentation="grp.565" data-presentation-kind="label">हजरपाळी</th><td class="slot" data-asn="566" data-shift="NIGHT" data-staff="71"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> १३५८ भालेराव</td></tr>
+<tr><td class="slot" data-asn="567" data-shift="NIGHT" data-staff="86"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २०८९ कदम</td></tr>
+<tr class="g"><th class="role" rowspan="1" data-label="grp.568" data-default="CCTNS" data-presentation="grp.568" data-presentation-kind="label">CCTNS</th><td class="slot" data-asn="569" data-shift="NIGHT" data-staff="131"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> २१९८ वाळुंज</td></tr>
+<tr class="g"><th class="role" rowspan="1" data-label="grp.570" data-default="वायरलेस" data-presentation="grp.570" data-presentation-kind="label">वायरलेस</th><td class="slot" data-asn="571" data-shift="NIGHT" data-staff="137"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> २६५८ शिंदे</td></tr>
+<tr class="g"><th class="role" rowspan="2" data-label="grp.572" data-default="पिटर मोबाईल" data-presentation="grp.572" data-presentation-kind="label">पिटर मोबाईल</th><td class="slot" data-asn="573" data-shift="NIGHT" data-staff="57"><abbr class="abbr" data-full="चालक पोलीस शिपाई" aria-label="चालक पोलीस शिपाई" tabindex="0">चापोशि</abbr> ४२६ शिकारे</td></tr>
+<tr><td class="slot" data-asn="574" data-shift="NIGHT" data-staff="1"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> ९७ गावित</td></tr>
+<tr class="g"><th class="role" rowspan="3" data-label="grp.575" data-default="सी.आर. मोबाईल" data-presentation="grp.575" data-presentation-kind="label">सी.आर. मोबाईल</th><td class="slot" data-asn="576" data-shift="NIGHT" data-staff="39"><abbr class="abbr" data-full="चालक पोलीस हवालदार" aria-label="चालक पोलीस हवालदार" tabindex="0">चापोहवा</abbr> ९८० मोरे</td></tr>
+<tr><td class="slot" data-asn="577" data-shift="NIGHT" data-staff="83"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २०४७ पाटील</td></tr>
+<tr><td><span class="nil">Dial 112 MERS set</span></td></tr>
+<tr class="g"><th class="role" rowspan="6" data-label="grp.579" data-default="गुन्हे शोध पथक/DB" data-presentation="grp.579" data-presentation-kind="label">गुन्हे शोध पथक/DB</th><td class="slot" data-asn="580" data-shift="NIGHT" data-staff="28"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> १५५८ काळे</td></tr>
+<tr><td class="slot" data-asn="581" data-shift="NIGHT" data-staff="66"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> १०२५ वायकंडे</td></tr>
+<tr><td class="slot" data-asn="582" data-shift="NIGHT" data-staff="64"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> ९७३ आगोणे</td></tr>
+<tr><td class="slot" data-asn="583" data-shift="NIGHT" data-staff="84"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २०६९ चारोस्कर</td></tr>
+<tr><td class="slot" data-asn="584" data-shift="NIGHT" data-staff="61"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> ५९७ चितळकर</td></tr>
+<tr><td class="slot" data-asn="585" data-shift="NIGHT" data-staff="107"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २५१७ घाडगे</td></tr>
+<tr class="g"><th class="role" rowspan="3" data-label="grp.586" data-default="पो.स्टे. लॉकअप गार्ड" data-presentation="grp.586" data-presentation-kind="label">पो.स्टे. लॉकअप गार्ड</th><td class="slot" data-asn="587" data-shift="NIGHT" data-staff="43"><abbr class="abbr" data-full="महिला पोलीस हवालदार" aria-label="महिला पोलीस हवालदार" tabindex="0">मपोहवा</abbr> १७२६ गवळी</td></tr>
+<tr><td class="slot" data-asn="588" data-shift="NIGHT" data-staff="137"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> २६५८ शिंदे</td></tr>
+<tr><td class="slot" data-asn="589" data-shift="NIGHT" data-staff="98"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २३२१ चोरघे</td></tr>
+</tbody></table></div>
+    </div>
+      <div class="blk core">
+      <div class="bh"><div class="nm" data-label="p1.desk.office" data-default="कार्यालयीन शाखा व कारकून" data-presentation="p1.desk.office" data-presentation-kind="section">कार्यालयीन शाखा व कारकून</div></div>
+      <div class="body"><table class="dt"><tbody>
+<tr class="g"><th class="role" colspan="2" data-label="grp.522" data-default="कार्यालयीन अंमलदार" data-presentation="grp.522" data-presentation-kind="label">कार्यालयीन अंमलदार</th></tr>
+<tr class="g"><th class="role" rowspan="1" data-label="grp.523" data-default="व.पो.नि.साो. रायटर" data-presentation="grp.523" data-presentation-kind="label">व.पो.नि.साो. रायटर</th><td class="slot" data-asn="524" data-shift="DAY" data-staff="23"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> १३४७ जाधव</td></tr>
+<tr class="g"><th class="role" data-label="grp.530" data-default="नगदी कारकुन" data-presentation="grp.530" data-presentation-kind="label">नगदी कारकुन</th><td class="slot" data-asn="530" data-shift="DAY"><span class="chip c-vac">रिक्त</span></td></tr>
+<tr class="g"><th class="role" rowspan="1" data-label="grp.531" data-default="मुद्देमाल कारकुन" data-presentation="grp.531" data-presentation-kind="label">मुद्देमाल कारकुन</th><td class="slot" data-asn="532" data-shift="DAY" data-staff="20"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> १०९१ गारे</td></tr>
+<tr class="g"><th class="role" rowspan="3" data-label="grp.533" data-default="गोपनिय ड्युटी" data-presentation="grp.533" data-presentation-kind="label">गोपनिय ड्युटी</th><td class="slot" data-asn="534" data-shift="DAY" data-staff="25"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> १४२५ पैठणकर</td></tr>
+<tr><td class="slot" data-asn="535" data-shift="DAY" data-staff="113"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २६९३ सोनजे</td></tr>
+<tr><td class="slot" data-asn="536" data-shift="DAY" data-staff="93"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २२३६ लभडे</td></tr>
+<tr class="g"><th class="role" rowspan="3" data-label="grp.537" data-default="हजेरी मास्तर" data-presentation="grp.537" data-presentation-kind="label">हजेरी मास्तर</th><td class="slot" data-asn="538" data-shift="DAY" data-staff="13"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> ६९२ गुंबाडे</td></tr>
+<tr><td class="slot" data-asn="539" data-shift="DAY" data-staff="60"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> ५६९ पवार</td></tr>
+<tr><td class="slot" data-asn="540" data-shift="DAY" data-staff="120"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> ६६९ गांगुर्डे</td></tr>
+<tr class="g"><th class="role" rowspan="2" data-label="grp.541" data-default="क्राईम कारकुन" data-presentation="grp.541" data-presentation-kind="label">क्राईम कारकुन</th><td class="slot" data-asn="542" data-shift="DAY" data-staff="49"><abbr class="abbr" data-full="महिला पोलीस हवालदार" aria-label="महिला पोलीस हवालदार" tabindex="0">मपोहवा</abbr> २७२९ पाटील</td></tr>
+<tr><td class="slot" data-asn="543" data-shift="DAY" data-staff="118"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> २९ कामडे</td></tr>
+<tr class="g"><th class="role" rowspan="1" data-label="grp.544" data-default="बारनिषी" data-presentation="grp.544" data-presentation-kind="label">बारनिषी</th><td class="slot" data-asn="545" data-shift="DAY" data-staff="136"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> २६३९ QM</td></tr>
+</tbody></table></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="page chowki" id="sheet-2">
+  <div class="head">
+    <div class="hc">
+      <div class="h1" data-label="head.h1" data-default="नाशिक शहर पोलीस आयुक्तालय" data-presentation="head.h1" data-presentation-kind="label">नाशिक शहर पोलीस आयुक्तालय</div>
+      <div class="h2" data-label="head.h2" data-default="दैनिक कर्तव्य वाटप" data-presentation="head.h2" data-presentation-kind="label">दैनिक कर्तव्य वाटप</div>
+      <div class="h3">१० सप्टेंबर २०२६, गुरुवार</div>
+    </div>
+    <div class="hr"><span class="lc lc-draft">DRAFT</span></div>
+  </div>
+  <div class="grid g-chowki">
+    <div class="blk">
+      <div class="ch-head"><div class="nm" data-label="blk.L2" data-default="काटया मारूती पोलीस चौकी" data-presentation="blk.L2" data-presentation-kind="section">काटया मारूती पोलीस चौकी</div><div class="of">अधि. <abbr class="abbr" data-full="सहाय्यक पोलीस निरीक्षक" aria-label="सहाय्यक पोलीस निरीक्षक" tabindex="0">सपोनि</abbr> हेमंत मोहिते <span class="tm">०९–१४</span></div><button type="button" class="box-del no-print" data-box-del="chowki" data-location-id="2" title="ही चौकी काढा (संपादन मोड)">✕</button></div>
+      <div class="body"><div class="sub-shift-wrap">
+        <div class="sub-col">
+            <div class="sub-col-title"><span data-label="blk.L2.DAY" data-default="दिवसपाळी" data-presentation="blk.L2.DAY" data-presentation-kind="label">दिवसपाळी</span></div>
+            
+            <div class="fx mrsh"><span class="lb">मार्शल:</span> <span class="st"><span class="sl">बंद</span>, चार्ज →</span> <span class="dst">मालेगांव स्टॅड मार्शल</span></div>
+            <table class="dt"><tbody>
+<tr class="g"><th class="role" rowspan="2" data-label="role.462" data-default="रायटर" data-presentation="role.462" data-presentation-kind="label">रायटर</th><td class="slot" data-asn="462" data-shift="DAY" data-staff="59"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> ५४२ आहेर</td></tr>
+<tr><td class="slot" data-asn="463" data-shift="DAY" data-staff="81"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> १९९८ वाकचैरे</td></tr>
+<tr class="g"><th class="role" rowspan="1"></th><td class="slot" data-asn="464" data-shift="DAY" data-staff="34"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> २१०० पाटील</td></tr>
+</tbody></table>
+          </div>
+        <div class="sub-col">
+            <div class="sub-col-title"><span data-label="blk.L2.NIGHT" data-default="रात्रपाळी" data-presentation="blk.L2.NIGHT" data-presentation-kind="label">रात्रपाळी</span></div>
+            
+            <div class="fx mrsh"><span class="lb">मार्शल:</span> <span class="st"><span class="sl">बंद</span>, चार्ज →</span> <span class="dst">मालेगांव स्टॅड मार्शल</span></div>
+            <table class="dt"><tbody>
+<tr class="g"><th class="role" rowspan="1"></th><td class="slot" data-asn="591" data-shift="NIGHT" data-staff="37"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> २७२१ सानप</td></tr>
+</tbody></table>
+          </div>
+      </div></div>
+    </div>
+    <div class="blk">
+      <div class="ch-head"><div class="nm" data-label="blk.L3" data-default="पंचवटी कारंजा पोलीस चौकी" data-presentation="blk.L3" data-presentation-kind="section">पंचवटी कारंजा पोलीस चौकी</div><div class="of">अधि. <abbr class="abbr" data-full="सहाय्यक पोलीस निरीक्षक" aria-label="सहाय्यक पोलीस निरीक्षक" tabindex="0">सपोनि</abbr> प्रशांत बोरसे <span class="tm">१६–२१</span></div><button type="button" class="box-del no-print" data-box-del="chowki" data-location-id="3" title="ही चौकी काढा (संपादन मोड)">✕</button></div>
+      <div class="body"><div class="sub-shift-wrap">
+        <div class="sub-col">
+            <div class="sub-col-title"><span data-label="blk.L3.DAY" data-default="दिवसपाळी" data-presentation="blk.L3.DAY" data-presentation-kind="label">दिवसपाळी</span></div>
+            <div class="fx"><span class="st">चार्ज →</span> <span class="dst">काटया मारूती पोलीस चौकी</span></div>
+            <div class="fx mrsh"><span class="lb">मार्शल:</span> <span class="st"><span class="sl">बंद</span>, चार्ज →</span> <span class="dst">मालेगांव स्टॅड मार्शल</span></div>
+            
+          </div>
+        <div class="sub-col">
+            <div class="sub-col-title"><span data-label="blk.L3.NIGHT" data-default="रात्रपाळी" data-presentation="blk.L3.NIGHT" data-presentation-kind="label">रात्रपाळी</span></div>
+            
+            <div class="fx mrsh"><span class="lb">मार्शल:</span> <span class="st"><span class="sl">बंद</span>, चार्ज →</span> <span class="dst">मालेगांव स्टॅड मार्शल</span></div>
+            <table class="dt"><tbody>
+<tr class="g"><th class="role" rowspan="1"></th><td class="slot" data-asn="593" data-shift="NIGHT" data-staff="30"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> १७१७ चव्हाण</td></tr>
+</tbody></table>
+          </div>
+      </div></div>
+    </div>
+    <div class="blk">
+      <div class="ch-head"><div class="nm" data-label="blk.L4" data-default="मालेगांव स्टॅड पोलीस चौकी" data-presentation="blk.L4" data-presentation-kind="section">मालेगांव स्टॅड पोलीस चौकी</div><div class="of">अधि. <abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> ९१३ गंदलवाड</div><button type="button" class="box-del no-print" data-box-del="chowki" data-location-id="4" title="ही चौकी काढा (संपादन मोड)">✕</button></div>
+      <div class="body"><div class="sub-shift-wrap">
+        <div class="sub-col">
+            <div class="sub-col-title"><span data-label="blk.L4.DAY" data-default="दिवसपाळी" data-presentation="blk.L4.DAY" data-presentation-kind="label">दिवसपाळी</span></div>
+            
+            
+            <table class="dt"><tbody>
+<tr class="g"><th class="role" rowspan="1" data-label="role.469" data-default="रायटर" data-presentation="role.469" data-presentation-kind="label">रायटर</th><td class="slot" data-asn="469" data-shift="DAY" data-staff="63"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> ९१३ गंदलवाड</td></tr>
+<tr class="g"><th class="role" rowspan="1"></th><td class="slot" data-asn="470" data-shift="DAY" data-staff="10"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> ५०९ बाविस्कर</td></tr>
+<tr class="g"><th class="bima-lb" rowspan="2" data-label="role.471" data-default="बिमा" data-presentation="role.471" data-presentation-kind="label">बिमा</th><td class="slot" data-asn="471" data-shift="DAY" data-staff="96" data-bima="1"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २२७२ गायकवाड</td></tr>
+<tr><td class="slot" data-asn="472" data-shift="DAY" data-staff="69" data-bima="1"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> १२४४ महाले</td></tr>
+<tr class="g"><th class="role" rowspan="3"></th><td class="slot" data-asn="493" data-shift="DAY" data-staff="96"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २२७२ गायकवाड</td></tr>
+<tr><td class="slot" data-asn="494" data-shift="DAY" data-staff="69"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> १२४४ महाले</td></tr>
+<tr><td><span class="nil">Dial 112 MERS set</span></td></tr>
+</tbody></table>
+          </div>
+        <div class="sub-col">
+            <div class="sub-col-title"><span data-label="blk.L4.NIGHT" data-default="रात्रपाळी" data-presentation="blk.L4.NIGHT" data-presentation-kind="label">रात्रपाळी</span></div>
+            
+            
+            <table class="dt"><tbody>
+<tr class="g"><th class="role" rowspan="1"></th><td class="slot" data-asn="595" data-shift="NIGHT" data-staff="16"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> ८४२ आहिरे</td></tr>
+<tr class="g"><th class="bima-lb" rowspan="2" data-label="role.596" data-default="बिमा" data-presentation="role.596" data-presentation-kind="label">बिमा</th><td class="slot" data-asn="596" data-shift="NIGHT" data-staff="91" data-bima="1"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २१६७ चौधरी</td></tr>
+<tr><td class="slot" data-asn="597" data-shift="NIGHT" data-staff="62" data-bima="1"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> ७६९ नागरे</td></tr>
+<tr class="g"><th class="role" rowspan="1"></th><td><span class="nil">Dial 112 MERS set</span></td></tr>
+<tr class="g"><th class="role" rowspan="2"></th><td class="slot" data-asn="625" data-shift="NIGHT" data-staff="91"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २१६७ चौधरी</td></tr>
+<tr><td class="slot" data-asn="626" data-shift="NIGHT" data-staff="62"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> ७६९ नागरे</td></tr>
+</tbody></table>
+          </div>
+      </div></div>
+    </div>
+    <div class="blk">
+      <div class="ch-head"><div class="nm" data-label="blk.L5" data-default="सरदार पोलीस चौकी" data-presentation="blk.L5" data-presentation-kind="section">सरदार पोलीस चौकी</div><div class="of">अधि. <abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> १०४५ सोर</div><button type="button" class="box-del no-print" data-box-del="chowki" data-location-id="5" title="ही चौकी काढा (संपादन मोड)">✕</button></div>
+      <div class="body"><div class="sub-shift-wrap">
+        <div class="sub-col">
+            <div class="sub-col-title"><span data-label="blk.L5.DAY" data-default="दिवसपाळी" data-presentation="blk.L5.DAY" data-presentation-kind="label">दिवसपाळी</span></div>
+            
+            
+            <table class="dt"><tbody>
+<tr class="g"><th class="role" rowspan="1"></th><td class="slot" data-asn="474" data-shift="DAY" data-staff="18"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> १०४५ सोर</td></tr>
+</tbody></table>
+          </div>
+        <div class="sub-col shut">
+            <div class="sub-col-title"><span data-label="blk.L5.NIGHT" data-default="रात्रपाळी" data-presentation="blk.L5.NIGHT" data-presentation-kind="label">रात्रपाळी</span></div>
+            <div class="fx"><span class="st"><span class="sl">बंद</span>, चार्ज →</span> <span class="dst">मालेगांव स्टॅड पोलीस चौकी</span></div>
+            
+            
+          </div>
+      </div></div>
+    </div>
+    <div class="blk">
+      <div class="ch-head"><div class="nm" data-label="blk.L6" data-default="फुलेनगर पोलीस चौकी" data-presentation="blk.L6" data-presentation-kind="section">फुलेनगर पोलीस चौकी</div><div class="of">अधि. <abbr class="abbr" data-full="सहाय्यक पोलीस निरीक्षक" aria-label="सहाय्यक पोलीस निरीक्षक" tabindex="0">सपोनि</abbr> शरद पाटील</div><button type="button" class="box-del no-print" data-box-del="chowki" data-location-id="6" title="ही चौकी काढा (संपादन मोड)">✕</button></div>
+      <div class="body"><div class="sub-shift-wrap">
+        <div class="sub-col">
+            <div class="sub-col-title"><span data-label="blk.L6.DAY" data-default="दिवसपाळी" data-presentation="blk.L6.DAY" data-presentation-kind="label">दिवसपाळी</span></div>
+            
+            
+            <table class="dt"><tbody>
+<tr class="g"><th class="role" rowspan="1"></th><td class="slot" data-asn="476" data-shift="DAY" data-staff="153"><abbr class="abbr" data-full="सहाय्यक पोलीस निरीक्षक" aria-label="सहाय्यक पोलीस निरीक्षक" tabindex="0">सपोनि</abbr> शरद पाटील</td></tr>
+<tr class="g"><th class="role" rowspan="2" data-label="role.477" data-default="रायटर" data-presentation="role.477" data-presentation-kind="label">रायटर</th><td class="slot" data-asn="477" data-shift="DAY" data-staff="22"><abbr class="abbr" data-full="चालक पोलीस हवालदार" aria-label="चालक पोलीस हवालदार" tabindex="0">चापोहवा</abbr> ११२६ शिंदे</td></tr>
+<tr><td class="slot" data-asn="478" data-shift="DAY" data-staff="116"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २९१४ रोकडे</td></tr>
+<tr class="g"><th class="role" rowspan="1"></th><td class="slot" data-asn="479" data-shift="DAY" data-staff="166"><abbr class="abbr" data-full="सहाय्यक पोलीस निरीक्षक" aria-label="सहाय्यक पोलीस निरीक्षक" tabindex="0">सपोउनि</abbr> कुलकर्णी</td></tr>
+<tr class="g"><th class="bima-lb" rowspan="2" data-label="role.480" data-default="बिमा" data-presentation="role.480" data-presentation-kind="label">बिमा</th><td class="slot" data-asn="480" data-shift="DAY" data-staff="90" data-bima="1"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २१५७ गुंजाळ</td></tr>
+<tr><td class="slot" data-asn="481" data-shift="DAY" data-staff="116" data-bima="1"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २९१४ रोकडे</td></tr>
+<tr class="g"><th class="role" rowspan="2"></th><td class="slot" data-asn="497" data-shift="DAY" data-staff="90"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २१५७ गुंजाळ</td></tr>
+<tr><td class="slot" data-asn="498" data-shift="DAY" data-staff="116"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २९१४ रोकडे</td></tr>
+</tbody></table>
+          </div>
+        <div class="sub-col">
+            <div class="sub-col-title"><span data-label="blk.L6.NIGHT" data-default="रात्रपाळी" data-presentation="blk.L6.NIGHT" data-presentation-kind="label">रात्रपाळी</span></div>
+            
+            <div class="fx mrsh"><span class="lb">मार्शल:</span> <span class="st"><span class="sl">बंद</span>, चार्ज →</span> <span class="dst">मेरी मार्शल</span></div>
+            <table class="dt"><tbody>
+<tr class="g"><th class="role" rowspan="1"></th><td class="slot" data-asn="602" data-shift="NIGHT" data-staff="8"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> ४९० सानप</td></tr>
+</tbody></table>
+          </div>
+      </div></div>
+    </div>
+    <div class="blk">
+      <div class="ch-head"><div class="nm" data-label="blk.L7" data-default="मेरी पोलीस चौकी" data-presentation="blk.L7" data-presentation-kind="section">मेरी पोलीस चौकी</div><div class="of">अधि. <abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> ६८० देसले</div><button type="button" class="box-del no-print" data-box-del="chowki" data-location-id="7" title="ही चौकी काढा (संपादन मोड)">✕</button></div>
+      <div class="body"><div class="sub-shift-wrap">
+        <div class="sub-col">
+            <div class="sub-col-title"><span data-label="blk.L7.DAY" data-default="दिवसपाळी" data-presentation="blk.L7.DAY" data-presentation-kind="label">दिवसपाळी</span></div>
+            
+            
+            <table class="dt"><tbody>
+<tr class="g"><th class="role" rowspan="1"></th><td class="slot" data-asn="483" data-shift="DAY" data-staff="38"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> ६८० देसले</td></tr>
+<tr class="g"><th class="bima-lb" rowspan="2" data-label="role.484" data-default="बिमा" data-presentation="role.484" data-presentation-kind="label">बिमा</th><td class="slot" data-asn="484" data-shift="DAY" data-staff="76" data-bima="1"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> १६४४ गायकवाड</td></tr>
+<tr><td class="slot" data-asn="485" data-shift="DAY" data-staff="97" data-bima="1"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २३१२ भाबड</td></tr>
+<tr class="g"><th class="role" rowspan="3"></th><td class="slot" data-asn="500" data-shift="DAY" data-staff="76"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> १६४४ गायकवाड</td></tr>
+<tr><td class="slot" data-asn="501" data-shift="DAY" data-staff="97"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २३१२ भाबड</td></tr>
+<tr><td><span class="nil">Dial 112 MERS set</span></td></tr>
+</tbody></table>
+          </div>
+        <div class="sub-col">
+            <div class="sub-col-title"><span data-label="blk.L7.NIGHT" data-default="रात्रपाळी" data-presentation="blk.L7.NIGHT" data-presentation-kind="label">रात्रपाळी</span></div>
+            
+            
+            <table class="dt"><tbody>
+<tr class="g"><th class="role" rowspan="1"></th><td class="slot" data-asn="604" data-shift="NIGHT" data-staff="19"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> १०६७ जाधव</td></tr>
+<tr class="g"><th class="bima-lb" rowspan="2" data-label="role.605" data-default="बिमा" data-presentation="role.605" data-presentation-kind="label">बिमा</th><td class="slot" data-asn="605" data-shift="NIGHT" data-staff="72" data-bima="1"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> १४२६ तांदळे</td></tr>
+<tr><td class="slot" data-asn="606" data-shift="NIGHT" data-staff="108" data-bima="1"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २५२३ शिलावट</td></tr>
+<tr class="g"><th class="role" rowspan="1"></th><td><span class="nil">Dial 112 MERS set</span></td></tr>
+<tr class="g"><th class="role" rowspan="3"></th><td class="slot" data-asn="631" data-shift="NIGHT" data-staff="72"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> १४२६ तांदळे</td></tr>
+<tr><td class="slot" data-asn="632" data-shift="NIGHT" data-staff="108"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २५२३ शिलावट</td></tr>
+<tr><td><span class="nil">Dial 112 MERS set</span></td></tr>
+</tbody></table>
+          </div>
+      </div></div>
+    </div>
+    
+    <button type="button" class="add-box" data-add="chowki">+ चौकी जोडा</button>
+   </div>
+  <div class="sec" style="margin-top:10px;"><h2 data-label="sec.scan" data-default="सुरक्षित नाशिक: गस्त व स्कॅनिंग वेळापत्रक" data-presentation="sec.scan" data-presentation-kind="section">सुरक्षित नाशिक: गस्त व स्कॅनिंग वेळापत्रक</h2></div>
+  <div class="two">
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th data-label="scan.s.t" data-default="सत्र व वेळ" data-presentation="scan.s.t" data-presentation-kind="label">सत्र व वेळ</th><th data-label="scan.s.p" data-default="पेट्रोलिंग मोबाईल" data-presentation="scan.s.p" data-presentation-kind="label">पेट्रोलिंग मोबाईल</th><th data-label="scan.s.b" data-default="बीट मार्शल नेमणूक" data-presentation="scan.s.b" data-presentation-kind="label">बीट मार्शल नेमणूक</th></tr></thead>
+        <tbody>
+        <tr><th class="win">०१) सकाळ ०९:०० ते १५:००</th><td>चौकीचे ईन्चार्ज अंमलदार</td><td>मेरी, फुलेनगर, काटया मारूती, कारंजा, मालेगाव</td></tr>
+        <tr><th class="win">०२) दुपार १५:०० ते २१:००</th><td>सी.आर., डेल्टा व डी.बी. मोबाईल</td><td>मेरी, फुलेनगर, काटया मारूती, कारंजा, मालेगाव</td></tr>
+        <tr><th class="win">०३) रात्र २१:०० ते ०९:००</th><td>सी.आर. मोबाईल / डी.बी. मोबाईल</td><td>मेरी मार्शल, मालेगाव स्टँड मार्शल</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tbl-wrap">
+    <table class="tbl">
+      <thead><tr><th class="num" data-label="scan.h.t" data-default="वेळ" data-presentation="scan.h.t" data-presentation-kind="label">वेळ</th><th data-label="scan.h.l" data-default="स्कॅन चौकी हद्द" data-presentation="scan.h.l" data-presentation-kind="label">स्कॅन चौकी हद्द</th><th data-label="scan.h.p" data-default="नियुक्त अंमलदार" data-presentation="scan.h.p" data-presentation-kind="label">नियुक्त अंमलदार</th></tr></thead>
+      <tbody>
+        <tr><th class="win num">०९:०० ते १०:००</th><td>मेरी पोलीस चौकी</td><td><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २३५७ साबळे</td></tr>
+        <tr><th class="win num">१०:०० ते ११:००</th><td>मालेगांव स्टॅड पोलीस चौकी</td><td><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> ६६९ गांगुर्डे</td></tr>
+        <tr><th class="win num">११:०० ते १२:००</th><td>काटया मारूती पोलीस चौकी</td><td><abbr class="abbr" data-full="महिला पोलीस हवालदार" aria-label="महिला पोलीस हवालदार" tabindex="0">मपोहवा</abbr> २७२९ पाटील</td></tr>
+        <tr><th class="win num">१२:०० ते १३:००</th><td>पंचवटी कारंजा पोलीस चौकी</td><td><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> २९ कामडे</td></tr>
+        <tr><th class="win num">१३:०० ते १४:००</th><td>फुलेनगर पोलीस चौकी</td><td><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> २६३९ QM</td></tr>
+        <tr><th class="win num">१४:०० ते १५:००</th><td>सरदार पोलीस चौकी</td><td><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> २०३३ कोकणी</td></tr>
+        <tr><th class="win num">१५:०० ते १६:००</th><td>मेरी पोलीस चौकी</td><td><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> २६२६ शिंदे</td></tr>
+        <tr><th class="win num">१६:०० ते १७:००</th><td>मालेगांव स्टॅड पोलीस चौकी</td><td><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> २७१२ काकुळदे</td></tr>
+        <tr><th class="win num">१७:०० ते १८:००</th><td>काटया मारूती पोलीस चौकी</td><td><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २३७७ साळवे</td></tr>
+        <tr><th class="win num">१८:०० ते १९:००</th><td>पंचवटी कारंजा पोलीस चौकी</td><td><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> ११३६ भालेराव</td></tr>
+        <tr><th class="win num">१९:०० ते २०:००</th><td>फुलेनगर पोलीस चौकी</td><td><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> २६६७ उगले</td></tr>
+        <tr><th class="win num">२०:०० ते २१:००</th><td>सरदार पोलीस चौकी</td><td><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> १४३४ तुपलोंढे</td></tr>
+      </tbody>
+    </table>
+  </div>
+  </div>
+</div>
+
+<div class="page dense" id="sheet-3">
+  <div class="head">
+    <div class="hc">
+      <div class="h1" data-label="head.h1" data-default="नाशिक शहर पोलीस आयुक्तालय" data-presentation="head.h1" data-presentation-kind="label">नाशिक शहर पोलीस आयुक्तालय</div>
+      <div class="h2" data-label="head.h2" data-default="दैनिक कर्तव्य वाटप" data-presentation="head.h2" data-presentation-kind="label">दैनिक कर्तव्य वाटप</div>
+      <div class="h3">१० सप्टेंबर २०२६, गुरुवार</div>
+    </div>
+    <div class="hr"><span class="lc lc-draft">DRAFT</span></div>
+  </div>
+  <div class="grid g-desk alone">
+    <div class="blk core">
+      <div class="bh"><div class="nm" data-label="p1.desk.court" data-default="कोर्ट, समन्स, वॉरंट व विशेष कक्ष" data-presentation="p1.desk.court" data-presentation-kind="section">कोर्ट, समन्स, वॉरंट व विशेष कक्ष</div></div>
+      <div class="body"><table class="dt"><tbody>
+<tr class="g"><th class="role" rowspan="2" data-label="grp.546" data-default="MOB/मिसिंग" data-presentation="grp.546" data-presentation-kind="label">MOB/मिसिंग</th><td class="slot" data-asn="547" data-shift="DAY" data-staff="130"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> २०३३ कोकणी</td></tr>
+<tr><td class="slot" data-asn="548" data-shift="DAY" data-staff="135"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> २६२६ शिंदे</td></tr>
+<tr class="g"><th class="role" rowspan="2" data-label="grp.549" data-default="मो.मिसिंग/ए.टी.सी.सेल" data-presentation="grp.549" data-presentation-kind="label">मो.मिसिंग/ए.टी.सी.सेल</th><td class="slot" data-asn="550" data-shift="DAY" data-staff="36"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> २७१२ काकुळदे</td></tr>
+<tr><td class="slot" data-asn="551" data-shift="DAY" data-staff="101"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २३७७ साळवे</td></tr>
+<tr class="g"><th class="role" rowspan="2" data-label="grp.552" data-default="वारंट" data-presentation="grp.552" data-presentation-kind="label">वारंट</th><td class="slot" data-asn="553" data-shift="DAY" data-staff="165"><abbr class="abbr" data-full="सहाय्यक पोलीस निरीक्षक" aria-label="सहाय्यक पोलीस निरीक्षक" tabindex="0">सपोउनि</abbr> सोळसे</td></tr>
+<tr><td class="slot" data-asn="554" data-shift="DAY" data-staff="6"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> ४७७ पांडे</td></tr>
+<tr class="g"><th class="role" rowspan="1" data-label="grp.555" data-default="सेशन समन्स" data-presentation="grp.555" data-presentation-kind="label">सेशन समन्स</th><td class="slot" data-asn="556" data-shift="DAY" data-staff="65"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> १०२० डावरे</td></tr>
+<tr class="g"><th class="role" rowspan="2" data-label="grp.557" data-default="समन्स" data-presentation="grp.557" data-presentation-kind="label">समन्स</th><td class="slot" data-asn="558" data-shift="DAY" data-staff="12"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> ६३२ आहेर</td></tr>
+<tr><td class="slot" data-asn="559" data-shift="DAY" data-staff="92"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २१८५ नागरे</td></tr>
+<tr class="g"><th class="role" colspan="2" data-label="grp.503" data-default="महिला कक्ष" data-presentation="grp.503" data-presentation-kind="label">महिला कक्ष</th></tr>
+<tr class="g"><th class="role" colspan="2" data-label="grp.504" data-default="वायरलेस महिला अंमलदार" data-presentation="grp.504" data-presentation-kind="label">वायरलेस महिला अंमलदार</th></tr>
+<tr class="g"><th class="role" rowspan="6" data-label="grp.505" data-default="काळाराम मंदीर गार्ड ड्युटी - दिवसपाळी" data-presentation="grp.505" data-presentation-kind="label">काळाराम मंदीर गार्ड ड्युटी - दिवसपाळी</th><td class="slot" data-asn="506" data-shift="DAY" data-staff="164"><abbr class="abbr" data-full="सहाय्यक पोलीस निरीक्षक" aria-label="सहाय्यक पोलीस निरीक्षक" tabindex="0">सपोउनि</abbr> शेळके</td></tr>
+<tr><td class="slot" data-asn="507" data-shift="DAY" data-staff="169"><abbr class="abbr" data-full="महिला सहाय्यक पोलीस उपनिरीक्षक" aria-label="महिला सहाय्यक पोलीस उपनिरीक्षक" tabindex="0">मसपोउनि</abbr> चौधरी</td></tr>
+<tr><td><span class="nil">ब्ण्ब्ण्ज्ण्छण्ैण्गुन्हे भरणे कामी</span></td></tr>
+<tr><td class="slot" data-asn="509" data-shift="DAY" data-staff="46"><abbr class="abbr" data-full="महिला पोलीस हवालदार" aria-label="महिला पोलीस हवालदार" tabindex="0">मपोहवा</abbr> १८८२ पाडवी</td></tr>
+<tr><td class="slot" data-asn="510" data-shift="DAY" data-staff="126"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> ११३६ भालेराव</td></tr>
+<tr><td class="slot" data-asn="511" data-shift="DAY" data-staff="139"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> २६६७ उगले</td></tr>
+<tr class="g"><th class="role" rowspan="2" data-label="grp.634" data-default="काळाराम मंदीर गार्ड ड्युटी - रात्रपाळी" data-presentation="grp.634" data-presentation-kind="label">काळाराम मंदीर गार्ड ड्युटी - रात्रपाळी</th><td class="slot" data-asn="635" data-shift="NIGHT" data-staff="26"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> १४४७ मल्ले</td></tr>
+<tr><td class="slot" data-asn="636" data-shift="NIGHT" data-staff="170"><abbr class="abbr" data-full="होम गार्ड" aria-label="होम गार्ड" tabindex="0">होम</abbr> २३५२० खाडे</td></tr>
+<tr class="g"><th class="role" rowspan="1" data-label="grp.512" data-default="सायबर सेल" data-presentation="grp.512" data-presentation-kind="label">सायबर सेल</th><td class="slot" data-asn="513" data-shift="DAY" data-staff="73"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> १४३४ तुपलोंढे</td></tr>
+<tr class="g"><th class="role" colspan="2" data-label="grp.514" data-default="पंचवटी 1 मोबाईल - दिवसपाळी" data-presentation="grp.514" data-presentation-kind="label">पंचवटी १ मोबाईल - दिवसपाळी</th></tr>
+<tr class="g"><th class="role" rowspan="6" data-label="grp.515" data-default="एम.टी.सेक्षन कडील चालक" data-presentation="grp.515" data-presentation-kind="label">एम.टी.सेक्षन कडील चालक</th><td class="slot" data-asn="516" data-shift="DAY" data-staff="160"><abbr class="abbr" data-full="परिविक्षाधीन पोलीस उपनिरीक्षक" aria-label="परिविक्षाधीन पोलीस उपनिरीक्षक" tabindex="0">परि.पोउनि</abbr> प्रतिक राऊत</td></tr>
+<tr><td class="slot" data-asn="517" data-shift="DAY" data-staff="111"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २५५३ मोकळ</td></tr>
+<tr><td class="slot" data-asn="518" data-shift="DAY" data-staff="142"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> २६७७ संवद्रे</td></tr>
+<tr><td class="slot" data-asn="519" data-shift="DAY" data-staff="132"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> २२०३ साबळे</td></tr>
+<tr><td class="slot" data-asn="520" data-shift="DAY" data-staff="133"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> २२०७ साबळे</td></tr>
+<tr><td class="slot" data-asn="521" data-shift="DAY" data-staff="138"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> २६६६ भोसले</td></tr>
+<tr class="g"><th class="role" rowspan="9" data-label="grp.608" data-default="पंचवटी 1 मोबाईल - रात्रपाळी" data-presentation="grp.608" data-presentation-kind="label">पंचवटी १ मोबाईल - रात्रपाळी</th><td class="slot" data-asn="609" data-shift="NIGHT" data-staff="159"><abbr class="abbr" data-full="परिविक्षाधीन पोलीस उपनिरीक्षक" aria-label="परिविक्षाधीन पोलीस उपनिरीक्षक" tabindex="0">परि.पोउनि</abbr> सुनिल ठेंग</td></tr>
+<tr><td class="slot" data-asn="610" data-shift="NIGHT" data-staff="67"><abbr class="abbr" data-full="चालक पोलीस शिपाई" aria-label="चालक पोलीस शिपाई" tabindex="0">चापोशि</abbr> १०३६ पाटील</td></tr>
+<tr><td class="slot" data-asn="611" data-shift="NIGHT" data-staff="21"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> १०८९ कोरडे</td></tr>
+<tr><td class="slot" data-asn="612" data-shift="NIGHT" data-staff="78"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> १८३६ शेळके</td></tr>
+<tr><td class="slot" data-asn="613" data-shift="NIGHT" data-staff="94"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २२३९ वाघ</td></tr>
+<tr><td class="slot" data-asn="614" data-shift="NIGHT" data-staff="171"><abbr class="abbr" data-full="होम गार्ड" aria-label="होम गार्ड" tabindex="0">होम</abbr> २३६८५ शिंदे</td></tr>
+<tr><td class="slot" data-asn="615" data-shift="NIGHT" data-staff="172"><abbr class="abbr" data-full="होम गार्ड" aria-label="होम गार्ड" tabindex="0">होम</abbr> २३६१३ सोनवणे</td></tr>
+<tr><td class="slot" data-asn="616" data-shift="NIGHT" data-staff="173"><abbr class="abbr" data-full="होम गार्ड" aria-label="होम गार्ड" tabindex="0">होम</abbr> २३६३८ सांगळे</td></tr>
+<tr><td class="slot" data-asn="617" data-shift="NIGHT" data-staff="174"><abbr class="abbr" data-full="होम गार्ड" aria-label="होम गार्ड" tabindex="0">होम</abbr> २३६०५ भडांगे</td></tr>
+</tbody></table></div>
+    </div>
+  </div>
+</div>
+
+<div class="page dense" id="sheet-4">
+  <div class="head">
+    <div class="hc">
+      <div class="h1" data-label="head.h1" data-default="नाशिक शहर पोलीस आयुक्तालय" data-presentation="head.h1" data-presentation-kind="label">नाशिक शहर पोलीस आयुक्तालय</div>
+      <div class="h2" data-label="head.h2" data-default="दैनिक कर्तव्य वाटप" data-presentation="head.h2" data-presentation-kind="label">दैनिक कर्तव्य वाटप</div>
+      <div class="h3">१० सप्टेंबर २०२६, गुरुवार</div>
+    </div>
+    <div class="hr"><span class="lc lc-draft">DRAFT</span></div>
+  </div>
+  <div class="sec"><h2 data-label="sec.avail.0" data-default="रजा, साप्ताहिक सुट्टी व गैरहजर" data-presentation="sec.avail.0" data-presentation-kind="section">रजा, साप्ताहिक सुट्टी व गैरहजर</h2></div>
+  <div class="grid g4">
+    <div class="blk">
+      <div class="bh"><div class="nm" data-label="avail.साप्ताहिक सुट्टी" data-default="साप्ताहिक सुट्टी" data-presentation="avail.साप्ताहिक सुट्टी" data-presentation-kind="section">साप्ताहिक सुट्टी</div><span class="chip num">२०</span></div>
+      <div class="body">
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस उपनिरीक्षक" aria-label="पोलीस उपनिरीक्षक" tabindex="0">पोउनि</abbr> प्रकाश नेमाणे</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस उपनिरीक्षक" aria-label="पोलीस उपनिरीक्षक" tabindex="0">पोउनि</abbr> पुंडलिक पावसे</span><span class="win">०८/०९</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस उपनिरीक्षक" aria-label="पोलीस उपनिरीक्षक" tabindex="0">पोउनि</abbr> कैलास जाधव</span><span class="win">२२/०८</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="परिविक्षाधीन पोलीस उपनिरीक्षक" aria-label="परिविक्षाधीन पोलीस उपनिरीक्षक" tabindex="0">परि.पोउनि</abbr> अशोक दिंडे</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> ४४३ कोरडे</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> २०४२ रोकडे</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> ४८० सोळसे</span><span class="win">०७/०९</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> ६७ देवरे</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २९०४ सावंत</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> ३४१ पांढरे</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> १८० काळे</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> १४५७ साळवे</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २०४६ साळवे</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २७५९ पवार</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> ५३० निकम</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २५१२ जगताप</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="महिला पोलीस हवालदार" aria-label="महिला पोलीस हवालदार" tabindex="0">मपोहवा</abbr> १४०८ भरसट</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="महिला पोलीस हवालदार" aria-label="महिला पोलीस हवालदार" tabindex="0">मपोहवा</abbr> १९८२ ठाकरे</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> २६७० भोईर</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> ८९९ लहरे</span></div>
+      </div>
+    </div>
+    <div class="blk">
+      <div class="bh"><div class="nm" data-label="avail.किरकोळ रजा" data-default="किरकोळ रजा" data-presentation="avail.किरकोळ रजा" data-presentation-kind="section">किरकोळ रजा</div><span class="chip num">१०</span></div>
+      <div class="body">
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> ३९१ शिंदे</span><span class="win">०८ ते १०</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> ७४२ ठाकरे</span><span class="win">०८ ते १०</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> ७९२ चांडोले</span><span class="win">१०</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २१३७ मोरे</span><span class="win">०९ व १०</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="महिला पोलीस हवालदार" aria-label="महिला पोलीस हवालदार" tabindex="0">मपोहवा</abbr> १२५ मोर्ती</span><span class="win">०८ ते १२</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="महिला पोलीस हवालदार" aria-label="महिला पोलीस हवालदार" tabindex="0">मपोहवा</abbr> १६१७ वडाळकर</span><span class="win">०९ ते १२</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="महिला पोलीस हवालदार" aria-label="महिला पोलीस हवालदार" tabindex="0">मपोहवा</abbr> १८१९ सानप</span><span class="win">१० ते ११</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> २९१२ गाढवे</span><span class="win">१० ते ११</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> ६४१ केदारे</span><span class="win">१० ते ११</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> २६७९ शिंदे</span><span class="win">१०</span></div>
+      </div>
+    </div>
+    <div class="blk">
+      <div class="bh"><div class="nm" data-label="avail.तपासकामी - गुजरात राज्य" data-default="तपासकामी - गुजरात राज्य" data-presentation="avail.तपासकामी - गुजरात राज्य" data-presentation-kind="section">तपासकामी - गुजरात राज्य</div><span class="chip num">५</span></div>
+      <div class="body">
+        <div class="p"><span class="n"><abbr class="abbr" data-full="सहाय्यक पोलीस निरीक्षक" aria-label="सहाय्यक पोलीस निरीक्षक" tabindex="0">सपोनि</abbr> सतिश शिरसाठ</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २२७१ गायकवाड</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २३९४ बहिकर</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> ३५२ देशमुख</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २५०७ परदेशी</span></div>
+      </div>
+    </div>
+    <div class="blk">
+      <div class="bh"><div class="nm" data-label="avail.तपासकामी - सातारा" data-default="तपासकामी - सातारा" data-presentation="avail.तपासकामी - सातारा" data-presentation-kind="section">तपासकामी - सातारा</div><span class="chip num">३</span></div>
+      <div class="body">
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस उपनिरीक्षक" aria-label="पोलीस उपनिरीक्षक" tabindex="0">पोउनि</abbr> सचिन चव्हाण</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २०७३ ठाकुर</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २३८५ बोरसे</span></div>
+      </div>
+    </div>
+    <div class="blk">
+      <div class="bh"><div class="nm" data-label="avail.प्रशिक्षण" data-default="प्रशिक्षण" data-presentation="avail.प्रशिक्षण" data-presentation-kind="section">प्रशिक्षण</div><span class="chip num">२</span></div>
+      <div class="body">
+        <div class="p"><span class="role">प्रशिक्षण</span><span class="win">डी.टी.एस.॰नाशिक · दिनांक १० व ११/०९/२०२६</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २४४० कुमावत</span><span class="win">दिनांक १० व ११/०९/२०२६</span></div>
+      </div>
+    </div>
+    <div class="blk">
+      <div class="bh"><div class="nm" data-label="avail.अर्जित रजा" data-default="अर्जित रजा" data-presentation="avail.अर्जित रजा" data-presentation-kind="section">अर्जित रजा</div><span class="chip num">१</span></div>
+      <div class="body">
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> १६९३ भोये</span><span class="win">२८/०८ ते ११/०९</span></div>
+      </div>
+    </div>
+    <div class="blk">
+      <div class="bh"><div class="nm" data-label="avail.हायकोर्ट - मुंबई" data-default="हायकोर्ट - मुंबई" data-presentation="avail.हायकोर्ट - मुंबई" data-presentation-kind="section">हायकोर्ट - मुंबई</div><span class="chip num">१</span></div>
+      <div class="body">
+        <div class="p"><span class="role">हायकोर्ट - मुंबई</span></div>
+      </div>
+    </div>
+    <div class="blk">
+      <div class="bh"><div class="nm" data-label="avail.सिक" data-default="सिक" data-presentation="avail.सिक" data-presentation-kind="section">सिक</div><span class="chip num">२</span></div>
+      <div class="body">
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> १०६ साताळकर</span><span class="win">११/०८ पासुन</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> १५५९ भोये</span><span class="win">३०/०८ पासुन</span></div>
+      </div>
+    </div>
+    <div class="blk">
+      <div class="bh"><div class="nm" data-label="avail.प्रसुती रजा" data-default="प्रसुती रजा" data-presentation="avail.प्रसुती रजा" data-presentation-kind="section">प्रसुती रजा</div><span class="chip num">१</span></div>
+      <div class="body">
+        <div class="p"><span class="n"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> २६७१ गवारे</span><span class="win">२२/०६ ते १८/१२</span></div>
+      </div>
+    </div>
+    <div class="blk">
+      <div class="bh"><div class="nm" data-label="avail.बाल संगोपन रजा" data-default="बाल संगोपन रजा" data-presentation="avail.बाल संगोपन रजा" data-presentation-kind="section">बाल संगोपन रजा</div><span class="chip num">१</span></div>
+      <div class="body">
+        <div class="p"><span class="n"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> २२०८ गवळी</span><span class="win">१८/०८ ते १६/१०</span></div>
+      </div>
+    </div>
+    <div class="blk">
+      <div class="bh"><div class="nm" data-label="avail.गैरहजर" data-default="गैरहजर" data-presentation="avail.गैरहजर" data-presentation-kind="section">गैरहजर</div><span class="chip num">२</span></div>
+      <div class="body">
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> १७६१ पवार</span><span class="win">०५/०८ पासुन</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> १४७४ पवार</span><span class="win">२३/०७ पासुन</span></div>
+      </div>
+    </div>
+    <div class="blk">
+      <div class="bh"><div class="nm" data-label="avail.पो.स्टे.रिझर्व्ह" data-default="पो.स्टे.रिझर्व्ह" data-presentation="avail.पो.स्टे.रिझर्व्ह" data-presentation-kind="section">पो.स्टे.रिझर्व्ह</div><span class="chip num">१</span></div>
+      <div class="body">
+        <div class="p"><span class="n"><abbr class="abbr" data-full="ग्रेड पोलीस उपनिरीक्षक" aria-label="ग्रेड पोलीस उपनिरीक्षक" tabindex="0">ग्रेपोउनि</abbr> अशोक काकड</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec" style="margin-top:10px;"><h2 data-label="sec.avail.1" data-default="कोर्ट पैरवी व विशेष क्षेत्रीय बंदोबस्त" data-presentation="sec.avail.1" data-presentation-kind="section">कोर्ट पैरवी व विशेष क्षेत्रीय बंदोबस्त</h2></div>
+  <div class="grid g4">
+    <div class="blk">
+      <div class="bh"><div class="nm" data-label="avail.प्रतिनियुक्ती" data-default="प्रतिनियुक्ती" data-presentation="avail.प्रतिनियुक्ती" data-presentation-kind="section">प्रतिनियुक्ती</div><span class="chip num">१</span></div>
+      <div class="body">
+        <div class="p"><span class="role">प्रतिनियुक्ती</span></div>
+      </div>
+    </div>
+    <div class="blk">
+      <div class="bh"><div class="nm" data-label="avail.मा.सपोआ.साो.पं.वि कार्या." data-default="मा.सपोआ.साो.पं.वि कार्या." data-presentation="avail.मा.सपोआ.साो.पं.वि कार्या." data-presentation-kind="section">मा.सपोआ.साो.पं.वि कार्या.</div><span class="chip num">४</span></div>
+      <div class="body">
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> ४१६ नवले</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> २५०२ ठेपणे</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> ५३१ राठोड</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २५३९ निरघुडे</span></div>
+      </div>
+    </div>
+    <div class="blk">
+      <div class="bh"><div class="nm" data-label="avail.मा.पो.उप.आ.परि.1 कार्यालय" data-default="मा.पो.उप.आ.परि.1 कार्यालय" data-presentation="avail.मा.पो.उप.आ.परि.1 कार्यालय" data-presentation-kind="section">मा.पो.उप.आ.परि.१ कार्यालय</div><span class="chip num">२</span></div>
+      <div class="body">
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> १३८१ सोनवणे</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २५४८ जोंधळे</span></div>
+      </div>
+    </div>
+    <div class="blk">
+      <div class="bh"><div class="nm" data-label="avail.पंचवटी निर्भया पथक" data-default="पंचवटी निर्भया पथक" data-presentation="avail.पंचवटी निर्भया पथक" data-presentation-kind="section">पंचवटी निर्भया पथक</div><span class="chip num">२</span></div>
+      <div class="body">
+        <div class="p"><span class="n"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> १००६ जयस्वाल</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> १८५८ देशमुख</span></div>
+      </div>
+    </div>
+    <div class="blk">
+      <div class="bh"><div class="nm" data-label="avail.मिसिंग सेल कामी" data-default="मिसिंग सेल कामी" data-presentation="avail.मिसिंग सेल कामी" data-presentation-kind="section">मिसिंग सेल कामी</div><span class="chip num">२</span></div>
+      <div class="body">
+        <div class="p"><span class="n"><abbr class="abbr" data-full="महिला सहाय्यक पोलीस उपनिरीक्षक" aria-label="महिला सहाय्यक पोलीस उपनिरीक्षक" tabindex="0">मसपोउनि</abbr> राठोड</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="महिला पोलीस हवालदार" aria-label="महिला पोलीस हवालदार" tabindex="0">मपोहवा</abbr> १७३४ गावित</span></div>
+      </div>
+    </div>
+    <div class="blk">
+      <div class="bh"><div class="nm" data-label="avail.पंचवटी दामिनी पथक" data-default="पंचवटी दामिनी पथक" data-presentation="avail.पंचवटी दामिनी पथक" data-presentation-kind="section">पंचवटी दामिनी पथक</div><span class="chip num">४</span></div>
+      <div class="body">
+        <div class="p"><span class="n"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> २६९९ पवार</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> १०६१ पानसरे</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> १७९९ बहिरम</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> ३९ येवले</span></div>
+      </div>
+    </div>
+    <div class="blk">
+      <div class="bh"><div class="nm" data-label="avail.मा.सेशन कोर्ट पैरवी" data-default="मा.सेशन कोर्ट पैरवी" data-presentation="avail.मा.सेशन कोर्ट पैरवी" data-presentation-kind="section">मा.सेशन कोर्ट पैरवी</div><span class="chip num">१</span></div>
+      <div class="body">
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> ५०० गावित</span></div>
+      </div>
+    </div>
+    <div class="blk">
+      <div class="bh"><div class="nm" data-label="avail.मा.JMFC कोर्ट पैरवी" data-default="मा.JMFC कोर्ट पैरवी" data-presentation="avail.मा.JMFC कोर्ट पैरवी" data-presentation-kind="section">मा.JMFC कोर्ट पैरवी</div><span class="chip num">२</span></div>
+      <div class="body">
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> १९९६ पालवी</span></div>
+        <div class="p"><span class="n"><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> १०१४ गोसावी</span></div>
+      </div>
+    </div>
+    <div class="blk">
+      <div class="bh"><div class="nm" data-label="avail.जिल्हा व सत्र कोर्ट॰नाशिक" data-default="जिल्हा व सत्र कोर्ट॰नाशिक" data-presentation="avail.जिल्हा व सत्र कोर्ट॰नाशिक" data-presentation-kind="section">जिल्हा व सत्र कोर्ट॰नाशिक</div><span class="chip num">१</span></div>
+      <div class="body">
+        <div class="p"><span class="role">जिल्हा व सत्र कोर्ट॰नाशिक</span><span class="win">येथे सुरक्षा बंदोबस्तकामी</span></div>
+      </div>
+    </div>
+    <div class="blk">
+      <div class="bh"><div class="nm" data-label="avail.वाघ जाप्ता" data-default="वाघ जाप्ता" data-presentation="avail.वाघ जाप्ता" data-presentation-kind="section">वाघ जाप्ता</div><span class="chip num">१</span></div>
+      <div class="body">
+        <div class="p"><span class="n"><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> २१४९ खैरनार</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page notices" id="sheet-5">
+  <div class="head">
+    <div class="hc">
+      <div class="h1" data-label="head.h1" data-default="नाशिक शहर पोलीस आयुक्तालय" data-presentation="head.h1" data-presentation-kind="label">नाशिक शहर पोलीस आयुक्तालय</div>
+      <div class="h2" data-label="head.h2" data-default="दैनिक कर्तव्य वाटप" data-presentation="head.h2" data-presentation-kind="label">दैनिक कर्तव्य वाटप</div>
+      <div class="h3">१० सप्टेंबर २०२६, गुरुवार</div>
+    </div>
+    <div class="hr"><span class="lc lc-draft">DRAFT</span></div>
+  </div>
+  <div class="sec"><h2 data-label="sec.notices" data-default="सूचना व निर्देश" data-presentation="sec.notices" data-presentation-kind="section">सूचना व निर्देश</h2></div>
+  <div class="grid g4">
+    <div class="blk">
+      <div class="bh"><div class="nm" data-label="notice.रात्रगस्त सुचना" data-default="रात्रगस्त सुचना" data-presentation="notice.रात्रगस्त सुचना" data-presentation-kind="section">रात्रगस्त सुचना</div><span class="chip num">७</span></div>
+      <div class="body">
+        <div class="p"><span class="n">गुडमाॅर्निंग स्काॅड</span></div>
+        <div class="p"><span class="n">हदद्ीतील सर्व बिट मार्शल</span></div>
+        <div class="p"><span class="n">त्यांचे त्यांचे कार्यक्षेत्रात</span></div>
+        <div class="p"><span class="n">गुडमाॅर्निंग ड्युटी करतील.</span></div>
+        <div class="p"><span class="n">सि.आर.॰ डि.बी.</span></div>
+        <div class="p"><span class="n">मोबाईल हे सर्व पुतळयांना</span></div>
+        <div class="p"><span class="n">भेटी देतील</span></div>
+      </div>
+    </div>
+    <div class="blk">
+      <div class="bh"><div class="nm" data-label="notice.रात्रड्युटी सुचना" data-default="रात्रड्युटी सुचना" data-presentation="notice.रात्रड्युटी सुचना" data-presentation-kind="section">रात्रड्युटी सुचना</div><span class="chip num">७</span></div>
+      <div class="body">
+        <div class="p"><span class="n">चौकी ड्युटी अंमलदार हे</span></div>
+        <div class="p"><span class="n">हददीत रात्रगस्त फिरतील</span></div>
+        <div class="p"><span class="n">वरील प्रमाणे DB अंमलदार</span></div>
+        <div class="p"><span class="n">बिट मार्शल हे गुडमाॅर्नींग</span></div>
+        <div class="p"><span class="n">फिरतील व रिपोर्ट पाठवुन</span></div>
+        <div class="p"><span class="n">स्थळप्रत गोपनियकडे</span></div>
+        <div class="p"><span class="n">देतील</span></div>
+      </div>
+    </div>
+    <div class="blk">
+      <div class="bh"><div class="nm" data-label="notice.महत्वाचे सुचना" data-default="महत्वाचे सुचना" data-presentation="notice.महत्वाचे सुचना" data-presentation-kind="section">महत्वाचे सुचना</div><span class="chip num">३</span></div>
+      <div class="body">
+        <div class="p"><span class="n">डीबी मोबाईल/ सीआर</span></div>
+        <div class="p"><span class="n">मोबाईल आस्थापना बंद करून घेतील</span></div>
+        <div class="p"><span class="n">मोबाईल आस्थापना बंद करून घेतील</span></div>
+      </div>
+    </div>
+    <div class="blk">
+      <div class="bh"><div class="nm" data-label="notice.ग्रीन अॅप" data-default="ग्रीन अॅप" data-presentation="notice.ग्रीन अॅप" data-presentation-kind="section">ग्रीन अॅप</div><span class="chip num">१</span></div>
+      <div class="body">
+        <div class="p"><span class="n">रात्रपाळी चौकीचे अंमलदार आपआपले चौकी हद्दीतील ग्रीन अॅप करतील.</span></div>
+      </div>
+    </div>
+    <div class="blk">
+      <div class="bh"><div class="nm" data-label="notice.रामकुंड पेट्रोलिंग" data-default="रामकुंड पेट्रोलिंग" data-presentation="notice.रामकुंड पेट्रोलिंग" data-presentation-kind="section">रामकुंड पेट्रोलिंग</div><span class="chip num">१०</span></div>
+      <div class="body">
+        <div class="p"><span class="n">रामकुंड</span></div>
+        <div class="p"><span class="n">सी.आर.॰ डी.बी.मोबाईल रामकुंड येथे</span></div>
+        <div class="p"><span class="n">भेट देतील.</span></div>
+        <div class="p"><span class="n">मार्केट यार्ड पोलीस मदत केंद्र</span></div>
+        <div class="p"><span class="n">मेरी मार्शल भेट देतील.</span></div>
+        <div class="p"><span class="n">मेरी मार्शल व डि.बी.मोबाईल वेळोवेळी</span></div>
+        <div class="p"><span class="n">भेट देतील.</span></div>
+        <div class="p"><span class="n">मार्केट यार्ड चौकी येथे मदत</span></div>
+        <div class="p"><span class="n">लागल्यास गुन्हेशोध पथकास संपर्क</span></div>
+        <div class="p"><span class="n">करतील.</span></div>
+      </div>
+    </div>
+   </div>
+  <div class="sec"><h2 data-label="sec.officers" data-default="पोलीस अधिकारी कर्तव्य सारांश" data-presentation="sec.officers" data-presentation-kind="section">पोलीस अधिकारी कर्तव्य सारांश</h2></div>
+  <div class="two">
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th class="num" style="width:30px" data-label="off.h.n" data-default="अ.नं." data-presentation="off.h.n" data-presentation-kind="label">अ.नं.</th><th data-label="off.h.o" data-default="अधिकारी" data-presentation="off.h.o" data-presentation-kind="label">अधिकारी</th><th data-label="off.h.d" data-default="कर्तव्य वाटप" data-presentation="off.h.d" data-presentation-kind="label">कर्तव्य वाटप</th></tr></thead>
+        <tbody>
+        <tr><td class="num">१</td><td>पो.नि.सुनिल पवार (गुन्हे)</td><td>उपस्थित</td></tr>
+        <tr><td class="num">२</td><td>पो.नि.सुधीर पाटील</td><td>उपस्थित</td></tr>
+        <tr><td class="num">३</td><td>पो.नि.नितीन आंधळे</td><td>उपस्थित</td></tr>
+        <tr><td class="num">४</td><td>स.पो.नि.शरद पाटील</td><td>उपस्थित</td></tr>
+        <tr><td class="num">५</td><td>स.पो.नि.सतिश शिरसाठ</td><td>उपस्थित</td></tr>
+        <tr><td class="num">६</td><td>स.पो.नि.हेमंत मोहिते</td><td>९ ते १४ व नाईट</td></tr>
+        <tr><td class="num">७</td><td>स.पो.नि.प्रशांत बोरसे</td><td>उपस्थित</td></tr>
+        <tr><td class="num">८</td><td>पो.उ.नि.कैलास जाधव</td><td>साप्ताहिक सुट्टी</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th class="num" style="width:30px" data-label="off.h.n" data-default="अ.नं." data-presentation="off.h.n" data-presentation-kind="label">अ.नं.</th><th data-label="off.h.o" data-default="अधिकारी" data-presentation="off.h.o" data-presentation-kind="label">अधिकारी</th><th data-label="off.h.d" data-default="कर्तव्य वाटप" data-presentation="off.h.d" data-presentation-kind="label">कर्तव्य वाटप</th></tr></thead>
+        <tbody>
+        <tr><td class="num">९</td><td>पो.उ.नि.प्रकाश नेमाणे</td><td>साप्ताहिक सुट्टी</td></tr>
+        <tr><td class="num">१०</td><td>पो.उ.नि.सचिन चव्हाण</td><td>उपस्थित</td></tr>
+        <tr><td class="num">११</td><td>पो.उ.नि पुंडलिक पावसे</td><td>साप्ताहिक सुट्टी</td></tr>
+        <tr><td class="num">१२</td><td>परि.म.पो.उ.नि.अर्चना वाघ</td><td>डे पि.एस.ओ.</td></tr>
+        <tr><td class="num">१३</td><td>परि.पोउनि.प्रतिक राऊत</td><td>पंचवटी १ मोबाईल - दिवसपाळी</td></tr>
+        <tr><td class="num">१४</td><td>परि.पोउनि.सुनिल ठेंग</td><td>पंचवटी १ मोबाईल - रात्रपाळी</td></tr>
+        <tr><td class="num">१५</td><td>परि.पोउनि.अशोक दिंडे</td><td>साप्ताहिक सुट्टी</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="sheet-6">
+  <div class="head">
+    <div class="hc">
+      <div class="h1" data-label="head.h1" data-default="नाशिक शहर पोलीस आयुक्तालय" data-presentation="head.h1" data-presentation-kind="label">नाशिक शहर पोलीस आयुक्तालय</div>
+      <div class="h2" data-label="head.h2" data-default="दैनिक कर्तव्य वाटप" data-presentation="head.h2" data-presentation-kind="label">दैनिक कर्तव्य वाटप</div>
+      <div class="h3">१० सप्टेंबर २०२६, गुरुवार</div>
+    </div>
+    <div class="hr"><span class="lc lc-draft">DRAFT</span></div>
+  </div>
+  <div class="sec"><h2 data-label="sec.matrix" data-default="मनुष्यबळ स्थिती दर्शक मॅट्रिक्स" data-presentation="sec.matrix" data-presentation-kind="section">मनुष्यबळ स्थिती दर्शक मॅट्रिक्स</h2></div>
+  <div class="tbl-wrap">
+  <table class="tbl">
+    <thead>
+      <tr><th data-label="mcol.detail" data-default="तपशील" data-presentation="mcol.detail" data-presentation-kind="label">तपशील</th><th class="num" data-label="mcol.PI" data-default="PI" data-presentation="mcol.PI" data-presentation-kind="label">PI</th><th class="num" data-label="mcol.API" data-default="API" data-presentation="mcol.API" data-presentation-kind="label">API</th><th class="num" data-label="mcol.PSI" data-default="PSI" data-presentation="mcol.PSI" data-presentation-kind="label">PSI</th><th class="num" data-label="mcol.GPS" data-default="GPS" data-presentation="mcol.GPS" data-presentation-kind="label">GPS</th><th class="num" data-label="mcol.ASI" data-default="ASI" data-presentation="mcol.ASI" data-presentation-kind="label">ASI</th><th class="num" data-label="mcol.LASI" data-default="LASI" data-presentation="mcol.LASI" data-presentation-kind="label">LASI</th><th class="num" data-label="mcol.LASI#2" data-default="LASI" data-presentation="mcol.LASI#2" data-presentation-kind="label">LASI</th><th class="num" data-label="mcol.HC" data-default="HC" data-presentation="mcol.HC" data-presentation-kind="label">HC</th><th class="num" data-label="mcol.LHC" data-default="LHC" data-presentation="mcol.LHC" data-presentation-kind="label">LHC</th><th class="num" data-label="mcol.PN" data-default="PN" data-presentation="mcol.PN" data-presentation-kind="label">PN</th><th class="num" data-label="mcol.LPN" data-default="LPN" data-presentation="mcol.LPN" data-presentation-kind="label">LPN</th><th class="num" data-label="mcol.PC" data-default="PC" data-presentation="mcol.PC" data-presentation-kind="label">PC</th><th class="num" data-label="mcol.LPC" data-default="LPC" data-presentation="mcol.LPC" data-presentation-kind="label">LPC</th><th class="num" data-label="mcol.OFFICE" data-default="Office" data-presentation="mcol.OFFICE" data-presentation-kind="label">Office</th><th class="num" data-label="mcol.ME" data-default="ME" data-presentation="mcol.ME" data-presentation-kind="label">ME</th></tr>
+    </thead>
+    <tbody>
+      <tr><th data-label="mrow.मंजूर संख्याबळ" data-default="मंजूर संख्याबळ" data-presentation="mrow.मंजूर संख्याबळ" data-presentation-kind="label">मंजूर संख्याबळ</th><td class="num">02</td><td class="num">04</td><td class="num">03</td><td class="num muted">..</td><td class="num">11</td><td class="num">11</td><td class="num">11</td><td class="num">46</td><td class="num">46</td><td class="num">53</td><td class="num">53</td><td class="num">123</td><td class="num">123</td><td class="num">09</td><td class="num">233</td></tr>
+      <tr><th data-label="mrow.हजर मनुश्यबळ" data-default="हजर मनुश्यबळ" data-presentation="mrow.हजर मनुश्यबळ" data-presentation-kind="label">हजर मनुश्यबळ</th><td class="num">04</td><td class="num">04</td><td class="num">08</td><td class="num">01</td><td class="num">04</td><td class="num">04</td><td class="num">03</td><td class="num">38</td><td class="num">10</td><td class="num">01</td><td class="num">00</td><td class="num">63</td><td class="num">31</td><td class="num">12&lt;br&gt;04 Proण्</td><td class="num">151</td></tr>
+      <tr><th data-label="mrow.मा.DCPएACP कार्या. प्रतिनियुक्ती" data-default="मा.DCPएACP कार्या. प्रतिनियुक्ती" data-presentation="mrow.मा.DCPएACP कार्या. प्रतिनियुक्ती" data-presentation-kind="label">मा.DCPएACP कार्या. प्रतिनियुक्ती</th><td class="num muted">..</td><td class="num muted">..</td><td class="num">00</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num">03</td><td class="num">02</td><td class="num muted"></td><td class="num muted"></td><td class="num">04</td><td class="num">2</td><td class="num">00</td><td class="num">12</td></tr>
+      <tr><th data-label="mrow.अंगरक्षक/जाप्ता" data-default="अंगरक्षक/जाप्ता" data-presentation="mrow.अंगरक्षक/जाप्ता" data-presentation-kind="label">अंगरक्षक/जाप्ता</th><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num">01</td></tr>
+      <tr><th data-label="mrow.मा. कोर्ट /पैरवी" data-default="मा. कोर्ट /पैरवी" data-presentation="mrow.मा. कोर्ट /पैरवी" data-presentation-kind="label">मा. कोर्ट /पैरवी</th><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num">03</td></tr>
+      <tr><th data-label="mrow.सिक" data-default="सिक" data-presentation="mrow.सिक" data-presentation-kind="label">सिक</th><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td></tr>
+      <tr><th data-label="mrow.से.नि/बा.संगोपन" data-default="से.नि/बा.संगोपन" data-presentation="mrow.से.नि/बा.संगोपन" data-presentation-kind="label">से.नि/बा.संगोपन</th><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num">01</td></tr>
+      <tr><th data-label="mrow.उजळणी कोर्स" data-default="उजळणी कोर्स" data-presentation="mrow.उजळणी कोर्स" data-presentation-kind="label">उजळणी कोर्स</th><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td></tr>
+      <tr><th data-label="mrow.पो.मु./पोस्टे/ स्पोर्ट" data-default="पो.मु./पोस्टे/ स्पोर्ट" data-presentation="mrow.पो.मु./पोस्टे/ स्पोर्ट" data-presentation-kind="label">पो.मु./पोस्टे/ स्पोर्ट</th><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td></tr>
+      <tr><th data-label="mrow.तपासकामी /वाॅरट" data-default="तपासकामी /वाॅरट" data-presentation="mrow.तपासकामी /वाॅरट" data-presentation-kind="label">तपासकामी /वाॅरट</th><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td></tr>
+      <tr><th data-label="mrow.अर्जित रजा" data-default="अर्जित रजा" data-presentation="mrow.अर्जित रजा" data-presentation-kind="label">अर्जित रजा</th><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num">01</td><td class="num">01</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num">02</td><td class="num muted">..</td><td class="num">03</td></tr>
+      <tr><th data-label="mrow.किरकोळ रजा" data-default="किरकोळ रजा" data-presentation="mrow.किरकोळ रजा" data-presentation-kind="label">किरकोळ रजा</th><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num">01</td><td class="num muted">..</td><td class="num">01</td></tr>
+      <tr><th data-label="mrow.साप्ताहीक सुटट्ी" data-default="साप्ताहीक सुटट्ी" data-presentation="mrow.साप्ताहीक सुटट्ी" data-presentation-kind="label">साप्ताहीक सुटट्ी</th><td class="num muted">..</td><td class="num muted">..</td><td class="num">03</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num">03</td><td class="num">02</td><td class="num muted">..</td><td class="num muted">..</td><td class="num">14</td><td class="num">02</td><td class="num">03</td><td class="num">21</td></tr>
+      <tr><th data-label="mrow.बाहेर बंदोबस्त" data-default="बाहेर बंदोबस्त" data-presentation="mrow.बाहेर बंदोबस्त" data-presentation-kind="label">बाहेर बंदोबस्त</th><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td></tr>
+      <tr><th data-label="mrow.मा. हायकोर्ट॰मुंबई" data-default="मा. हायकोर्ट॰मुंबई" data-presentation="mrow.मा. हायकोर्ट॰मुंबई" data-presentation-kind="label">मा. हायकोर्ट॰मुंबई</th><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td><td class="num muted">..</td></tr>
+      <tr><th data-label="mrow.दिवस व रात्रकरिता प्रत्यक्ष हजर" data-default="दिवस व रात्रकरिता प्रत्यक्ष हजर" data-presentation="mrow.दिवस व रात्रकरिता प्रत्यक्ष हजर" data-presentation-kind="label">दिवस व रात्रकरिता प्रत्यक्ष हजर</th><td class="num">03</td><td class="num muted"></td><td class="num muted"></td><td class="num muted"></td><td class="num muted"></td><td class="num muted"></td><td class="num muted"></td><td class="num muted"></td><td class="num muted"></td><td class="num muted"></td><td class="num muted"></td><td class="num muted"></td><td class="num muted"></td><td class="num muted"></td><td class="num muted"></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="sec" style="margin-top:10px;"><h2 data-label="sec.summary" data-default="पाळीनिहाय सारांश व अचानक बदल नोंद" data-presentation="sec.summary" data-presentation-kind="section">पाळीनिहाय सारांश व अचानक बदल नोंद</h2></div>
+  <div class="two">
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th data-label="ssum.lbl" data-default="पाळी" data-presentation="ssum.lbl" data-presentation-kind="label">पाळी</th><th class="num" data-label="ssum.col.अधिकारी" data-default="अधिकारी" data-presentation="ssum.col.अधिकारी" data-presentation-kind="label">अधिकारी</th><th class="num" data-label="ssum.col.अंमलदार" data-default="अंमलदार" data-presentation="ssum.col.अंमलदार" data-presentation-kind="label">अंमलदार</th><th class="num" data-label="ssum.col.महिला अंमलदार" data-default="महिला अंमलदार" data-presentation="ssum.col.महिला अंमलदार" data-presentation-kind="label">महिला अंमलदार</th><th class="num" data-label="ssum.col.एकूण" data-default="एकूण" data-presentation="ssum.col.एकूण" data-presentation-kind="label">एकूण</th></tr></thead>
+        <tbody>
+      <tr><th data-label="ssum.row.DAY" data-default="दिवसपाळी (०९:०० ते २१:००)" data-presentation="ssum.row.DAY" data-presentation-kind="label">दिवसपाळी (०९:०० ते २१:००)</th><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td></tr>
+      <tr><th data-label="ssum.row.NIGHT" data-default="रात्रपाळी (२१:०० ते ०९:००)" data-presentation="ssum.row.NIGHT" data-presentation-kind="label">रात्रपाळी (२१:०० ते ०९:००)</th><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td></tr>
+      <tr><th data-label="ssum.row.OTHER" data-default="इतर ड्युटी / रजा / कोर्ट" data-presentation="ssum.row.OTHER" data-presentation-kind="label">इतर ड्युटी / रजा / कोर्ट</th><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th class="num" style="width:32px" data-label="chg.h.n" data-default="अ.नं." data-presentation="chg.h.n" data-presentation-kind="label">अ.नं.</th><th data-label="chg.h.d" data-default="अचानक बदल तपशील" data-presentation="chg.h.d" data-presentation-kind="label">अचानक बदल तपशील</th><th style="width:40%" data-label="chg.h.note" data-default="नोंद / कारण" data-presentation="chg.h.note" data-presentation-kind="label">नोंद / कारण</th></tr></thead>
+        <tbody>
+      <tr><td class="num">१</td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+   </div>
+   <div class="signoff">
+    <div class="sig"><span data-label="signoff.1" data-default="तक्ता तयार करणारे हजेरी लेखनिक:" data-presentation="signoff.1" data-presentation-kind="section">तक्ता तयार करणारे हजेरी लेखनिक:</span><br><b><abbr class="abbr" data-full="पोलीस हवालदार" aria-label="पोलीस हवालदार" tabindex="0">पोहवा</abbr> ६९२ गुंबाडे</b> / <b><abbr class="abbr" data-full="पोलीस शिपाई" aria-label="पोलीस शिपाई" tabindex="0">पोशि</abbr> ५६९ पवार</b> / <b><abbr class="abbr" data-full="महिला पोलीस शिपाई" aria-label="महिला पोलीस शिपाई" tabindex="0">मपोशि</abbr> ६६९ गांगुर्डे</b></div>
+    <div class="sig"><span data-label="signoff.2" data-default="तपासणी अधिकारी (प्रभारी):" data-presentation="signoff.2" data-presentation-kind="section">तपासणी अधिकारी (प्रभारी):</span><br><b>गजेंद्र रघुनाथ पाटील</b>, वरिष्ठ पोलीस निरीक्षक</div>
+    <div class="sig"><span data-label="signoff.3" data-default="ठाणे शिक्का व दैनिक डायरी नोंद:" data-presentation="signoff.3" data-presentation-kind="section">ठाणे शिक्का व दैनिक डायरी नोंद:</span><br>ठाणे दैनंदिनी नोंद क्र. ____ / २०२६</div>
+  </div>
+</div>
+
+<script src="/chart-authoring.js" defer></script>
+</body>
+</html>

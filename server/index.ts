@@ -10,7 +10,7 @@ import path from "node:path";
 import { makePool, DEV_DB } from "./db.js";
 import { projectChart, getSnapshot, weekdayMr, type ChartDocument } from "./chart-document.js";
 import { finalizeChart, reopenForAmendment } from "./finalize.js";
-import { reassignSlot, addChowkiBlock, addOfficerBox } from "./assignments.js";
+import { reassignSlot, addChowkiBlock, addOfficerBox, removeChowkiBlock, removeOfficerBox, addSupportSeat, removeSupportSeat } from "./assignments.js";
 import { renderChart } from "./render/chart-html.js";
 import { registerChartPresentationRoute } from "./presentation.js";
 
@@ -39,6 +39,21 @@ app.get("/design/compv3.css", serveFile(path.join("design", "compv3.css"), "text
 // The frozen visual baseline itself, served read-only so the chart can be reviewed side by side
 // against the mock it must match (same origin → the mock's relative compv3.css link resolves).
 app.get("/design/panchavati-compv3.html", serveFile(path.join("design", "panchavati-compv3.html"), "text/html; charset=utf-8"));
+
+// Legacy reference chart (user request 2026-10-13): the real legacy six-page chart lives in
+// Kushal's repo, which is a SEPARATE app — its own DB (panchavati_dev), its own API shape and its
+// own React views (Page1View…Page6View.tsx). It is therefore NOT proxied through this server
+// (root-absolute assets + different /api contract would render a broken shell). The header entry
+// opens it directly at http://localhost:3100/charts/<date>; `npm run legacy:start` starts it, and
+// the browser page probes reachability before embedding it. Nothing here imports that app's code.
+// The browser keeps a SAME-ORIGIN url (/legacy/<date>) and this redirect is the only place that
+// knows the other app's origin — the client-side invariant "no absolute URLs" stays intact.
+const LEGACY_PORT = process.env.LEGACY_PORT || "3101";
+app.get("/legacy/:date", async (req, reply) => {
+  const { date } = req.params as { date: string };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return reply.code(400).send({ error: "bad date" });
+  return reply.redirect(`http://localhost:${LEGACY_PORT}/charts/${date}`);
+});
 app.get("/authoring.css", serveFile(path.join("web", "authoring.css"), "text/css; charset=utf-8"));
 app.get("/chart-presentation.css", serveFile(path.join("web", "chart-presentation.css"), "text/css; charset=utf-8"));
 app.get("/chart-authoring.js", serveFile(path.join("web", "chart-authoring.js"), "text/javascript; charset=utf-8"));
@@ -279,6 +294,118 @@ app.post("/api/charts/:date/officer", async (req, reply) => {
       return reply.code(/immutable|already|आधीच/.test(msg) ? 409 : 400).send({ error: msg });
     }
     throw e;
+  } finally {
+    client.release();
+  }
+});
+
+// Remove a chart block (edit-mode ✕) — the clerk's own undo for the two add controls.
+// Same guards as the domain layer: FINALIZED → 409, a block that holds a person → 409,
+// a chowki another block charges to → 409. Nothing but this chart's own rows is touched.
+const removeErrorReply = (reply: { code: (n: number) => { send: (b: unknown) => unknown } }, msg: string) => {
+  if (/immutable|कर्मचारी|चार्ज|आधीच/.test(msg)) return reply.code(409).send({ error: msg });
+  if (/no officer box|चौकी नाही/.test(msg)) return reply.code(404).send({ error: msg });
+  return reply.code(400).send({ error: msg });
+};
+
+app.delete("/api/charts/:date/officer/:label", async (req, reply) => {
+  const { date, label } = req.params as { date: string; label: string };
+  const ch = (await pool.query(`SELECT chart_id FROM daily_charts WHERE chart_date = $1`, [date])).rows;
+  if (ch.length !== 1) return reply.code(404).send({ error: `no chart for ${date}` });
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const res = await removeOfficerBox(client, {
+      chartId: Number(ch[0].chart_id),
+      label: decodeURIComponent(label),
+    });
+    await client.query("COMMIT");
+    return { ok: true, ...res };
+  } catch (e) {
+    await client.query("ROLLBACK");
+    return removeErrorReply(reply, (e as Error).message);
+  } finally {
+    client.release();
+  }
+});
+
+app.delete("/api/charts/:date/chowki/:locationId", async (req, reply) => {
+  const { date, locationId } = req.params as { date: string; locationId: string };
+  const ch = (await pool.query(`SELECT chart_id FROM daily_charts WHERE chart_date = $1`, [date])).rows;
+  if (ch.length !== 1) return reply.code(404).send({ error: `no chart for ${date}` });
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const res = await removeChowkiBlock(client, {
+      chartId: Number(ch[0].chart_id),
+      locationId: Number(locationId),
+    });
+    await client.query("COMMIT");
+    return { ok: true, ...res };
+  } catch (e) {
+    await client.query("ROLLBACK");
+    return removeErrorReply(reply, (e as Error).message);
+  } finally {
+    client.release();
+  }
+});
+
+// Sr-PI support seats (edit-mode `+ जागा` / ✕ inside the station-officer card). Same guards as
+// the block routes: DRAFT only (enforced in the domain layer), a seat holding a person cannot be
+// deleted, and a duplicate seat is refused instead of silently reused.
+const supportErrorReply = (reply: { code: (n: number) => { send: (b: unknown) => unknown } }, msg: string) => {
+  if (/immutable/.test(msg)) return reply.code(409).send({ error: msg });
+  if (/जागा आधीच|role must|shift must|does not belong|सपोर्ट जागा/.test(msg)) {
+    return reply.code(/जागा आधीच|सपोर्ट जागा/.test(msg) ? 409 : 400).send({ error: msg });
+  }
+  return reply.code(400).send({ error: msg });
+};
+
+app.post("/api/charts/:date/support", async (req, reply) => {
+  const { date } = req.params as { date: string };
+  const body = (req.body ?? {}) as { role?: string; shift?: "DAY" | "NIGHT" };
+  const ch = (await pool.query(`SELECT chart_id FROM daily_charts WHERE chart_date = $1`, [date])).rows;
+  if (ch.length !== 1) return reply.code(404).send({ error: `no chart for ${date}` });
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const res = await addSupportSeat(client, {
+      chartId: Number(ch[0].chart_id), role: body.role ?? "", shift: body.shift as "DAY" | "NIGHT",
+    });
+    await client.query("COMMIT");
+    return reply.code(201).send(res);
+  } catch (e) {
+    await client.query("ROLLBACK");
+    return supportErrorReply(reply, (e as Error).message);
+  } finally {
+    client.release();
+  }
+});
+
+app.delete("/api/charts/:date/support/:id", async (req, reply) => {
+  const { date, id } = req.params as { date: string; id: string };
+  const assignmentId = Number(id);
+  if (!Number.isFinite(assignmentId) || assignmentId <= 0) {
+    return reply.code(400).send({ error: "assignment id must be a number" });
+  }
+  const ch = (await pool.query(`SELECT chart_id FROM daily_charts WHERE chart_date = $1`, [date])).rows;
+  if (ch.length !== 1) return reply.code(404).send({ error: `no chart for ${date}` });
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const res = await removeSupportSeat(client, { chartId: Number(ch[0].chart_id), assignmentId });
+    await client.query("COMMIT");
+    return { ok: true, ...res };
+  } catch (e) {
+    await client.query("ROLLBACK");
+    const msg = (e as Error).message;
+    if (/immutable/.test(msg)) return reply.code(409).send({ error: msg });
+    if (/no assignment/.test(msg)) return reply.code(404).send({ error: msg });
+    return supportErrorReply(reply, msg);
   } finally {
     client.release();
   }

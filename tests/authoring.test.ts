@@ -34,6 +34,41 @@ afterAll(async () => { await pool.end(); });
 describe("browser authoring asset (web/chart-authoring.js)", () => {
   const js = () => read("web/chart-authoring.js");
 
+  // A syntax error in this file throws once, at load, in the browser only — every other check in
+  // this suite reads it as TEXT and passes anyway, and the whole chrome silently dies (found live
+  // 2026-10-13: a literal newline inside a single-quoted string). Compile it here instead.
+  it("parses as JavaScript (a load-time syntax error would silently kill all chrome)", () => {
+    expect(() => new Function(js())).not.toThrow();
+  });
+
+  // The bilingual input aid is pure string logic, so it can be pinned exactly. The slice is taken
+  // between two stable anchors inside the IIFE (the file itself needs a DOM, so it cannot be
+  // imported here); a moved anchor fails loudly instead of silently skipping coverage.
+  it("transliterates the real Panchavati name shapes both ways (offline, approximate)", () => {
+    const src = js();
+    const start = src.indexOf("var TR_VOWELS");
+    const end = src.indexOf("function bindTranslit");
+    expect(start).toBeGreaterThan(-1);
+    expect(end).toBeGreaterThan(start);
+    const { romanToDev, devToRoman } = new Function(
+      `${src.slice(start, end)}; return { romanToDev, devToRoman };`,
+    )() as { romanToDev: (s: string) => string; devToRoman: (s: string) => string };
+    // retroflex is the documented capital convention INSIDE a word, plain capitalisation at its
+    // start; r after a bare consonant is the repha; n/m before a consonant is the anusvara
+    for (const [roman, dev] of [
+      ["Kushal", "कुशल"], ["Arjish", "अर्जिश"], ["prakaash", "प्रकाश"], ["durvesh", "दुर्वेश"],
+      ["Deshmukh", "देशमुख"], ["Patil", "पतिल"], ["paTil", "पटिल"], ["gaNesh", "गणेश"],
+      ["shinde", "शिंदे"], ["pawar", "पवार"], ["saaLunkhe", "साळुंखे"], ["Sanjay", "संजय"],
+    ] as const) expect(romanToDev(roman), roman).toBe(dev);
+    for (const [dev, roman] of [
+      ["कुशल", "kushal"], ["प्रकाश", "prakaash"], ["दुर्वेश", "durvesh"], ["गणेश", "gaNesh"],
+    ] as const) expect(devToRoman(dev), dev).toBe(roman);
+    // Marathi typed first produces a usable Latin suggestion, digits untouched (display transform
+    // stays a display transform) — and a rank label passes through without turning into a name
+    expect(devToRoman("पोशि 2451")).toBe("poshi 2451");
+    expect(romanToDev("12/09/2026")).toBe("12/09/2026");
+  });
+
   it("is local-only: no absolute URLs — every API call is a same-origin relative path", () => {
     expect(js()).not.toMatch(/https?:\/\//);
     expect(js()).not.toMatch(/fetch\(\s*["'`]https?:/);
@@ -108,9 +143,16 @@ describe("rendered page wiring (renderChart output)", () => {
     const officer = html.match(/<button[^>]*data-add="officer"[^>]*>/)?.[0] ?? "";
     expect(officer).not.toBe("");
     expect(officer).not.toContain("disabled");    // finished feature — never a dead control
-    expect(html).toContain("+ अधिकारी बॉक्स जोडा");
+    // compact-v5: the officer add control is a TILE inside the officer band's own grid row
+    // (beside the last box), not a full-width block underneath it.
+    expect(html).toContain("+ अधिकारी बॉक्स");
     const officerButton = html.match(/<button[^>]*data-add="officer"[^>]*>[\s\S]*?<\/button>/)?.[0] ?? "";
     expect(officerButton).not.toContain("Coming Soon");
+    expect(officerButton).toContain("add-box-tile");
+    const bandStart = html.indexOf('class="grid g-off fit"');
+    const bandEnd = html.indexOf('class="grid g-core"', bandStart);
+    expect(bandStart).toBeGreaterThan(-1);
+    expect(html.slice(bandStart, bandEnd), "add tile sits inside the officer band").toContain('data-add="officer"');
     const js = read("web/chart-authoring.js");
     expect(js).toContain('data-add") === "officer"');
     expect(js).toContain('api("/api/charts/" + DATE + "/officer"');
@@ -142,8 +184,13 @@ describe("rendered page wiring (renderChart output)", () => {
     expect(card).toContain("ठाणे प्रमुख");
   });
 
-  it("chowki incharge line carries their time window; block name not duplicated inside sub-tables", () => {
-    expect(html).toContain('<span class="tm">· ');
+  it("chowki incharge line carries their time window as plain text; block name not duplicated inside sub-tables", () => {
+    // user correction 2026-10-13: the source-backed window still prints, but as plain text — no
+    // decorative middle dot and no coloured chip ("this is a chart, not ui").
+    expect(html).toMatch(/<span class="tm">[^·<]+<\/span>/);
+    expect(html).not.toContain('<span class="tm">· ');
+    // the only surviving middle dot is verbatim source text inside a notice line
+    expect(html).toContain("डी.टी.एस.॰नाशिक · दिनांक");
     // heading exists as the block name only — never repeated as an in-table role label
     expect(html).toMatch(/<div class="nm"[^>]*>काटया मारूती पोलीस चौकी<\/div>/);
     expect(html).not.toMatch(/<th class="role"[^>]*>काटया मारूती पोलीस चौकी<\/th>/);

@@ -21,6 +21,7 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "doctor": "node scripts/doctor.mjs",
+    "legacy:start": "node scripts/start-legacy.mjs",
     "print:audit": "node tools/print-audit.mjs",
     "verify": "npm run typecheck && npm test && npm run doctor",
     "check": "npm run verify"

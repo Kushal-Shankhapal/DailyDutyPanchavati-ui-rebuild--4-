@@ -115,6 +115,27 @@
 
 #appbar .ab-datewrap {
   position: relative;
+  position: relative;
+}
+
+/* compact-v5: the date selector sits on the chart toolbar (second bar), not in the identity
+   header. Layout is shared; colours follow the bar it sits on so it stays legible. */
+.ab-datebtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.chart-toolbar .ab-datebtn {
+  background: #fff;
+  border: 1px solid #b6c4d4;
+  color: var(--navy);
+}
+
+.chart-toolbar .ab-datebtn:hover {
+  background: #f0f7ff;
+  border-color: var(--navy);
 }
 
 #appbar .ab-datebtn {
@@ -129,36 +150,36 @@
   min-height: 34px;
 }
 
-#appbar .ab-datebtn::before {
+.ab-datebtn::before {
   content: "🗓";
   font-size: 13px;
 }
 
-#appbar .ab-datebtn .d {
+.ab-datebtn .d {
   font-weight: 700;
   font-size: 13px;
   white-space: nowrap;
 }
 
-#appbar .ab-datebtn .w {
+.ab-datebtn .w {
   color: #93a8c8;
   font-size: 11.5px;
   white-space: nowrap;
 }
 
-#appbar .ab-datebtn .cv {
+.ab-datebtn .cv {
   color: #93a8c8;
   font-size: 10px;
 }
 
-#appbar .ab-datebtn:hover {
+.ab-datebtn:hover {
   background: rgba(255, 255, 255, .12);
 }
 
-#appbar .ab-datemenu {
+.ab-datemenu {
   position: absolute;
   top: calc(100% + 6px);
-  right: 0;
+  left: 0;
   z-index: 70;
   min-width: 230px;
   max-height: 320px;
@@ -171,14 +192,14 @@
   padding: 6px;
 }
 
-#appbar .ab-datemenu .dm-head {
+.ab-datemenu .dm-head {
   font-size: 10.5px;
   font-weight: 700;
   color: #64748b;
   padding: 4px 8px 6px;
 }
 
-#appbar .ab-datemenu .dm-item {
+.ab-datemenu .dm-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -190,25 +211,25 @@
   font-weight: 600;
 }
 
-#appbar .ab-datemenu .dm-item:hover,
-#appbar .ab-datemenu .dm-item:focus {
+.ab-datemenu .dm-item:hover,
+.ab-datemenu .dm-item:focus {
   background: #eef4fb;
   outline: none;
 }
 
-#appbar .ab-datemenu .dm-item.cur {
+.ab-datemenu .dm-item.cur {
   background: #0e1e38;
   color: #fff;
 }
 
-#appbar .ab-datemenu .dm-item .st {
+.ab-datemenu .dm-item .st {
   font-size: 9.5px;
   font-weight: 700;
   letter-spacing: .3px;
   color: #64748b;
 }
 
-#appbar .ab-datemenu .dm-item.cur .st {
+.ab-datemenu .dm-item.cur .st {
   color: #cbd5e1;
 }
 
@@ -486,6 +507,254 @@ body.mode-edit .add-box:disabled {
 body.mode-edit .add-box:focus-visible {
   outline: 2px solid #2563eb;
   outline-offset: 1px;
+}
+
+/* ---- compact-v5 header: grouped nav, language toggle, bar placements -------------- */
+/* One UI language at a time (never both): the markup carries both, CSS shows one. The chart
+   itself is police data and always prints Marathi regardless of the chrome language. */
+[data-lang="en"] {
+  display: none;
+}
+
+body.lang-en [data-lang="en"] {
+  display: inline;
+}
+
+body.lang-en [data-lang="mr"] {
+  display: none;
+}
+
+.ab-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.ab-group {
+  position: relative;
+}
+
+.ab-gbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: #cbd5e1;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.ab-gbtn:hover {
+  color: #fff;
+}
+
+.ab-gbtn.active {
+  color: #fff;
+  border-bottom-color: #d2a85b;
+}
+
+.ab-gbtn small,
+.ab-menu small {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .3px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: #24314f;
+  color: #9fb3d1;
+  border: 1px solid #33456b;
+}
+
+.ab-gbtn small.wip {
+  color: #e8d9a8;
+  border-color: #6b5a2a;
+  background: #2c2716;
+}
+
+.ab-gbtn .cv {
+  font-size: 9px;
+  opacity: .8;
+}
+
+/* dropdown: opens on hover, on focus (keyboard) and when JS marks the group open */
+.ab-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 80;
+  min-width: 290px;
+  padding: 5px;
+  background: #0f2140;
+  border: 1px solid #33456b;
+  border-radius: 7px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .35);
+}
+
+/* User correction 2026-10-13: menus open on CLICK only (never on hover/focus), and clicking
+   the group again closes it — hover-open menus were hard to use on a daily-driver screen. */
+.ab-group.open .ab-menu {
+  display: block;
+}
+
+.ab-menu a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 9px;
+  border-radius: 5px;
+  color: #dbe4f0;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.ab-menu a:hover,
+.ab-menu a:focus-visible {
+  background: #1b2e52;
+  color: #fff;
+}
+
+.ab-menu a.ab-live {
+  border-top: 1px solid #24314f;
+  margin-top: 4px;
+  color: #cfe0f7;
+}
+
+/* language toggle: मराठी | EN */
+.ab-lang {
+  display: inline-flex;
+  border: 1px solid #33456b;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-right: 8px;
+}
+
+.ab-lang button {
+  background: none;
+  border: 0;
+  color: #cbd5e1;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.ab-lang button + button {
+  border-left: 1px solid #33456b;
+}
+
+.ab-lang button.on {
+  background: #d2a85b;
+  color: #10203c;
+}
+
+/* the date selector lives on the chart's own bar (second bar), not in the identity header */
+/* Bug fix 2026-10-13: the wrapper had no `position`, so the absolutely positioned menu
+   anchored to the (sticky) toolbar and appeared detached at the bar's bottom-left. The
+   wrapper is the anchor, and the menu hangs from the button's right edge so it never
+   overflows the viewport. */
+.chart-toolbar .ct-actions .ab-datewrap {
+  position: relative;
+  margin-right: 4px;
+}
+
+.chart-toolbar .ab-datemenu {
+  /* the date button sits at the toolbar's left edge — hang the menu from ITS left, so a
+     right-anchored menu can never be pushed off-screen (left: -47px was measured). */
+  left: 0;
+  right: auto;
+}
+
+.ab-datemenu .dm-none {
+  padding: 5px 8px 7px;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+/* ---- compact-v5: inline add tile + block removal (edit mode only) --------------- */
+/* The officer band's add control is a TILE in the same row as the boxes (beside the last one),
+   not a full-width block below them — user correction 2026-10-13. In print the tile is hidden
+   and the band returns to its four equal columns (see the print block at the end). */
+body.mode-edit .grid.g-off.fit {
+  grid-template-columns: repeat(4, 1fr) 124px;
+}
+
+body.mode-edit .add-box-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 0;
+  min-height: 54px;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* ✕ on a clerk-added officer box and on a chowki block — edit mode only, never printed. */
+.box-del {
+  display: none;
+}
+
+body.mode-edit .box-del {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 5px;
+  height: 17px;
+  line-height: 15px;
+  border: 1px solid #fecdd3;
+  border-radius: 3px;
+  background: #fff;
+  color: #b42318;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+body.mode-edit .ch-head {
+  position: relative;
+}
+
+body.mode-edit .ch-head .box-del {
+  position: absolute;
+  top: 4px;
+  right: 5px;
+  margin-left: 0;
+}
+
+body.mode-edit .box-del:hover {
+  background: #fff1f2;
+  border-color: #f87171;
+}
+
+/* compact-v5 lane packing: the command sheet carries THREE lanes (day │ night │ office).
+   Overrides the frozen baseline's 1fr 1fr without editing it; narrower screens keep the
+   baseline's two-column behaviour. */
+.grid.g-core {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 1120px) {
+  .grid.g-core {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  body.mode-edit .grid.g-off.fit {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* the office register left the court sheet, so that register is now full width */
+.grid.g-desk.alone {
+  grid-template-columns: 1fr;
 }
 
 /* ---- abbreviation tooltip (hover AND keyboard focus; preview only) ---------- */
@@ -798,6 +1067,67 @@ abbr.abbr:focus::after {
   background: #7f1d1d;
 }
 
+/* ============================================================================
+   Compact-v5 density pass (2026-10-13) — every rule here is tied to a measurement.
+   D2/D3: grid items (office/court registers, chowki blocks, officer boxes) must grow to their
+   own content instead of being stretched to the tallest item in their row. Measured before the
+   fix: office register box 757px for 291px of rows (465px false blank); single-row chowki blocks
+   stretched to 217/238px boxes. Content-only change: no row is hidden, moved or reordered.
+   ========================================================================== */
+.grid.g-desk,
+.grid.g-chowki,
+.grid.g-off,
+.grid.g-core,
+.grid.g4 {
+  align-items: start;
+}
+
+/* D4a: timing is source information, not a UI badge. The blue pill printed on every person's
+   window and on each chowki in-charge window read as duration chips and was rejected by the
+   station. Plain text in the row's own tone; the value itself is unchanged and still prints. */
+.ch-head .of .tm,
+.dt td .duty-time {
+  font-weight: 600;
+  font-size: 10.5px;
+  color: var(--ink-soft);
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+/* D4b: the operating-state line (बंद / चार्ज / मार्शल:) must carry its meaning in WORDS. The red
+   tone on every chowki block was the "contrasting colour" complaint. Slate ink with the state
+   word bold keeps बंद/चार्ज/मार्शल unmistakable without colour being the signal. */
+.fx,
+.fx.mrsh {
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+.fx .lb,
+.fx .sl {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+/* D4c: card fatigue. Each block was a rounded card whose border doubled with the heading-band
+   rule and with a dotted separator under EVERY row, which made each person look like its own
+   little card. Keep one square frame per block, one rule under the heading, and row rules only
+   between groups. Decoration only — nothing is dropped, truncated or reordered. */
+.page .blk {
+  border: 1px solid var(--line);
+  border-radius: 0;
+}
+
+.page .blk .body .dt tr:not(.g) > td {
+  border-top: 0;
+}
+
+.page .blk .body .dt tr.g > th,
+.page .blk .body .dt tr.g > td {
+  border-top: 1px solid var(--line-soft);
+}
+
 /* ---- print density: composite sheets whose real content exceeds one A4 -----
    The mock's type scale fits a page when its sample data is small; the 10/09 source
    carries ~2× that volume on the command band (page 1) and the leave/court page. Those
@@ -914,6 +1244,66 @@ abbr.abbr:focus::after {
     line-height: 1.08;
   }
 
+  /* Sheet 2 (compact-v5): six chowki blocks plus the गस्त व स्कॅनिंग schedule share this sheet
+     (field sheet). Measured overflow before this block: 800px vs 775px — the scan tables keep
+     their rows, only padding/leading tighten, and nothing goes below 9.5px. */
+  .page.chowki .sec {
+    margin: 3px 0 2px;
+  }
+
+  .page.chowki .sec h2 {
+    font-size: 10.5px;
+  }
+
+  .page.chowki .grid {
+    gap: 5px;
+  }
+
+  .page.chowki .tbl th,
+  .page.chowki .tbl td {
+    font-size: 9.5px;
+    padding: 1px 5px;
+  }
+
+  /* Sheet 5 (compact-v5): the 28 source notices plus the patrol/scan schedule now share one
+     sheet instead of each owning one. Measured overflow before this block: 837px vs 775px. The
+     type never drops below 9.5px and no notice line is dropped or truncated. */
+  .page.notices .sec {
+    margin: 3px 0 2px;
+  }
+
+  .page.notices .sec h2 {
+    font-size: 10.5px;
+  }
+
+  .page.notices .blk>.bh {
+    padding: 1px 6px;
+  }
+
+  .page.notices .blk .bh .nm {
+    font-size: 10.5px;
+  }
+
+  .page.notices .blk .body {
+    padding: 2px 6px;
+    gap: 1px;
+  }
+
+  .page.notices .p {
+    font-size: 10px;
+    padding: 0.5px 0;
+  }
+
+  .page.notices .tbl th,
+  .page.notices .tbl td {
+    font-size: 9.5px;
+    padding: 1px 5px;
+  }
+
+  .page.notices .grid {
+    gap: 5px;
+  }
+
   /* row metrics: 20–36 source rows per block only fit a sheet when a row is ~15px.
      Values wrap, they are never truncated. */
   .page.dense .dt td,
@@ -930,14 +1320,408 @@ abbr.abbr:focus::after {
   }
 }
 
+/* ============================================================================
+   Compact-v5: station-officer (Sr-PI) card corrections — user pass 2026-10-13.
+   Four explicit asks: no dotted underlines before दिवस:/रात्र:, a thinner card, real
+   breathing room between the three page-1 bands, and every seat inside the card CRUDable.
+   ========================================================================== */
+
+/* 1. the fill-in-the-blank rules are gone — an empty seat simply reads empty */
+.sr-pi-body .ln .blank,
+.sr-pi-body .ln .v.empty {
+  border-bottom: 0;
+  min-width: 0;
+  background: none;
+  height: auto;
+}
+
+.sr-pi-body .v {
+  font-weight: 600;
+  color: var(--ink);
+  min-width: 20mm;
+}
+
+.sr-pi-body .v.empty {
+  min-width: 12mm;
+}
+
+/* a seat in the card behaves exactly like a slot in any desk table */
+.sr-pi-body .v.slot {
+  cursor: pointer;
+}
+
+body.mode-edit .sr-pi-body .v.slot {
+  outline: 1px dashed var(--navy-3);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+body.mode-edit .sr-pi-body .v.slot:hover {
+  background: #eef4fb;
+}
+
+/* `+ जागा` and ✕ — edit-mode only (also `.no-print`, so they never reach the sheet) */
+.sr-pi-body .add-seat,
+.sr-pi-body .seat-x {
+  align-self: center;
+  border: 1px dashed var(--navy-3);
+  background: #f6f9fd;
+  color: var(--navy-2);
+  border-radius: 3px;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 2px 5px;
+  cursor: pointer;
+}
+
+.sr-pi-body .add-seat:hover {
+  background: var(--navy-3);
+  border-style: solid;
+  color: #fff;
+}
+
+.sr-pi-body .seat-x {
+  color: #991b1b;
+  border-color: #fca5a5;
+  background: #fef2f2;
+  padding: 2px 4px;
+}
+
+.sr-pi-body .seat-x:hover {
+  background: #fee2e2;
+}
+
+body:not(.mode-edit) .sr-pi-body .add-seat,
+body:not(.mode-edit) .sr-pi-body .seat-x {
+  display: none;
+}
+
+/* 2. thinner card: 6/7px → 4/4px vertical padding, tighter group rhythm */
+.page .sr-pi-header {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.page .sr-pi-body {
+  padding-top: 4px;
+  padding-bottom: 5px;
+  gap: 3px 20px;
+}
+
+.page .sr-pi-body .grp {
+  gap: 1.5px;
+}
+
+.page .sr-pi-body .grp + .grp {
+  padding-left: 20px;
+}
+
+/* 3. breathing room between the three page-1 bands: card → officer band → day/night/office.
+   They were stacked with no vertical separation (the `.grid` gap only spaces items INSIDE a
+   band). Sized to the measured budget: page 1 is the tallest sheet at 750px. */
+.page .sr-pi-card {
+  margin-top: 0;
+  margin-bottom: 9px;
+}
+
+.page > .grid.g-off {
+  margin-bottom: 8px;
+}
+
+/* WIP placeholder page (the flyer that opens when a planned nav leaf is clicked) */
+.wip-note {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin: 4px 0 8px;
+}
+
+/* ---- presentation controls UI (edit mode → `स्वरूप`) ------------------------- */
+/* The persistence contract and the CSS hooks already shipped with work unit 1011; this is the
+   screen side: highlight every named element, click it, choose align / vertical / compact /
+   hide. Hidden elements stay listed in a restore bar — hiding is never a one-way door. */
+/* The standalone लेआउट button and its mode-layout body class are GONE (user 2026-10-13: the
+   button only worked with edit mode on and could not be switched off). The controls now live
+   inside the clicked element's own edit flyer, so no separate mode indicator is needed — the
+   dead `#layout-btn` / `body.mode-layout` rules were removed with it rather than left behind. */
+
+#pv-panel {
+  position: absolute;
+  z-index: 150;
+  width: 232px;
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  box-shadow: 0 14px 30px rgba(2, 8, 23, .28);
+  padding: 8px;
+  font-size: 11.5px;
+}
+
+#pv-panel .pv-t {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--navy);
+}
+
+#pv-panel .pv-k {
+  font-size: 10px;
+  color: #64748b;
+  word-break: break-all;
+  margin: 2px 0 6px;
+}
+
+#pv-panel .pv-row {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 5px;
+}
+
+.pv-b {
+  flex: 1 1 auto;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  border-radius: 5px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  color: #334155;
+  padding: 4px 6px;
+  cursor: pointer;
+}
+
+.pv-b:hover {
+  background: #eef4fb;
+}
+
+.pv-b.on {
+  background: #d2a85b;
+  border-color: #d2a85b;
+  color: #10203c;
+}
+
+.pv-b.pv-x {
+  flex: 0 0 auto;
+}
+
+#pv-hidden {
+  position: fixed;
+  left: 50%;
+  bottom: 54px;
+  transform: translateX(-50%);
+  z-index: 150;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  max-width: 92vw;
+  background: #0f172a;
+  color: #fff;
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 11px;
+}
+
+#pv-hidden .pvh-t {
+  font-weight: 800;
+  color: #fbbf24;
+}
+
+#pv-hidden .pv-b {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+/* ============================================================================
+   User feedback 2026-10-13 (second round) — navbar scale, sticky chart bar,
+   equal-size chowki cells.
+   ========================================================================== */
+
+/* 1. the logo + station lockup read too small next to the nav and the lang toggle */
+#appbar .ab-logo {
+  height: 40px;
+}
+
+#appbar .ab-st b {
+  font-size: 15.5px;
+}
+
+#appbar .ab-st span {
+  font-size: 12px;
+}
+
+/* 6a. the chart's own bar is sticky too — edit mode, lifecycle and print stay reachable while
+   scrolling a long sheet. It parks under the identity bar (56px tall), never over it. */
+.chart-toolbar {
+  position: sticky;
+  top: 56px;
+  z-index: 60;
+}
+
+/* 8. six chowki blocks are EQUAL cells (3×2) even when that leaves whitespace — uneven boxes
+   were rejected. Both rows share one height, so the grid height is decided by the taller row
+   only, never by stacking two tall blocks on top of each other. */
+.page > .grid.g-chowki {
+  grid-template-rows: 1fr 1fr;
+  align-items: stretch;
+}
+
+/* ---- bilingual input aid + master-data viewer (user feedback 2026-10-13) ---- */
+.tr-hint {
+  margin: 2px 0 6px;
+  font-size: 10.5px;
+  line-height: 1.45;
+  color: #64748b;
+}
+
+.md-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.md-counts span {
+  font-size: 10.5px;
+  color: #475569;
+  background: #eef2f7;
+  border: 1px solid #dbe3ec;
+  border-radius: 3px;
+  padding: 2px 7px;
+}
+
+.md-counts b {
+  color: #0e1e38;
+}
+
+.md-scroll {
+  max-height: 240px;
+  overflow: auto;
+  border: 1px solid #dbe3ec;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.md-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.md-tbl thead th {
+  position: sticky;
+  top: 0;
+  background: #eef2f7;
+  text-align: left;
+  font-size: 10px;
+  letter-spacing: .3px;
+  color: #475569;
+  padding: 4px 8px;
+  border-bottom: 1px solid #dbe3ec;
+}
+
+.md-tbl td {
+  padding: 3px 8px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.md-en {
+  color: #94a3b8;
+  font-size: 10px;
+}
+
+.md-off {
+  color: #b45309;
+  font-size: 9.5px;
+  font-weight: 700;
+}
+
+.md-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.md-tag {
+  font-size: 10.5px;
+  color: #334155;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 3px;
+  padding: 2px 6px;
+}
+
+.md-tag i {
+  color: #94a3b8;
+  font-style: normal;
+  font-size: 9px;
+}
+
+/* ---- legacy reference chart (separate local app on :3100) ------------------ */
+.lg-status {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 3px;
+  margin-bottom: 8px;
+  background: #eef2f7;
+  color: #475569;
+}
+
+.lg-status.on {
+  background: #eaf7ee;
+  color: #166534;
+}
+
+.lg-status.off {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.lg-cmd {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 11px;
+  background: #0e1e38;
+  color: #e8eef7;
+  padding: 6px 8px;
+  border-radius: 4px;
+  margin: 0 0 8px;
+}
+
+.lg-actions {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.lg-frame {
+  width: 100%;
+  height: 62vh;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+}
+
 /* ---- print: authoring chrome NEVER prints --------------------------------- */
 @media print {
 
+  #pv-panel,
+  #pv-hidden,
   .add-box,
+  .box-del,
   .toast,
   .flyer-overlay,
   .flyer-card {
     display: none !important;
+  }
+
+  /* the inline add tile is hidden in print → the officer band keeps four equal columns,
+     and the ✕ control never takes a column of its own */
+  body.mode-edit .grid.g-off.fit {
+    grid-template-columns: repeat(4, 1fr) !important;
   }
 
   abbr.abbr {

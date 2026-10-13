@@ -73,18 +73,27 @@ describe("renderer fidelity vs design/panchavati-compv3.html", () => {
   });
 
   it("officers are NOT repeated inside the generic day desk", () => {
-    // नितीन आंधळे (प्रषा) exists only in the station-officer band → exactly one day render,
-    // plus the verbatim officer-summary row on page 5.
-    const dayBand = html.slice(0, html.indexOf("रजा, साप्ताहिक सुट्टी व गैरहजर"));
-    expect((dayBand.match(/नितीन आंधळे/g) ?? []).length).toBe(1);
+    // नितीन आंधळे (प्रषा) belongs to the station-officer band, and to the source's own
+    // officer-summary table. The DAY desk must not repeat him as a person row.
+    const dayStart = html.indexOf('data-label="p1.desk.day"');
+    const dayEnd = html.indexOf('data-label="p1.desk.night"', dayStart);
+    expect(dayStart).toBeGreaterThan(-1);
+    expect(html.slice(dayStart, dayEnd)).not.toContain("नितीन आंधळे");
+    // …and he IS rendered (band + summary), so the test cannot pass by the name being absent
+    expect(html).toContain("नितीन आंधळे");
   });
 
   it("office desk keeps the clerk rows; the branch writers render in the officer boxes", () => {
     const gridStart = html.indexOf('class="grid g-off fit"');
-    const gridEnd = html.indexOf('class="g-core"', gridStart);
+    const gridEnd = html.indexOf('class="grid g-core"', gridStart);
     const grid = html.slice(gridStart, gridEnd === -1 ? undefined : gridEnd);
-    expect((grid.match(/>रायटर<\/th>/g) ?? []).length).toBe(4);   // one writer row per box
-    const desk = html.slice(html.indexOf("कार्यालयीन शाखा व कारकून"), html.indexOf("कोर्ट, समन्स"));
+    // exactly one writer row per officer box — counted from the boxes themselves so an
+    // added/removed box keeps the test meaningful instead of hard-coding today's box count
+    const boxes = (grid.match(/class="chip c-off"/g) ?? []).length;
+    expect((grid.match(/>रायटर<\/th>/g) ?? []).length).toBe(boxes);
+    // anchors, not titles: the header nav also names these sheets, so text search would
+    // find the menu instead of the register (compact-v5 moved the office desk to sheet 1)
+    const desk = html.slice(html.indexOf('data-label="p1.desk.office"'), html.indexOf('data-label="p1.desk.court"'));
     expect(desk).toContain("नगदी कारकुन");
     expect(desk).toContain("हजेरी मास्तर");
   });

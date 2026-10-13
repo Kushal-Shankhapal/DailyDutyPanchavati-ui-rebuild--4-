@@ -53,6 +53,16 @@ Status legend: ⬜ requirement recorded · 🔨 implemented · ✅ verified (tes
 - **A-copy:** copy 10/09→11/09 as clerk would; source hash unchanged; conflicts flagged.
 - **A-print:** rendered compact print inspected in browser preview (screen + grayscale emulation); Marathi wrap verified.
 
+## Feedback batch #1–#10 + two additions (2026-10-13)
+
+| Req | Requirement | Evidence | Implementation | Test |
+|---|---|---|---|---|
+| R-20 | Everything the clerk can see on the chart is either CRUDable or explicitly explained as calculated | user 2026-10-13 #10 | `docs/BRIEF_NOTICES.md` §4/§5 (four element classes) | ⏳ pending — brief approved first, then id-in-render + endpoints |
+| R-21 | Bilingual input: a separate Marathi field, EN↔MR conversion while typing, local only | user 2026-10-13 (new) | `web/chart-authoring.js` `romanToDev` / `devToRoman` / `bindTranslit`; `#nc-nameen` + `#me-name*` | 🔨 manual field pair wiring (both directions, manual edit wins); no external service |
+| R-22 | One row, one home — no element repeats a row that another block already owns | user 2026-10-13 (writer case) | `server/render/chart-html.ts` Sr-PI card owns its रायटर row; office column does not repeat it | 🔨 duplicate-slot audit: 121 renders / 121 unique `data-asn`, 0 duplicates; no-loss 212/212 |
+| R-23 | Legacy 10 Sept chart reachable from the header as a reference, never a dead link | user 2026-10-13 #5 | `data-legacy` nav entry → `openLegacy()` flyer; separate local app on :3101 (`npm run legacy:start`); reachability probe | 🔨 HTTP 200 on `http://localhost:3101/charts/2026-09-10`; flyer shows start command when down |
+| R-24 | Unfinished/unavailable surfaces say so honestly (no half-usable control) | AGENTS.md hard rule | `data-wip` placeholder flyer (bilingual); master-data viewer is read-only with the reason stated | 🔨 `authoring.test.ts` (enabled + routed controls, no "Coming Soon" on shipped ones) |
+
 ## Old-invariant carryover
 
 The 12 old INV rules (old repo `docs/decisions/INVARIANTS.md`) are carried into ARCHITECTURE §"Invariants" (renumbered 1–12 there); their old verification mechanisms (DB CHECKs, static scanner, DB tests, snapshot-replay test) are reused per-slice as implementation lands.

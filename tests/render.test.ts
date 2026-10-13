@@ -58,12 +58,24 @@ describe("renderChart (10/09)", () => {
       "रात्रगस्त सुचना", "पो.नि.सुनिल पवार (गुन्हे)", "मेरी पोलीस चौकी",
       "तयार करणारे हजेरी लेखनिक", "अधिकारी कर्तव्य सारांश",
     ]) expect(html, `missing: ${needle}`).toContain(needle);
-    // The full 10/09 source volume needs a dedicated office/special sheet after Page 1 is
-    // kept command-focused; this is seven readable sheets rather than an overflowing relocation.
-    expect((html.match(/<div class="page(?: dense)?(?: command)?">/g) ?? []).length).toBe(7);
+    // compact-v5 sheet packing (2026-10-13): SIX readable sheets, one A4 landscape each. The
+    // officer summary rides sheet 1, the patrol/scan schedule rides the notices sheet and the
+    // sign-off closes the manpower sheet, so no sheet is half empty. Nothing was dropped to get
+    // here — the no-loss ledger below is unchanged (212/212).
+    // every sheet carries an anchor (id="sheet-N") so the header nav can jump to a sheet
+    const pages = [...html.matchAll(/<div class="page[^"]*" id="sheet-(\d+)"/g)]
+      .map((m) => ({ at: m.index!, n: Number(m[1]) }));
+    expect(pages.length).toBe(6);
+    const pageOf = (needle: string) => pages.filter((p) => p.at < html.indexOf(needle)).length;
+    expect(pageOf("पोलीस अधिकारी कर्तव्य सारांश"), "officer summary rides the notices sheet").toBe(5);
+    expect(pageOf("सुरक्षित नाशिक: गस्त व स्कॅनिंग वेळापत्रक"), "scan schedule rides the field (chowki) sheet").toBe(2);
+    // the colon form is the sign-off label; the header's clerk button carries the same words
+    // without a colon, so the needle must keep the colon to address the printed block
+    expect(pageOf("तक्ता तयार करणारे हजेरी लेखनिक:"), "sign-off closes the manpower sheet").toBe(6);
+    expect((html.match(/<div class="page notices"[^>]*>/g) ?? []).length).toBe(1);
     // print-density sheets: the composite pages whose real source volume exceeds one
     // A4 at the mock's screen type scale (allowed to tighten in print, never to drop rows)
-    expect((html.match(/<div class="page dense(?: command)?">/g) ?? []).length).toBe(3);
+    expect((html.match(/<div class="page dense(?: command)?"[^>]*>/g) ?? []).length).toBe(3);
     // (`.h2` may carry data-label/data-default — editable names; markup text is the contract)
     expect(html).toMatch(/<div class="sec"><h2[^>]*>सूचना व निर्देश<\/h2><\/div>/);
     for (const o of doc.officerSummary) {

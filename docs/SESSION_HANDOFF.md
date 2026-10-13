@@ -298,6 +298,37 @@ migration 0009 + server-side session — ask the user first.
 - Verify with `npm run check`; for print/UI changes also `npm run print:audit` + a browser look.
 - Never commit/push unless the user asks (nothing in this repo is committed since the 10/08 P0 commits).
 
+## 7.5 Third-round feedback batch — resume notes (2026-10-13)
+
+**What shipped** (full status table: `docs/BACKLOG.md` §9): nav scale, bilingual WIP flyer, dropdown
+cleanup, group badges off, real master-data viewer (`data-masters` → `openMasters()` over the existing
+`GET /api/masters`), legacy reference entry, sticky second bar, लेआउट button removed with its dead CSS,
+EN-toggle date/weekday in the second bar only, equal 3×2 chowki cells, **offline EN↔MR transliteration**
+in every name field, and a re-audited one-row-one-home rule.
+
+**Legacy reference chart (T19) — how it runs, and the trap.** The legacy six-page chart is Kushal's
+repo (`DailyDutyPanchavati-ui-rebuild/`, React views `src/web/Page1View…Page6View.tsx`) with its **own
+database `panchavati_dev`** and its own API shape. It is **not** proxied or re-implemented: the header
+entry opens `http://localhost:3101/charts/<date>` in its own tab, and `npm run legacy:start`
+(`scripts/start-legacy.mjs`, cross-platform, runs the repo's built `dist-server/server/index.js`)
+starts it. The flyer probes it with a `no-cors` fetch first and prints the start command when it is
+down. **Trap:** do not serve that repo's `dist/` bundle from *our* server — its assets are
+root-absolute and its `/api` contract is different, so it renders a broken shell (the earlier
+`/legacy` route did exactly that and was removed).
+
+**Briefs written, nothing implemented** (user asked for options first): `docs/BRIEF_DENSE_TABLES.md`
+(scan-schedule whitespace + the one-row-per-staff court register; source evidence is that the source
+has four 6-row session mini-tables and lists court duties as *grouped heading + names*, not a
+full-width register) and `docs/BRIEF_NOTICES.md` (notices belong beside the duty they modify in the
+source — no notices page exists; plus the four-class CRUD audit and the concrete recipe to make
+`chart_notices` CRUDable). Decisions needed: T21 (dense tables), N13 (notice-to-block mapping),
+T20 (date selector design), T22 (transliteration conventions).
+
+**Test trap fixed:** `tests/presentation.test.ts` requires `support.srpi.operator` to carry
+`empty: true`. When the support seats became dynamic, `Names.e` dropped its `empty` argument and the
+test failed. `e(key, def, kind, empty)` exists again and each support group passes
+`seatGroupEmpty(role)` / `writerRow === null` — if that flag is lost again, that test is the alarm.
+
 ## 8. Open questions snapshot
 
 - **T16** — mock content with no source evidence (ऑपरेटर writers, विशेष box writer, shift-summary
@@ -312,6 +343,12 @@ migration 0009 + server-side session — ask the user first.
 2. 11/09 chart seed + event annex page; print verification of both days.
 3. Deferred T9–T12 (template rights, transliteration, eligibility, sharing).
 Nothing from the 10/12 user message remains open (§5.1–§5.4 all DONE).
+
+**Before planning anything new, read `docs/BACKLOG.md`** — it is the single resumable list of
+everything still open from the 2026-10-13 feedback rounds (CRUD audit of every element, the
+three-section CRUD popup, WIP page contents, guided EN→MR transliteration), each with its
+evidence source. A fresh session must never re-mine `mega.txt` (3474 lines) or `chat.json`
+(22 MB) to know what is open; those two files are user words, and the backlog quotes them.
 
 Uncommitted work: the whole working tree since the 10/08 P0 commits (renderer, authoring layer,
 seeds, docs, `tools/print-audit.mjs`, `web/assets/Police_Logo.png`) — the user has not asked for a

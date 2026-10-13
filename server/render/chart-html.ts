@@ -85,6 +85,18 @@ const dateSlash = (date: string): string => {
   return `${toMr(d)}/${toMr(m)}/${toMr(y)}`;
 };
 
+/** Latin twin of dateSlash — chrome only (the chart itself always prints Marathi/Devanagari). */
+const dateLatin = (date: string): string => {
+  const [y, m, d] = date.split("-");
+  return `${d}/${m}/${y}`;
+};
+
+/** English weekday for the toolbar — display transform of the same date, never stored. */
+const weekdayEn = (date: string): string => {
+  const names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  return names[new Date(`${date}T00:00:00Z`).getUTCDay()];
+};
+
 /** Date ± n days (YYYY-MM-DD, UTC-safe) — toolbar date navigation, derived never hardcoded. */
 function addDays(date: string, delta: number): string {
   const d = new Date(`${date}T00:00:00Z`);
@@ -98,6 +110,12 @@ const isLabel = (r: DocAssignment): boolean => r.person === null && r.notesMr ==
  *  those rows render as the Sr-PI card and the officer boxes, never twice in the desks. */
 const STATION_LEADERSHIP_DUTY = "DAY_STATION_LEADERSHIP";
 const isVacant = (r: DocAssignment): boolean => r.allocationState === "VACANT_RIKT";
+/** Assignment column reserved for the Sr-PI card's support seats (रायटर / चालक / RTPC /
+ *  ऑपरेटर). A dedicated column keeps them out of every duty-desk walk: they belong to the
+ *  card, not to a desk. The source charts carry only रायटर, so the rest are seats the clerk
+ *  creates in edit mode — never invented data (user 2026-10-13: “ensure everything is crudable”). */
+const SRPI_SUPPORT_COL = 9;
+export const SRPI_SUPPORT_ROLES = ["रायटर", "चालक", "RTPC", "ऑपरेटर"] as const;
 
 export interface RenderStats {
   rowsTotal: number;
@@ -123,7 +141,7 @@ export interface Names {
   /** Presentation hook and resolved safe values for the server-rendered element. */
   p(key: string, label: string, kind?: PresentationElement["kind"], empty?: boolean): string;
   /** Presentation hook plus the existing editable-name attributes. */
-  e(key: string, def: string, kind?: PresentationElement["kind"]): string;
+  e(key: string, def: string, kind?: PresentationElement["kind"], empty?: boolean): string;
 }
 const NO_NAMES: Names = { t: (_key, def) => def, a: () => "", p: () => "", e: () => "" };
 function makeNames(doc: ChartDocument, elements?: Map<string, PresentationElement>): Names {
@@ -154,7 +172,11 @@ function makeNames(doc: ChartDocument, elements?: Map<string, PresentationElemen
     // pre-select the matching radio (blank + right scope = a real revert, not a no-op).
     a,
     p,
-    e: (key, def, kind = "label") => def === "" ? "" : `${a(key, def)}${p(key, def, kind)}`,
+    // `empty` marks an element that currently carries NO data (a seat nobody filled, a रिक्त
+    // row). It is what lets the clerk hide that element to compact the sheet without losing a
+    // real value — so the flag has to be passed explicitly by every caller that knows.
+    e: (key, def, kind = "label", empty = false) =>
+      def === "" ? "" : `${a(key, def)}${p(key, def, kind, empty)}`,
   };
 }
 
@@ -254,7 +276,7 @@ function valueHtml(r: DocAssignment): string {
   if (r.person) {
     let s = personLine(r.person);
     const tr = timeRange(r.startTime, r.endTime);
-    if (tr) s += ` <span class="win duty-time">· ${tr}</span>`;
+    if (tr) s += ` <span class="win duty-time">${tr}</span>`;
     if (r.notesMr) s += ` <span class="win">${raw(r.notesMr)}</span>`;
     return s;
   }
@@ -420,7 +442,8 @@ function stateFx(states: DocLocationState[], locationId: number | null, shift: "
   if (s.chargeTo) words.push(`चार्ज →`);
   if (words.length === 0) return "";
   const dst = s.chargeTo ? ` <span class="dst">${disp(s.chargeTo.nameMr)}</span>` : "";
-  return `<div class="${cls}">${lb}<span class="st">${words.join(" · ")}</span>${dst}</div>`;
+  // state words are separated by a plain comma, never a decorative middle dot (user correction)
+  return `<div class="${cls}">${lb}<span class="st">${words.join(", ")}</span>${dst}</div>`;
 }
 
 // ---- page sections ---------------------------------------------------------------
@@ -474,28 +497,69 @@ export function renderChart(doc: ChartDocument): { html: string; stats: RenderSt
 
   // ---- page 1: Sr-PI + officers + paired day/night core --------------------------
   const srpi = doc.assignments.find((a) => a.shift === "DAY" && a.person?.rankCode === "SR_PI")?.person ?? null;
-  const writer = doc.assignments.find((a) => a.dutyCode === "OFFICE_WRITER" && a.person)?.person ?? null;
+  // The Sr-PI card is fully editable: रायटर is a real seat in the source chart, and the
+  // चालक / RTPC / ऑपरेटर day+night seats can be created by the clerk (they do not exist in any
+  // Panchavati source chart yet). No dotted “fill-in-the-blank” rules — user correction
+  // 2026-10-13; an empty seat simply reads empty and carries an edit-mode + control.
+  // The Sr-PI's own रायटर: several office-column seats share the OFFICE_WRITER duty, so the
+  // seat WITH a person is the one the card shows (the seed's vacant twin of the same title is
+  // another seat, not this one). De-duplication (user 2026-10-13: “don't list them again in the
+  // office column if they are not providing more info there”): the card OWNS the row it prints,
+  // so the office column no longer repeats that same row — one row, one home.
+  const writerRows = doc.assignments.filter((a) => a.dutyCode === "OFFICE_WRITER");
+  const writerRow = writerRows.find((a) => a.person !== null)
+    ?? writerRows.find((a) => a.allocationState === "VACANT_RIKT")
+    ?? writerRows[0] ?? null;
+  // The card prints it and the office column no longer does — so the card accounts it.
+  if (writerRow) count(1);
+  const srpiSeat = (role: string, shift: "DAY" | "NIGHT"): DocAssignment | null =>
+    doc.assignments.find((r) => r.columnNo === SRPI_SUPPORT_COL && r.roleMr === role && r.shift === shift) ?? null;
+  // A support group with no seat at all currently holds no information, so it is marked empty:
+  // the clerk can hide exactly that group to compact the card (and restore it from the bar).
+  const seatGroupEmpty = (role: string): boolean => srpiSeat(role, "DAY") === null && srpiSeat(role, "NIGHT") === null;
+  // Value cell of the card: exactly ONE class attribute (slotAttrs emits `class="slot"`), so a
+  // seat is clickable exactly like every other slot on the chart — same picker, same rules.
+  const srpiValue = (r: DocAssignment): string => {
+    const inner = r.person ? personLine(r.person) : "";
+    const attrs = slotAttrs(r);
+    return attrs === "" ? `<span class="v empty">${inner}</span>`
+      : `<span${attrs.replace('class="slot"', 'class="v slot"')}>${inner}</span>`;
+  };
+  const seatLine = (label: string, role: string, shift: "DAY" | "NIGHT"): string => {
+    const r = srpiSeat(role, shift);
+    if (r === null) {
+      return `<div class="ln"><span class="k">${label}</span><span class="v empty"></span>`
+        + `<button type="button" class="add-seat no-print" data-add-seat="${role}" data-shift="${shift}" title="नवीन जागा तयार करा (संपादन मोड)" aria-label="${role} ${label} जागा तयार करा">+ जागा</button></div>`;
+    }
+    count(1);   // support seats live outside every desk walk — they are accounted here
+    return `<div class="ln"><span class="k">${label}</span>${srpiValue(r)}`
+      + `<button type="button" class="seat-x no-print" data-del-seat="${r.assignmentId}" title="ही जागा काढा (संपादन मोड)" aria-label="जागा काढा">✕</button></div>`;
+  };
   const srPiCard = srpi ? `<div class="sr-pi-card">
     <div class="sr-pi-header">
       <div class="sr-pi-title"><span class="rk"><abbr class="abbr" data-full="${h(srpi.rankNameMr ?? "वरिष्ठ पोलीस निरीक्षक")}" aria-label="${h(srpi.rankNameMr ?? "वरिष्ठ पोलीस निरीक्षक")}" tabindex="0">${h(srpi.rankShortFormMr ?? srpi.rankCode)}</abbr>:</span> <span class="nm">${chartName(srpi)}</span></div>
       <span class="chip c-sr">ठाणे प्रमुख</span>
     </div>
     <div class="sr-pi-body">
-       <div class="grp"${n.p("support.srpi.writer", "रायटर", "support", !writer)}>
+       <div class="grp"${n.e("support.srpi.writer", "रायटर", "support", writerRow === null)}>
          <span class="lb">रायटर:</span>
-         <div class="ln">${writer ? `<span>${personLine(writer)}</span>` : `<span class="blank"></span>`}</div>
+         <div class="ln">${writerRow ? srpiValue(writerRow) : `<span class="v empty"></span>`}</div>
        </div>
-       <div class="grp"${n.p("support.srpi.driver", "चालक", "support", true)}>
+       <div class="grp"${n.e("support.srpi.driver", "चालक", "support", seatGroupEmpty("चालक"))}>
          <span class="lb">चालक:</span>
-         <div class="ln"><span class="k">दिवस:</span><span class="blank"></span></div>
-         <div class="ln"><span class="k">रात्र:</span><span class="blank"></span></div>
+         ${seatLine("दिवस:", "चालक", "DAY")}
+         ${seatLine("रात्र:", "चालक", "NIGHT")}
        </div>
-       <div class="grp"${n.p("support.srpi.rtpc", "RTPC", "support", true)}>
+       <div class="grp"${n.e("support.srpi.rtpc", "RTPC", "support", seatGroupEmpty("RTPC"))}>
          <span class="lb">RTPC:</span>
-         <div class="ln"><span class="k">दिवस:</span><span class="blank"></span></div>
-         <div class="ln"><span class="k">रात्र:</span><span class="blank"></span></div>
+         ${seatLine("दिवस:", "RTPC", "DAY")}
+         ${seatLine("रात्र:", "RTPC", "NIGHT")}
        </div>
-       <div class="grp presentation-support-empty" aria-hidden="true"${n.p("support.srpi.operator", "ऑपरेटर", "support", true)}></div>
+       <div class="grp"${n.e("support.srpi.operator", "ऑपरेटर", "support", seatGroupEmpty("ऑपरेटर"))}>
+         <span class="lb">ऑपरेटर:</span>
+         ${seatLine("दिवस:", "ऑपरेटर", "DAY")}
+         ${seatLine("रात्र:", "ऑपरेटर", "NIGHT")}
+       </div>
     </div>
   </div>` : "";
 
@@ -529,12 +593,18 @@ export function renderChart(doc: ChartDocument): { html: string; stats: RenderSt
     }
   }
   for (const rows of boxRows.values()) for (const r of rows) claimed.add(r);
+  // Rows already printed by the Sr-PI card are claimed here: one row, one home, no second
+  // copy in the office column (the card is where a value provides its information).
+  if (writerRow) claimed.add(writerRow);
   const officeDesk = officeRows.filter((r) => !claimed.has(r));
 
   const boxHead = (box: OfficerBox): DocPerson | null =>
   (box.title ? null : day1.find((r) =>
     r.person?.cadre === "OFFICER" && r.person.rankCode !== "SR_PI"
     && bareToken(r.roleMr) === box.label)?.person ?? null);
+  // Only a box the clerk added on THIS chart (presentation_overrides.officerBoxes) can be
+  // removed — the template/source boxes are chart structure, not a clerk addition.
+  const extraLabels = new Set(extraBoxes.map((b) => b.label));
   const officerBoxHtml = (box: OfficerBox): string => {
     const head = boxHead(box);
     const all = boxRows.get(box.writerDutyTitle) ?? [];
@@ -556,7 +626,8 @@ export function renderChart(doc: ChartDocument): { html: string; stats: RenderSt
     // (it is a person's name, not a table/column name — the master stays the authority).
     const name = head ? personLine(head) : disp(n.t(nameKey, nameDef));
     return `<div class="blk">
-       <div class="bh"><div class="nm"${head ? "" : n.e(nameKey, nameDef, "section")}>${name}</div><span class="chip c-off"${n.e(`box.${box.label}`, box.label)}>${disp(n.t(`box.${box.label}`, box.label))}</span></div>
+       <div class="bh"><div class="nm"${head ? "" : n.e(nameKey, nameDef, "section")}>${name}</div><span class="chip c-off"${n.e(`box.${box.label}`, box.label)}>${disp(n.t(`box.${box.label}`, box.label))}</span>${extraLabels.has(box.label)
+        ? `<button type="button" class="box-del no-print" data-box-del="officer" data-box-label="${h(box.label)}" title="हा बॉक्स काढा (संपादन मोड)">✕</button>` : ""}</div>
       <div class="body"><table class="dt"><tbody>\n        ${body}\n      </tbody></table></div>
     </div>`;
   };
@@ -580,11 +651,14 @@ export function renderChart(doc: ChartDocument): { html: string; stats: RenderSt
   }
   count(officerBand.length);
   const officerBandSet = new Set(officerBand);
-  const dayDesk = day1.filter((r) => !officerBandSet.has(r));
-  const officerGrid = officerBoxes.length
-    ? `<div class="grid g-off fit">
+  const dayDesk = day1.filter((r) => !officerBandSet.has(r) && r !== writerRow);
+  // The add control is a TILE in the officer band's own row (beside the last box), not a
+  // full-width block underneath it — user correction 2026-10-13. Hidden in print (`.add-box`).
+  const officerAddBox = `<button type="button" class="add-box add-box-tile" data-add="officer" title="नवीन अधिकारी बॉक्स जोडा (संपादन मोड)">+ अधिकारी बॉक्स</button>`;
+  const officerGrid = `<div class="grid g-off fit">
     ${officerBoxes.map(officerBoxHtml).join("\n    ")}
-  </div>` : "";
+    ${officerAddBox}
+  </div>`;
 
   const deskBlock = (key: string, title: string, win: string | undefined, rows: DocAssignment[]) =>
     `<div class="blk core">
@@ -592,16 +666,26 @@ export function renderChart(doc: ChartDocument): { html: string; stats: RenderSt
       <div class="body">${dtTable(rows)}</div>
     </div>`;
 
-  const p1Lower = `<div class="g-core">
+  const tail = tailSections();   // hoisted below: officer summary / patrol-scan schedule / sign-off
+
+  // D1 (compact-v5): the wrapper must carry BOTH `grid` (display:grid, design/compv3.css) and
+  // `g-core` (1fr 1fr). Without `grid` the browser computed display:block and stacked day above
+  // night — 418px of dead height on the command sheet, measured 2026-10-13.
+  // Compact-v5 lower band = THREE lanes: दिवस पाळी │ रात्र पाळी │ कार्यालयीन शाखा व कारकून.
+  // Measured 2026-10-13: the office register needs only ~294px of height while the night lane is
+  // ~451px, so it rides beside them at ZERO added height instead of owning half of the
+  // office/court sheet (where it sat next to the 743px court register and left ~465px of blank).
+  // Court/summons/warrant/special keep their own sheet — their volume would overflow this band.
+  const p1Lower = `<div class="grid g-core">
       ${deskBlock("p1.desk.day", "दिवस पाळी कर्तव्य", "वेळ: ०९:०० ते २१:००", dayDesk)}
       ${deskBlock("p1.desk.night", "रात्र पाळी कर्तव्य", "वेळ: २१:०० ते ०९:००", col("NIGHT", 1))}
+      ${deskBlock("p1.desk.office", "कार्यालयीन शाखा व कारकून", undefined, officeDesk)}
   </div>`;
 
-  const officerAddBox = `<button type="button" class="add-box" data-add="officer">+ अधिकारी बॉक्स जोडा</button>`;
-  const page1 = page("", doc, `  ${srPiCard}
+    const page1 = page("", doc, `  ${srPiCard}
 ${officerGrid}
-${officerAddBox}
-${p1Lower}`, { dense: true, kind: "command" }, n);
+${p1Lower}
+`, { dense: true, kind: "command" }, n);
 
   // ---- page 2: location blocks (chowkis + folded marshal posts) ------------------
   const blockHtml = (b: Block): string => {
@@ -645,11 +729,15 @@ ${p1Lower}`, { dense: true, kind: "command" }, n);
     const incharge = b.incharge ? (() => {
       const row = [...b.day, ...b.night].find(
         (r) => r.person?.staffId === b.incharge!.staffId && r.startTime && r.endTime);
-      const tm = row ? ` <span class="tm">· ${timeRange(row.startTime, row.endTime)}</span>` : "";
+      const tm = row ? ` <span class="tm">${timeRange(row.startTime, row.endTime)}</span>` : "";
       return `<div class="of">अधि. ${personLine(b.incharge)}${tm}</div>`;
     })() : "";
+    // A location-backed block can be removed by the clerk while it is empty (no person, no
+    // dangling चार्ज) — the domains layer enforces both guards; the control is edit-mode only.
+    const delBtn = b.locationId != null
+      ? `<button type="button" class="box-del no-print" data-box-del="chowki" data-location-id="${b.locationId}" title="ही चौकी काढा (संपादन मोड)">✕</button>` : "";
     return `<div class="blk">
-      <div class="ch-head"><div class="nm"${n.e(`blk.${b.key}`, b.name, "section")}>${disp(n.t(`blk.${b.key}`, b.name))}</div>${incharge}</div>
+      <div class="ch-head"><div class="nm"${n.e(`blk.${b.key}`, b.name, "section")}>${disp(n.t(`blk.${b.key}`, b.name))}</div>${incharge}${delBtn}</div>
       <div class="body"><div class="sub-shift-wrap">
         ${sub("DAY", "दिवसपाळी")}
         ${sub("NIGHT", "रात्रपाळी")}
@@ -663,15 +751,20 @@ ${p1Lower}`, { dense: true, kind: "command" }, n);
     ${blocks.map(blockHtml).join("\n    ")}
     ${looseHtml}
     <button type="button" class="add-box" data-add="chowki">+ चौकी जोडा</button>
-   </div>`, undefined, n);
+   </div>
+${tail.scanSection}`, { kind: "chowki" }, n);
 
-  // ---- page 3: office, court and special duties ---------------------------------
-  const page3 = page("", doc, `  <div class="grid g-desk">
-    ${deskBlock("p1.desk.office", "कार्यालयीन शाखा व कारकून", undefined, officeDesk)}
-    ${courtSplit || specialRows.length > 0
-      ? deskBlock("p1.desk.court", "कोर्ट, समन्स, वॉरंट व विशेष कक्ष", undefined, [...courtRows, ...specialRows])
-      : ""}
-  </div>`, { dense: true }, n);
+  // ---- page 3: court, summons, warrant and special duties ----------------------
+  // The office register moved to the command sheet's third lane (compact-v5), so this sheet is one
+  // FULL-WIDTH register: fewer wrapped cells than the old half-width column, no empty twin block.
+  const courtDesk = courtSplit || specialRows.length > 0
+    ? deskBlock("p1.desk.court", "कोर्ट, समन्स, वॉरंट व विशेष कक्ष", undefined, [...courtRows, ...specialRows])
+    : "";
+  const page3 = page("", doc, courtDesk
+    ? `  <div class="grid g-desk alone">
+    ${courtDesk}
+  </div>`
+    : "", { dense: true }, n);
 
   // ---- page 4: availability (leave section + other duties) ---------------------
   // One block per SOURCE sub-group (category); the source's own column groups decide which
@@ -733,7 +826,8 @@ ${p1Lower}`, { dense: true, kind: "command" }, n);
   const page5 = page("", doc, `  <div class="sec"><h2${n.e("sec.notices", "सूचना व निर्देश", "section")}>${disp(n.t("sec.notices", "सूचना व निर्देश"))}</h2></div>
   <div class="grid g4">
     ${noticeBlocks}
-   </div>`, undefined, n);
+   </div>
+${tail.officerSummarySection}`, { kind: "notices" }, n);
 
   // ---- page 4: manpower matrix + shift summary + sudden changes ----
   const mcols = (doc.template.layout.matrixColumns as MatrixColumn[] | undefined) ?? [];
@@ -799,9 +893,13 @@ ${p1Lower}`, { dense: true, kind: "command" }, n);
         </tbody>
       </table>
     </div>
-   </div>`, undefined, n);
+   </div>
+   ${tail.signoff}`, undefined, n);
 
-  // ---- page 5: officer summary + scan schedule + sign-off ----
+  // ---- officer summary / patrol-scan schedule / sign-off (compact-v5: composed onto sheets 1, 5, 6) ----
+  // Declared as a HOISTED function so the sheet assembly above can place these sections on the
+  // sheets that have room. The seventh sheet they used to own is gone; every row still prints once.
+  function tailSections() {
   const offHalf = Math.ceil(doc.officerSummary.length / 2);
   const officerTable = (rows: typeof doc.officerSummary) => `<div class="tbl-wrap">
       <table class="tbl">
@@ -822,7 +920,7 @@ ${p1Lower}`, { dense: true, kind: "command" }, n);
     `<div class="sig"><span${n.e(key, label, "section")}>${disp(n.t(key, label))}</span><br>${value}</div>`;
   const signoff = `<div class="signoff">
     ${sig("signoff.1", "तक्ता तयार करणारे हजेरी लेखनिक:", hazari.map((p) => `<b>${p}</b>`).join(" / ") || "<b>—</b>")}
-    ${sig("signoff.2", "तपासणी अधिकारी (प्रभारी):", srpi ? `<b>${h(srpi.nameMr)}</b> · वरिष्ठ पोलीस निरीक्षक` : "<b>—</b>")}
+    ${sig("signoff.2", "तपासणी अधिकारी (प्रभारी):", srpi ? `<b>${h(srpi.nameMr)}</b>, वरिष्ठ पोलीस निरीक्षक` : "<b>—</b>")}
     ${sig("signoff.3", "ठाणे शिक्का व दैनिक डायरी नोंद:", `ठाणे दैनंदिनी नोंद क्र. ____ / ${toMr(doc.chartDate.slice(0, 4))}`)}
   </div>`;
 
@@ -847,16 +945,17 @@ ${p1Lower}`, { dense: true, kind: "command" }, n);
     </table>
   </div>`;
 
-  const page7 = page("", doc, `  <div class="sec"><h2${n.e("sec.officers", "पोलीस अधिकारी कर्तव्य सारांश", "section")}>${disp(n.t("sec.officers", "पोलीस अधिकारी कर्तव्य सारांश"))}</h2></div>
+  const officerSummarySection = `  <div class="sec"><h2${n.e("sec.officers", "पोलीस अधिकारी कर्तव्य सारांश", "section")}>${disp(n.t("sec.officers", "पोलीस अधिकारी कर्तव्य सारांश"))}</h2></div>
   <div class="two">
     ${officerTable(doc.officerSummary.slice(0, offHalf))}
     ${officerTable(doc.officerSummary.slice(offHalf))}
-  </div>
+  </div>`;
 
-  <div class="sec" style="margin-top:10px;"><h2${n.e("sec.scan", "सुरक्षित नाशिक: गस्त व स्कॅनिंग वेळापत्रक", "section")}>${disp(n.t("sec.scan", "सुरक्षित नाशिक: गस्त व स्कॅनिंग वेळापत्रक"))}</h2></div>
-  ${sessionTable ? `<div class="two">\n    ${sessionTable}\n    ${scanTable}\n  </div>` : scanTable}
+  const scanSection = `  <div class="sec" style="margin-top:10px;"><h2${n.e("sec.scan", "सुरक्षित नाशिक: गस्त व स्कॅनिंग वेळापत्रक", "section")}>${disp(n.t("sec.scan", "सुरक्षित नाशिक: गस्त व स्कॅनिंग वेळापत्रक"))}</h2></div>
+  ${sessionTable ? `<div class="two">\n    ${sessionTable}\n    ${scanTable}\n  </div>` : scanTable}`;
 
-   ${signoff}`, undefined, n);
+  return { officerSummarySection, scanSection, signoff };
+  }
 
   const html = `<!DOCTYPE html>
 <html lang="mr">
@@ -873,33 +972,74 @@ ${p1Lower}`, { dense: true, kind: "command" }, n);
 <div class="toolbar no-print" id="appbar">
   <div class="ab-l">
     <img class="ab-logo" src="/assets/police-logo.png" alt="महाराष्ट्र पोलीस" width="34" height="34">
-    <div class="ab-st"><b>पंचवटी पोलीस ठाणे</b><span>नाशिक शहर | Panchavati Police Station</span></div>
+    <div class="ab-st">
+      <b><span data-lang="mr">पंचवटी पोलीस ठाणे</span><span data-lang="en">Panchavati Police Station</span></b>
+      <span><span data-lang="mr">नाशिक शहर</span><span data-lang="en">Nashik City</span></span>
+    </div>
     <nav class="ab-nav" aria-label="मुख्य नेव्हिगेशन">
-      <a class="active" href="/charts/${doc.chartDate}">दैनिक कर्तव्य तक्ते</a>
-      <span class="planned">कार्यवाही <small>Coming Soon</small></span>
-      <span class="planned">मास्टर डेटा <small>WIP</small></span>
-      <span class="planned">ऐतिहासिक शोध <small>Coming Soon</small></span>
+      <div class="ab-group">
+        <button type="button" class="ab-gbtn active" aria-expanded="false"><span data-lang="mr">दैनिक कर्तव्य तक्ते</span><span data-lang="en">Daily Duty Charts</span><span class="cv">▾</span></button>
+        <div class="ab-menu" role="menu">
+          <a role="menuitem" href="#sheet-1"><span data-lang="mr">पृष्ठ १ — दैनिक कर्तव्य तक्ता</span><span data-lang="en">Sheet 1 — Daily duty chart</span></a>
+          <a role="menuitem" href="#sheet-2"><span data-lang="mr">पृष्ठ २ — चौक्या, गस्त व स्कॅनिंग</span><span data-lang="en">Sheet 2 — Chowkis, patrol &amp; scanning</span></a>
+          <a role="menuitem" href="#sheet-3"><span data-lang="mr">पृष्ठ ३ — कोर्ट, समन्स व विशेष कक्ष</span><span data-lang="en">Sheet 3 — Court, summons &amp; special desks</span></a>
+          <a role="menuitem" href="#sheet-4"><span data-lang="mr">पृष्ठ ४ — रजा व इतर ड्युटी</span><span data-lang="en">Sheet 4 — Leave &amp; other duties</span></a>
+          <a role="menuitem" href="#sheet-5"><span data-lang="mr">पृष्ठ ५ — सूचना व अधिकारी सारांश</span><span data-lang="en">Sheet 5 — Notices &amp; officer summary</span></a>
+          <a role="menuitem" href="#sheet-6"><span data-lang="mr">पृष्ठ ६ — मनुष्यबळ व सारांश</span><span data-lang="en">Sheet 6 — Manpower &amp; summary</span></a>
+          <div class="ab-sep"><span data-lang="mr">संदर्भ</span><span data-lang="en">Reference</span></div>
+          <a role="menuitem" href="#" data-legacy="1"><span data-lang="mr">जुना ६-पृष्ठ तक्ता — १० सप्टेंबर २०२६</span><span data-lang="en">Legacy 6-page chart — 10 Sept 2026</span></a>
+        </div>
+      </div>
+      <div class="ab-group">          <button type="button" class="ab-gbtn" aria-expanded="false"><span data-lang="mr">कार्यवाही</span><span data-lang="en">Operations</span><span class="cv">▾</span></button>
+        <div class="ab-menu" role="menu">
+          <a role="menuitem" href="#" data-wip="कार्यकारी डॅशबोर्ड"><span data-lang="mr">कार्यकारी डॅशबोर्ड</span><span data-lang="en">Executive dashboard</span><small>WIP</small></a>
+          <a role="menuitem" href="#" data-wip="कर्तव्य फलक"><span data-lang="mr">कर्तव्य फलक (दिवसनिहाय)</span><span data-lang="en">Duty board (day-wise)</span><small>WIP</small></a>
+          <a role="menuitem" href="#" data-wip="बंदोबस्त व विशेष मोहीम"><span data-lang="mr">बंदोबस्त व विशेष मोहीम</span><span data-lang="en">Bandobast &amp; special operations</span><small>Coming Soon</small></a>
+          <a role="menuitem" href="#" data-wip="ऐतिहासिक शोध"><span data-lang="mr">ऐतिहासिक शोध</span><span data-lang="en">Historical search</span><small>Coming Soon</small></a>
+          <a role="menuitem" href="#" data-wip="इव्हेंट अ‍ॅनेक्स"><span data-lang="mr">इव्हेंट अ‍ॅनेक्स</span><span data-lang="en">Event annex</span><small>Coming Soon</small></a>
+        </div>
+      </div>
+      <div class="ab-group">          <button type="button" class="ab-gbtn" aria-expanded="false"><span data-lang="mr">डेटा</span><span data-lang="en">Data</span><span class="cv">▾</span></button>
+        <div class="ab-menu" role="menu">
+          <a role="menuitem" href="#" data-masters="1"><span data-lang="mr">मास्टर डेटा (कर्मचारी, चौक्या, हुद्दे)</span><span data-lang="en">Master data (staff, chowkis, duties)</span></a>
+          <a role="menuitem" href="#" data-wip="मास्टर डेटा संपादन"><span data-lang="mr">मास्टर डेटा संपादन / नवीन नोंद</span><span data-lang="en">Edit / add master data</span><small>WIP</small></a>
+          <a role="menuitem" href="#" data-wip="दस्तऐवज आयात / OCR"><span data-lang="mr">दस्तऐवज आयात / OCR</span><span data-lang="en">Document import / OCR</span><small>Coming Soon</small></a>
+          <a role="menuitem" href="#" data-wip="अहवाल व निर्यात"><span data-lang="mr">अहवाल व PDF निर्यात</span><span data-lang="en">Reports &amp; PDF export</span><small>Coming Soon</small></a>
+        </div>
+      </div>
+      <div class="ab-group">          <button type="button" class="ab-gbtn" aria-expanded="false"><span data-lang="mr">समाकलन</span><span data-lang="en">Integrations</span><span class="cv">▾</span></button>
+        <div class="ab-menu" role="menu">
+          <a role="menuitem" href="#" data-wip="WhatsApp अलर्ट"><span data-lang="mr">WhatsApp वर तक्ता पाठवा</span><span data-lang="en">Send chart on WhatsApp</span><small>Coming Soon</small></a>
+          <a role="menuitem" href="#" data-wip="Telegram अलर्ट"><span data-lang="mr">Telegram अलर्ट</span><span data-lang="en">Telegram alerts</span><small>Coming Soon</small></a>
+          <a role="menuitem" href="#" data-wip="बहु-ठाणे"><span data-lang="mr">इतर ठाणी (बहु-ठाणे)</span><span data-lang="en">Other stations (multi-station)</span><small>Coming Soon</small></a>
+          <a role="menuitem" href="#" data-wip="टेम्पलेट बिल्डर"><span data-lang="mr">तक्ता टेम्पलेट बिल्डर</span><span data-lang="en">Chart template builder</span><small>Coming Soon</small></a>
+        </div>
+      </div>
     </nav>
   </div>
   <div class="ab-r">
-    <div class="ab-datewrap">
-      <button type="button" class="ab-datebtn" id="date-btn" aria-haspopup="listbox" aria-expanded="false" title="तारीख निवडा">
-        <span class="d">${dateSlash(doc.chartDate)}</span><span class="w">${doc.weekdayMr}</span><span class="cv">▾</span>
-      </button>
-      <div class="ab-datemenu" id="date-menu" role="listbox" hidden></div>
+    <div class="ab-lang" role="group" aria-label="भाषा निवड">
+      <button type="button" data-lang-set="mr">मराठी</button>
+      <button type="button" data-lang-set="en">EN</button>
     </div>
     <button type="button" class="ab-user" id="ab-user" title="तक्ता तयार करणारे हजेरी लेखनिक">लॉगिन</button>
   </div>
 </div>
 
 <div class="chart-toolbar no-print">
-  <div class="ct-title"><span>पंचवटी दैनिक कर्तव्य तक्ता</span><strong>${dateSlash(doc.chartDate)} · ${doc.weekdayMr}</strong></div>
+  <div class="ct-title"><span><span data-lang="mr">पंचवटी दैनिक कर्तव्य तक्ता</span><span data-lang="en">Panchavati daily duty chart</span></span><strong><span data-lang="mr">${dateSlash(doc.chartDate)}, ${doc.weekdayMr}</span><span data-lang="en">${dateLatin(doc.chartDate)}, ${weekdayEn(doc.chartDate)}</span></strong></div>
   <div class="ct-actions">
-    <span class="lc lc-${doc.lifecycle.toLowerCase()}">${doc.lifecycle}</span>
+    <div class="ab-datewrap">
+      <button type="button" class="ab-datebtn" id="date-btn" aria-haspopup="listbox" aria-expanded="false" title="तारीख निवडा">
+        <span class="d" data-lang="mr">${dateSlash(doc.chartDate)}</span><span class="d" data-lang="en">${dateLatin(doc.chartDate)}</span><span class="w" data-lang="mr">${doc.weekdayMr}</span><span class="w" data-lang="en">${weekdayEn(doc.chartDate)}</span><span class="cv">▾</span>
+      </button>
+      <div class="ab-datemenu" id="date-menu" role="listbox" hidden></div>
+    </div>
+    <span class="lc lc-${doc.lifecycle.toLowerCase()}"><span data-lang="mr">${doc.lifecycle === "FINALIZED" ? "अंतिम" : doc.lifecycle === "VALIDATED" ? "तपासलेले" : "मसुदा"}</span><span data-lang="en">${doc.lifecycle}</span></span>
     ${doc.lifecycle === "FINALIZED"
-      ? `<button id="amend-btn">सुधारणा सुरू करा</button>`
-      : `<button id="mode-btn">संपादन</button><button id="finalize-btn" class="finalize">अंतिम करा</button>`}
-    <button class="print" onclick="window.print()">प्रिंट</button>
+      ? `<button id="amend-btn"><span data-lang="mr">सुधारणा सुरू करा</span><span data-lang="en">Start amendment</span></button>`
+      : `<button id="mode-btn"><span data-lang="mr">संपादन</span><span data-lang="en">Edit</span></button><button id="finalize-btn" class="finalize"><span data-lang="mr">अंतिम करा</span><span data-lang="en">Finalize</span></button>`}
+    <button class="print" onclick="window.print()"><span data-lang="mr">प्रिंट</span><span data-lang="en">Print</span></button>
   </div>
 </div>
 
@@ -915,11 +1055,13 @@ ${page5}
 
 ${page6}
 
-${page7}
-
 <script src="__AUTH_JS_SRC__" defer></script>
 </body>
 </html>`;
 
-  return { html, stats, presentationElements: [...elementMap.values()] };
+  // Sheet anchors (nav submenu jumps to a printed sheet): sheet-1 … sheet-N in DOM order.
+  let sheetNo = 0;
+  const anchored = html.replace(/<div class="page([^"]*)">/g, (_m: string, cls: string) => `<div class="page${cls}" id="sheet-${++sheetNo}">`);
+
+  return { html: anchored, stats, presentationElements: [...elementMap.values()] };
 }

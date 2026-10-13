@@ -244,3 +244,190 @@ export async function addOfficerBox(db: Queryable, input: AddOfficerBoxInput): P
     assignmentIds: [Number(seatRow.assignment_id)],
   };
 }
+
+// ---- remove a chart block (edit-mode ✕ on an officer box or a chowki) ----------
+// The counterpart of the two add functions above: the clerk can undo their own addition.
+// Two hard guards keep this from becoming an information-loss path:
+//   1. a block that holds ANY person is refused — the clerk clears the seats first, so no
+//      assignment row can ever be swept away by a display control;
+//   2. a chowki that another block's चार्ज points at is refused — that state would dangle.
+// Only the chart's own rows are deleted (the master location/duty stay; the source chart in
+// reference/ is never touched). FINALIZED charts are immutable, like every other edit.
+export interface RemoveBlockInput { chartId: number; locationId?: number; label?: string; }
+export interface RemoveBlockResult { removedAssignmentIds: number[]; removedStates: number; }
+
+/** Remove ALL chart-local display names/keys that belonged to a box or block. */
+function stripBlockOverrides(
+  ov: Record<string, unknown>, prefixes: string[],
+): Record<string, unknown> {
+  const owns = (k: string) => prefixes.some((p) => k === p || k.startsWith(`${p}.`));
+  const labels = { ...((ov.labels as Record<string, string>) ?? {}) };
+  for (const k of Object.keys(labels)) if (owns(k)) delete labels[k];
+  if (Object.keys(labels).length) ov.labels = labels; else delete ov.labels;
+  const elements = { ...((ov.elements as Record<string, unknown>) ?? {}) };
+  for (const k of Object.keys(elements)) if (owns(k)) delete elements[k];
+  if (Object.keys(elements).length) ov.elements = elements; else delete ov.elements;
+  // labelsAll is deliberately NOT touched: it is keyed by DEFAULT TEXT ("everywhere this name
+  // appears"), not by element identity — a removal must not silently change other elements.
+  return ov;
+}
+
+async function lockChartOverrides(db: Queryable, chartId: number): Promise<Record<string, unknown>> {
+  const rows = (await db.query(
+    `SELECT lifecycle, presentation_overrides FROM daily_charts WHERE chart_id = $1 FOR UPDATE`,
+    [chartId])).rows;
+  if (rows.length !== 1) throw new Error(`no chart ${chartId}`);
+  if (rows[0].lifecycle === "FINALIZED") throw new Error("FINALIZED charts are immutable; use amendment");
+  return { ...((rows[0].presentation_overrides as Record<string, unknown>) ?? {}) };
+}
+
+export async function removeOfficerBox(db: Queryable, input: RemoveBlockInput): Promise<RemoveBlockResult> {
+  const label = (input.label ?? "").trim();
+  if (!label) throw new Error("label is required");
+  const ov = await lockChartOverrides(db, input.chartId);
+  const extra = (ov.officerBoxes as BoxLike[] | undefined) ?? [];
+  const box = extra.find((b) => b.label === label);
+  if (!box) throw new Error(`no officer box ${label}`);
+
+  // the seat(s) this box created — DAY column 4 rows carrying the box's writer title
+  const writerDutyTitle = box.writerDutyTitle ?? `${label}॰रायटर`;
+  const seats = (await db.query(
+    `SELECT assignment_id, staff_id FROM daily_assignments
+      WHERE chart_id = $1 AND shift = 'DAY' AND column_no = 4 AND duty_title_mr = $2
+      FOR UPDATE`, [input.chartId, writerDutyTitle])).rows;
+  if (seats.some((s) => s.staff_id != null)) {
+    throw new Error("या बॉक्समध्ये कर्मचारी नेमलेला आहे — आधी ती जागा रिक्त करा");
+  }
+  const removed = (await db.query(
+    `DELETE FROM daily_assignments
+      WHERE chart_id = $1 AND shift = 'DAY' AND column_no = 4 AND duty_title_mr = $2 AND staff_id IS NULL
+      RETURNING assignment_id`, [input.chartId, writerDutyTitle])).rows
+    .map((r) => Number(r.assignment_id));
+
+  const cleaned = stripBlockOverrides(ov, [`box.${label}`]);
+  const rest = extra.filter((b) => b.label !== label);
+  if (rest.length) cleaned.officerBoxes = rest; else delete cleaned.officerBoxes;
+  await db.query(
+    `UPDATE daily_charts SET presentation_overrides = $1 WHERE chart_id = $2`,
+    [cleaned, input.chartId]);
+  return { removedAssignmentIds: removed, removedStates: 0 };
+}
+
+export async function removeChowkiBlock(db: Queryable, input: RemoveBlockInput): Promise<RemoveBlockResult> {
+  const locationId = Number(input.locationId);
+  if (!Number.isFinite(locationId) || locationId <= 0) throw new Error("locationId is required");
+  const ov = await lockChartOverrides(db, input.chartId);
+
+  const rows = (await db.query(
+    `SELECT assignment_id, staff_id FROM daily_assignments
+      WHERE chart_id = $1 AND location_id = $2 FOR UPDATE`, [input.chartId, locationId])).rows;
+  if (rows.length === 0) throw new Error("या तक्त्यावर ही चौकी नाही");
+  if (rows.some((r) => r.staff_id != null)) {
+    throw new Error("या चौकीवर कर्मचारी नेमलेले आहेत — आधी त्या जागा रिक्त करा");
+  }
+  // a चार्ज on ANOTHER block pointing here would be left dangling by the removal
+  const charges = (await db.query(
+    `SELECT location_id FROM location_operational_states
+      WHERE chart_id = $1 AND charge_destination_location_id = $2`, [input.chartId, locationId])).rows;
+  if (charges.length > 0) {
+    throw new Error("दुसऱ्या चौकीचा चार्ज या चौकीकडे आहे — आधी तो बदला");
+  }
+
+  const removed = (await db.query(
+    `DELETE FROM daily_assignments WHERE chart_id = $1 AND location_id = $2 AND staff_id IS NULL
+      RETURNING assignment_id`, [input.chartId, locationId])).rows.map((r) => Number(r.assignment_id));
+  // the block's own बंद/चार्ज states belong to the block
+  const states = (await db.query(
+    `DELETE FROM location_operational_states WHERE chart_id = $1 AND location_id = $2
+      RETURNING location_id`, [input.chartId, locationId])).rows.length;
+
+  const cleaned = stripBlockOverrides(ov, [`blk.L${locationId}`]);
+  await db.query(
+    `UPDATE daily_charts SET presentation_overrides = $1 WHERE chart_id = $2`,
+    [cleaned, input.chartId]);
+  return { removedAssignmentIds: removed, removedStates: states };
+}
+
+// ---- Sr-PI support seats (edit-mode `+ जागा` in the station-officer card) ----------
+// The source charts carry only the Sr-PI's रायटर. चालक / RTPC / ऑपरेटर (day and night) are
+// seats the clerk creates here; the renderer keeps them in their own assignment column so they
+// never join a duty desk. Nothing is invented — a new seat starts VACANT_RIKT with no person,
+// no timing and no BIMA, exactly like every other seat (user 2026-10-13: “ensure everything is
+// crudable”).
+export const SRPI_SUPPORT_COL = 9;
+export const SRPI_SUPPORT_ROLES = ["रायटर", "चालक", "RTPC", "ऑपरेटर"] as const;
+export type SrpiSupportRole = (typeof SRPI_SUPPORT_ROLES)[number];
+
+export interface AddSupportSeatInput {
+  chartId: number;
+  role: string;
+  shift: "DAY" | "NIGHT";
+}
+export interface SupportSeatResult {
+  assignmentId: number;
+  role: string;
+  shift: "DAY" | "NIGHT";
+}
+
+async function lockChartForWrite(db: Queryable, chartId: number): Promise<void> {
+  const rows = (await db.query(
+    `SELECT lifecycle FROM daily_charts WHERE chart_id = $1 FOR UPDATE`, [chartId])).rows;
+  if (rows.length !== 1) throw new Error(`no chart ${chartId}`);
+  if (rows[0].lifecycle === "FINALIZED") {
+    throw new Error("FINALIZED charts are immutable; use amendment");
+  }
+}
+
+/** Create ONE vacant Sr-PI support seat. Idempotence is refused, not silently reused, so the
+ *  clerk always knows whether the click created something. */
+export async function addSupportSeat(db: Queryable, input: AddSupportSeatInput): Promise<SupportSeatResult> {
+  const role = (input.role ?? "").trim();
+  if (!(SRPI_SUPPORT_ROLES as readonly string[]).includes(role)) {
+    throw new Error(`role must be one of ${SRPI_SUPPORT_ROLES.join(", ")}`);
+  }
+  if (input.shift !== "DAY" && input.shift !== "NIGHT") throw new Error("shift must be DAY or NIGHT");
+  await lockChartForWrite(db, input.chartId);
+
+  const dup = (await db.query(
+    `SELECT 1 FROM daily_assignments
+      WHERE chart_id = $1 AND column_no = $2 AND role_mr = $3 AND shift = $4 LIMIT 1`,
+    [input.chartId, SRPI_SUPPORT_COL, role, input.shift])).rows;
+  if (dup.length > 0) throw new Error("ही जागा आधीच आहे");
+
+  const maxSort = Number((await db.query(
+    `SELECT COALESCE(MAX(sort_order), 0) AS m FROM daily_assignments
+      WHERE chart_id = $1 AND column_no = $2`, [input.chartId, SRPI_SUPPORT_COL])).rows[0].m);
+  const row = (await db.query(
+    `INSERT INTO daily_assignments (chart_id, shift, role_mr, column_no, allocation_state, sort_order)
+     VALUES ($1, $2, $3, $4, 'VACANT_RIKT', $5)
+     RETURNING assignment_id`,
+    [input.chartId, input.shift, role, SRPI_SUPPORT_COL, maxSort + 10])).rows[0];
+
+  return { assignmentId: Number(row.assignment_id), role, shift: input.shift };
+}
+
+/** Remove ONE vacant Sr-PI support seat (the clerk's own undo for `+ जागा`). Guards: only a
+ *  support-column row may be deleted, and a seat holding a person must be cleared first —
+ *  a display control can never sweep an assignment with a person on it. */
+export async function removeSupportSeat(
+  db: Queryable, input: { chartId: number; assignmentId: number },
+): Promise<{ removedAssignmentIds: number[] }> {
+  await lockChartForWrite(db, input.chartId);
+  const cur = (await db.query(
+    `SELECT assignment_id, chart_id, column_no, role_mr, staff_id
+       FROM daily_assignments WHERE assignment_id = $1 FOR UPDATE`, [input.assignmentId])).rows;
+  if (cur.length !== 1) throw new Error(`no assignment ${input.assignmentId}`);
+  if (Number(cur[0].chart_id) !== input.chartId) {
+    throw new Error(`assignment ${input.assignmentId} does not belong to chart ${input.chartId}`);
+  }
+  if (Number(cur[0].column_no) !== SRPI_SUPPORT_COL || cur[0].role_mr == null) {
+    throw new Error("ही जागा सपोर्ट जागा नाही — ती तक्त्याचा भाग आहे");
+  }
+  if (cur[0].staff_id != null) {
+    throw new Error("या जागेवर कर्मचारी नेमलेला आहे — आधी ती जागा रिक्त करा");
+  }
+  const removed = (await db.query(
+    `DELETE FROM daily_assignments WHERE assignment_id = $1 RETURNING assignment_id`,
+    [input.assignmentId])).rows.map((r) => Number(r.assignment_id));
+  return { removedAssignmentIds: removed };
+}

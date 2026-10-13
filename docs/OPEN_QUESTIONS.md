@@ -122,5 +122,22 @@ SEMANTIC/10.md Table 1 col 4 (content authority) flows: … पोनि.प्�
 ### T16 — Mock content that has no source evidence
 Recorded, not rendered (never invent): the mock's officer boxes show `ऑपरेटर` writers (पोशि ३११२ शेवाळे, पोशि १८८१ जाधव, पोशि ०५९५ पगारे) and a `विशेष तपास पथक` writer; `reference/SEMANTIC/10.md`, the EXCEL reconstruction and Staff_Info contain none of them. The renderer therefore shows a `विशेष तपास पथक` box with an open रायटर slot and no `ऑपरेटर` rows. The mock's shift-summary numbers (पाळीनिहाय सारांश) are likewise absent from the source (Tables 5–7 are blank) — the renderer prints the blanks. Confirm against `reference/ORIGINAL_VISUAL/` PDFs; if the PDFs carry them, they get seeded, not invented.
 
+## From the 2026-10-13 feedback batch
+
+### N13 — Do notices belong to a duty block? (new, blocks the notices brief)
+The 10/09 source keeps notice text in the note column *beside the row it concerns* (`रात्रगस्त सुचना`, `रात्रड्युटी सुचना`, `महत्वाचे सुचना`) and has no notices page, while `chart_notices.group_key` in our DB is seeded from the source's grouping, not from block keys. Before `docs/BRIEF_NOTICES.md` option A can be built, the station must confirm (a) which notices belong to a specific chowki/desk and which are station-wide (“general”), and (b) that moving a notice under its block is acceptable when it also appears in the circular. Until then: no notice is moved, re-grouped or auto-classified.
+
+### T19 — Legacy reference chart surface
+Kushal's legacy six-page chart is a separate app (own DB `panchavati_dev`, own API, React `Page1View…Page6View.tsx`). Decision made 2026-10-13: it is linked (own tab, `npm run legacy:start`), never re-implemented or proxied. Open: should it eventually be *ported* into this repo as a read-only comparison surface (large), or stay a link indefinitely? Also open: should the legacy app be started automatically by `npm run dev`, or stay an explicit one-command reference?
+
+### T20 — Date selector design
+The selector was rebuilt this round (anchored menu, grouped आज/उद्या/मागील ७ दिवस/जुने तक्ते) but the user still prefers the look in Kushal's/Arjish's repo. Need: a screenshot or the specific component from those repos to copy the visual (month grid vs list, chip styling, weekday placement). No design is guessed until that reference is supplied.
+
+### T21 — Dense-table layout choices (which option)
+`docs/BRIEF_DENSE_TABLES.md` proposes, for the scan schedule, (A) the source's four session cards, (B) one table with session band rows, (C) side-by-side session pairing; and for the court register, (A) grouped court cards, (B) sub-heading rows in the register, (C) an added duty × rank matrix. All are presentation-only and no row is dropped. The station must pick before implementation; A/A is recommended. A/C would introduce derived cells and therefore needs the D-rule sign-off.
+
+### T22 — Transliteration conventions (extends T10)
+The shipped offline converter follows a documented encoding (see `docs/CURRENT_STATE.md` item 9). Open questions: (a) is inserting anusvara for `n/m`+consonant acceptable (`saLunkhe` → साळुंखे) or should it be न्? (b) should uppercase `T/D/N/L/S` stay the retroflex convention, or should the clerk get a picker for ट/ड/ण/ळ? (c) whose name forms become the canonical `name_mr` when both fields are typed? No answer is assumed; both fields stay editable.
+
 ### T17 — Chart staff names that are Latin in the master
 `staff_members.name_mr` for some seeded constables is Latin (e.g. buckle 1347 → `Kushal`), so the chart prints `पोहवा १३४७ Kushal` where the source page shows a Marathi surname. T10 (dual-entry transliteration) covers the fix; flagging it because it is visible on page 1's Sr-PI रायटर line.
