@@ -78,7 +78,11 @@ describe("presentation override validation and resolution", () => {
     expect(rendered.html).toContain('data-horizontal-align="center"');
     expect(rendered.html).toContain('data-presentation-hidden="true"');
     expect(rendered.html).not.toContain('data-css=');
-    expect(rendered.presentationElements.some((e) => e.key === "support.srpi.operator" && e.empty)).toBe(true);
+    // The Sr-PI card carries writer / चालक / RTPC (and no ऑपरेटर group any more — user
+    // 2026-10-13: “only keep writer, chalak (both day and night), and rtpc”). The element keys
+    // follow the card, so the removed group must be gone AND the kept ones still addressable.
+    expect(rendered.presentationElements.some((e) => e.key === "support.srpi.rtpc")).toBe(true);
+    expect(rendered.presentationElements.some((e) => e.key === "support.srpi.operator")).toBe(false);
   });
 });
 

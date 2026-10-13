@@ -9,6 +9,9 @@
   },
   "scripts": {
     "dev": "tsx watch server/index.ts",
+    "demo": "node scripts/dev-all.mjs",
+    "stop": "node scripts/stop-servers.mjs",
+    "stop:all": "node scripts/stop-servers.mjs --all",
     "build:app": "vite build",
     "start": "tsx server/index.ts",
     "db:create": "node scripts/create-dbs.mjs",
@@ -22,12 +25,14 @@
     "typecheck": "tsc --noEmit",
     "doctor": "node scripts/doctor.mjs",
     "legacy:start": "node scripts/start-legacy.mjs",
+    "legacy:start:arjish": "node scripts/start-legacy.mjs --arjish",
     "print:audit": "node tools/print-audit.mjs",
     "verify": "npm run typecheck && npm test && npm run doctor",
     "check": "npm run verify"
   },
   "dependencies": {
     "@fastify/cors": "^11.3.1",
+    "@indic-transliteration/sanscript": "^1.3.3",
     "fastify": "^5.12.5",
     "pg": "^8.13.1",
     "react": "^19.3.0",

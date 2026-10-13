@@ -43,7 +43,7 @@ If evidence is ambiguous: stop, implement the representable part, record the amb
 - Unfinished features are "Coming Soon" and disabled — no half-usable controls.
 - Never modify `reference/` files.
 - Never edit an applied migration; add a new one.
-- No police operational data leaves the machine (no external AI/API calls with chart data, no cloud services in the runtime).
+- No police operational data leaves the machine (no external AI/API calls with chart data, no cloud services in the runtime). One narrow, user-authorized exception: the demo deployment hosts the station's own 10/09 chart, approved by the user on 2026-10-13 and recorded in `docs/OPEN_QUESTIONS.md` T23 + `docs/DEPLOY.md`. Everything else (no outbound call, no key, no CDN — the transliteration engine is served from this repo) stands unchanged.
 
 ## Coding mode
 

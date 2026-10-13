@@ -68,7 +68,9 @@ describe("renderChart (10/09)", () => {
     expect(pages.length).toBe(6);
     const pageOf = (needle: string) => pages.filter((p) => p.at < html.indexOf(needle)).length;
     expect(pageOf("पोलीस अधिकारी कर्तव्य सारांश"), "officer summary rides the notices sheet").toBe(5);
-    expect(pageOf("सुरक्षित नाशिक: गस्त व स्कॅनिंग वेळापत्रक"), "scan schedule rides the field (chowki) sheet").toBe(2);
+    // 2026-10-13: the schedule moved off the chowki sheet to the court/special sheet — it measured
+    // 810px vs 775px there once the chowki cells became equal-height (npm run print:audit).
+    expect(pageOf("सुरक्षित नाशिक: गस्त व स्कॅनिंग वेळापत्रक"), "scan schedule rides the court/special sheet").toBe(3);
     // the colon form is the sign-off label; the header's clerk button carries the same words
     // without a colon, so the needle must keep the colon to address the printed block
     expect(pageOf("तक्ता तयार करणारे हजेरी लेखनिक:"), "sign-off closes the manpower sheet").toBe(6);

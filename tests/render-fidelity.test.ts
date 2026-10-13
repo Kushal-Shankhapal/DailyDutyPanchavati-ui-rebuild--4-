@@ -87,10 +87,17 @@ describe("renderer fidelity vs design/panchavati-compv3.html", () => {
     const gridStart = html.indexOf('class="grid g-off fit"');
     const gridEnd = html.indexOf('class="grid g-core"', gridStart);
     const grid = html.slice(gridStart, gridEnd === -1 ? undefined : gridEnd);
-    // exactly one writer row per officer box — counted from the boxes themselves so an
-    // added/removed box keeps the test meaningful instead of hard-coding today's box count
+    // one writer row per officer box — counted from the boxes themselves so an added/removed box
+    // keeps the test meaningful instead of hard-coding today's box count. A box with NO writer row
+    // at all (विशेष तपास पथक) prints its heading only: the empty “रायटर + blank” line was removed
+    // by request (user 2026-10-13), so it contributes no रायटर cell and no body at all.
     const boxes = (grid.match(/class="chip c-off"/g) ?? []).length;
-    expect((grid.match(/>रायटर<\/th>/g) ?? []).length).toBe(boxes);
+    const boxBlocks = grid.split('<div class="blk">').slice(1);
+    const withWriter = boxBlocks.filter((b) => b.includes(">रायटर</th>")).length;
+    expect(withWriter).toBe(boxes - 1);
+    const headingOnly = boxBlocks.filter((b) => b.includes("विशेष तपास पथक"));
+    expect(headingOnly.length).toBe(1);
+    expect(headingOnly[0]).not.toContain('<div class="body">');
     // anchors, not titles: the header nav also names these sheets, so text search would
     // find the menu instead of the register (compact-v5 moved the office desk to sheet 1)
     const desk = html.slice(html.indexOf('data-label="p1.desk.office"'), html.indexOf('data-label="p1.desk.court"'));
@@ -115,10 +122,51 @@ describe("renderer fidelity vs design/panchavati-compv3.html", () => {
     expect(html).toMatch(/<h2[^>]*>कोर्ट पैरवी व विशेष क्षेत्रीय बंदोबस्त<\/h2>/);
   });
 
-  it("page 5 pairs the session table with the hourly scan table", () => {
-    expect(html).toMatch(/<th[^>]*>सत्र व वेळ<\/th>/);
+  it("sheet 3 shows the source's own session cards plus the hourly strip folded into 3 columns", () => {
+    // Option A (user 2026-10-13): each session is its own small card, and the 12 hourly rows are
+    // split into 3 sub-columns of 4 rows instead of one 12-row strip (measured 281px for 3 rows
+    // before, stretched to the long table beside it).
+    // Print-fit is measured by tools/print-audit.mjs, but WHERE a section lives is a structural fact
+    // this suite can hold: the chowki sheet is the mock's six-chowki sheet and nothing else. The
+    // schedule shared it until 2026-10-13, when equal-height chowki cells pushed that box 35px past
+    // one A4 sheet (810px vs 775px) — a 35px-tight sheet breaks again the moment either side grows.
+    const sheet = (n: number): string => {
+      const from = html.indexOf(`id="sheet-${n}"`);
+      expect(from, `no sheet ${n}`).toBeGreaterThan(-1);
+      const to = html.indexOf(`id="sheet-${n + 1}"`);
+      return html.slice(from, to === -1 ? undefined : to);
+    };
+    expect(sheet(2)).toContain("grid g-chowki");
+    expect(sheet(2)).not.toContain("सुरक्षित नाशिक: गस्त व स्कॅनिंग वेळापत्रक");
+    expect(sheet(3)).toContain("सुरक्षित नाशिक: गस्त व स्कॅनिंग वेळापत्रक");
+    expect(html).toContain('<div class="grid g-scan-sessions">');
+    expect(html).toMatch(/<th colspan="2"[^>]*>०१\) सकाळ ०९:०० ते १५:००<\/th>/);
     expect(html).toContain("बीट मार्शल नेमणूक");
-    expect(html).toMatch(/<th[^>]*>स्कॅन चौकी हद्द<\/th>/);
+    expect(html).toContain('<div class="grid g-scan-hours">');
+    expect((html.match(/<th[^>]*>स्कॅन चौकी हद्द<\/th>/g) ?? []).length).toBe(3);
+    // the three hourly sub-columns hold 4 rows each — 12 rows, none dropped
+    expect((html.match(/class="win num">/g) ?? []).length).toBe(12);
+  });
+
+  it("the rows the clerk asked to remove stay gone (duplicates and empty lines)", () => {
+    // The office register prints a heading only when it still has value rows: these two headings
+    // lost every row to the officer boxes / the Sr-PI card and printed as bare empty lines
+    // (user 2026-10-13: “why are these two empty: कार्यालयीन अंमलदार / व.पो.नि.साो. रायटर”).
+    expect(html).not.toContain(">कार्यालयीन अंमलदार</th>");
+    expect(html).not.toContain(">व.पो.नि.साो. रायटर</th>");
+    // the कक्ष देखरेख post repeats the officer who already has his own box at the top of the sheet
+    expect(html).not.toContain("ठाणे अंमलदार कक्ष देखरेख");
+    expect(html).toContain("सुनिल पवार");            // …and he IS still printed, in that box
+    // an unfilled support seat is an ordinary empty cell the clerk clicks (created on demand);
+    // the manual “+ जागा” control is gone, and ऑपरेटर is not on the card at all
+    expect(html).toContain('data-seat-role="RTPC"');
+    expect(html).not.toContain("+ जागा");
+    expect(html).not.toContain("ऑपरेटर</span>");
+    // sign-off: the second “ठाणे दैनंदिनी नोंद क्र. …” line was removed and the values are the
+    // author's own editable text (the signed-in clerk's name is filled in by the client)
+    expect(html).not.toContain("ठाणे दैनंदिनी नोंद क्र.");
+    expect(html).toContain('data-value-key="signoff.1"');
+    expect(html).toContain('data-value-key="signoff.3"');
   });
 
   it("page 1 court desk carries the mock's full title", () => {

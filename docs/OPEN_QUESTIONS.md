@@ -141,3 +141,57 @@ The shipped offline converter follows a documented encoding (see `docs/CURRENT_S
 
 ### T17 — Chart staff names that are Latin in the master
 `staff_members.name_mr` for some seeded constables is Latin (e.g. buckle 1347 → `Kushal`), so the chart prints `पोहवा १३४७ Kushal` where the source page shows a Marathi surname. T10 (dual-entry transliteration) covers the fix; flagging it because it is visible on page 1's Sr-PI रायटर line.
+## From the 2026-10-13 round 5 (the 13-item list + bilingual ask)
+
+### T20 — Date selector design — ✅ RESOLVED 2026-10-13
+The user pointed at the selector in Kushal's repo and said to copy it as-is. The reference is
+`DailyDutyPanchavati-ui-rebuild/NEW DATA/kushals repo/archive/src/web/components/AppNav.tsx` (the
+date block at the top of the identity bar: calendar icon, date + `आज` badge, weekday underneath,
+chevron) and its panel (search box, `आगामी` / `अलीकडील ७ दिवस` / `ऐतिहासिक व डेमो तारखा` groups, a
+weekday + availability dot per row, the current row highlighted). Our selector already carried that
+grammar; this round brought the last differences in (one scroll region, pinned search row, the
+advanced-search entry at the end of the search row). No design is guessed — the file above is the
+authority.
+
+### T21 — Dense-table layout choices — ✅ RESOLVED 2026-10-13 (user: “do all the recommended A options”)
+Option **A** of both briefs: the scan/patrol schedule prints as the source's own per-session cards
+plus the hourly strip folded into three sub-columns, and the court/summons/warrant register prints as
+one card per heading (the source prints a heading with names under it, never a page-wide register).
+Presentation only — no row added, dropped or reclassified, and no derived cell, so the D-rule is not
+touched. `docs/BRIEF_DENSE_TABLES.md` and `docs/BRIEF_NOTICES.md` stay as the option record.
+
+### T22 — Transliteration engine and conventions (extends T10)
+**Settled this round:** the engine is Sanscript (MIT, offline, served from the repo's own
+`node_modules` — see CURRENT_STATE §4) with a documented Marathi convention layer, a review strip
+before anything is written into a field, and protected tokens never transliterated. Two sub-questions
+remain open and are NOT guessed:
+1. **Where does the English companion live for chart-local text?** Master staff rows already have
+   `staff_masters.name_en`, but chart-local text (element names, sign-off values, notice lines,
+   free-table titles/headers/cells, matrix columns) stores only its Marathi text. Today the Latin
+   field is an ENTRY aid for that edit session (review → accept into the Marathi field). Persisting a
+   stored twin needs a decision on shape (`presentation_overrides.i18n` map vs a `text_en` column on
+   `chart_notices`) and on what consumes it — the chart prints Marathi only. Nothing is stored until
+   the user says which surfaces need a permanent English value.
+2. **Should the romanized form become `name_en` automatically** when a staff master is created from
+   the picker, or stay a suggestion the clerk accepts? Today the form sends whatever is in the English
+   field (auto-filled only if the clerk never typed one) — the clerk can always see and edit it first.
+
+### T23 — Public demo URL vs “no police data leaves the machine” — ✅ RESOLVED 2026-10-13 (user)
+**User decision (2026-10-13): the demo deployment may carry the station's real 10/09 chart — “do it,
+we have permission”.** The build therefore runs `npm run db:seed` (reference masters + the 10/09
+chart) and `PANCHAVATI_KEEP_EXISTING=1` stops a redeploy from wiping a populated chart, so the
+clerk's edits survive. Recorded here, in `render.yaml`, in `docs/DEPLOY.md`, and pointed at from
+AGENTS.md's data rule. Scope of the authorization: this demo deployment only. For every other
+environment the rule stands unchanged — the app makes no outbound call, no key is used, and the
+transliteration engine is served from this repo rather than a CDN.
+
+### T24 — Advanced search page (future, reference-first)
+The date menu now carries an icon-only WIP entry for advanced search, wired to the same Coming-Soon
+flyer as the navbar's ऐतिहासिक शोध leaf — no second implementation exists. **Before any planning or
+building of the real page, read the old one**: Kushal's repo implements it as
+`…/kushals repo/archive/src/web/HistoricalSearchView.tsx` (filters by date/staff/location/duty/
+operation with a `SlidersHorizontal` affordance, results across finalized charts, operational
+assignments and events), served at `/search` and described in `AppNav.tsx` as
+`ऐतिहासिक शोध (Search) — तारीख, कर्मचारी, स्थान, कर्तव्य व मोहीम शोध`. The user's instruction is
+explicit: learn from that implementation instead of designing a new one. Also note it needs its OWN
+data decision (which surfaces are searchable) before code.

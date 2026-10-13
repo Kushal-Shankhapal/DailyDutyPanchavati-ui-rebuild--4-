@@ -14,6 +14,12 @@ import { makePool, TEST_DB } from "../server/db.js";
 import { projectChart, type ChartDocument } from "../server/chart-document.js";
 import { renderChart } from "../server/render/chart-html.js";
 import { addOfficerBox } from "../server/assignments.js";
+import { createRequire } from "node:module";
+
+// The browser transliteration engine is a real dependency (MIT, offline). The test evaluates the
+// client slice with the SAME library object the browser gets from /vendor/sanscript.js.
+const require = createRequire(import.meta.url);
+const Sanscript = require("@indic-transliteration/sanscript") as { t: (s: string, from: string, to: string) => string };
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const read = (rel: string) => fs.readFileSync(path.join(root, rel), "utf8");
@@ -41,32 +47,96 @@ describe("browser authoring asset (web/chart-authoring.js)", () => {
     expect(() => new Function(js())).not.toThrow();
   });
 
-  // The bilingual input aid is pure string logic, so it can be pinned exactly. The slice is taken
-  // between two stable anchors inside the IIFE (the file itself needs a DOM, so it cannot be
-  // imported here); a moved anchor fails loudly instead of silently skipping coverage.
-  it("transliterates the real Panchavati name shapes both ways (offline, approximate)", () => {
+  // The bilingual input aid is Sanscript (a real library) plus a thin Marathi convention layer on
+  // top, so it can be pinned exactly. The slice is taken between two stable anchors inside the IIFE
+  // (the file itself needs a DOM, so it cannot be imported here); a moved anchor fails loudly instead
+  // of silently skipping coverage.
+  it("transliterates the real Panchavati name shapes both ways (Sanscript + Marathi conventions)", () => {
     const src = js();
-    const start = src.indexOf("var TR_VOWELS");
-    const end = src.indexOf("function bindTranslit");
+    const start = src.indexOf("var PROTECTED_LATIN");
+    const end = src.indexOf("function bilingualPair");
     expect(start).toBeGreaterThan(-1);
     expect(end).toBeGreaterThan(start);
-    const { romanToDev, devToRoman } = new Function(
-      `${src.slice(start, end)}; return { romanToDev, devToRoman };`,
-    )() as { romanToDev: (s: string) => string; devToRoman: (s: string) => string };
-    // retroflex is the documented capital convention INSIDE a word, plain capitalisation at its
-    // start; r after a bare consonant is the repha; n/m before a consonant is the anusvara
+    const { romanToDev, devToRoman, isProtectedLatin } = new Function(
+      "window",
+      `${src.slice(start, end)}; return { romanToDev, devToRoman, isProtectedLatin };`,
+    )({ Sanscript }) as {
+      romanToDev: (s: string) => string;
+      devToRoman: (s: string) => string;
+      isProtectedLatin: (s: string) => boolean;
+    };
+    // roman → Devanagari: ITRANS typing, no printed word-final virama, nasal+stop → anusvara
     for (const [roman, dev] of [
-      ["Kushal", "कुशल"], ["Arjish", "अर्जिश"], ["prakaash", "प्रकाश"], ["durvesh", "दुर्वेश"],
-      ["Deshmukh", "देशमुख"], ["Patil", "पतिल"], ["paTil", "पटिल"], ["gaNesh", "गणेश"],
-      ["shinde", "शिंदे"], ["pawar", "पवार"], ["saaLunkhe", "साळुंखे"], ["Sanjay", "संजय"],
+      ["gajendra pATIl", "गजेंद्र पाटील"], ["sunil pavAr", "सुनिल पवार"],
+      ["gAngurDe", "गांगुर्डे"], ["kALArAma maMdIr", "काळाराम मंदीर"],
+      ["paMchavaTI", "पंचवटी"], ["vishESh tapAs pathak", "विशेष तपास पथक"],
+      ["caukI", "चौकी"], ["gaNesh", "गणेश"], ["paTil", "पटिल"],
+      // a word-initial capital with no ITRANS meaning is plain capitalisation (Patil → पतिल,
+      // Sanjay → संजय, Dattatray → दत्तात्रय) — how a clerk writes a name in English
+      ["Patil", "पतिल"], ["Sanjay", "संजय"], ["dattAtray", "दत्तात्रय"],
+      // …but the letters that DO carry ITRANS meaning keep it: the long vowels (Aher → आहेर,
+      // Akash → आकाश) and the retroflex ट (Tukaram → टुकाराम), which Marathi names need
+      ["Aher", "आहेर"], ["AkAsh", "आकाश"], ["TukArAm", "टुकाराम"],
+      // a doubled nasal is a real conjunct, never folded to the anusvara
+      ["jagannAth", "जगन्नाथ"], ["ThAkare", "ठाकरे"], ["lakShmaN", "लक्ष्मण"],
+      ["j~nAneshvar", "ज्ञानेश्वर"],
     ] as const) expect(romanToDev(roman), roman).toBe(dev);
+    // Devanagari → roman: Marathi schwa deletion (no trailing ‘a’), ASCII anusvara
     for (const [dev, roman] of [
-      ["कुशल", "kushal"], ["प्रकाश", "prakaash"], ["दुर्वेश", "durvesh"], ["गणेश", "gaNesh"],
+      ["सुनिल", "sunil"], ["पाटील", "pATIl"], ["चौकी", "chaukI"], ["रिक्त", "rikt"],
+      ["गजेंद्र", "gajendr"], ["बंद", "band"], ["विशेष", "visheSh"],
     ] as const) expect(devToRoman(dev), dev).toBe(roman);
-    // Marathi typed first produces a usable Latin suggestion, digits untouched (display transform
-    // stays a display transform) — and a rank label passes through without turning into a name
-    expect(devToRoman("पोशि 2451")).toBe("poshi 2451");
+    // digits are untouched (the Devanagari transform stays a display transform)
     expect(romanToDev("12/09/2026")).toBe("12/09/2026");
+    expect(devToRoman("पोशि 2451")).toBe("poshi 2451");
+    // AGENTS.md: codes and protected tokens are NEVER transliterated (CCTNS would otherwise
+    // letter-map into Devanagari, MERS would become a Marathi word)
+    expect(romanToDev("CCTNS")).toBe("CCTNS");
+    expect(romanToDev("Dial 112 MERS set")).toContain("Dial 112 MERS");
+    expect(isProtectedLatin("PROB_PSI")).toBe(true);
+    expect(isProtectedLatin("(LHC),")).toBe(true);
+    expect(isProtectedLatin("gajendra")).toBe(false);
+    // a Devanagari word is never re-converted on the roman side (canonical spelling stays intact)
+    expect(romanToDev("गजेंद्र")).toBe("गजेंद्र");
+  });
+
+  // The strongest check the aid can carry: every real name on the chart survives a trip to the
+  // Latin side and back. Four SOURCE spellings are irregular (a doubled anusvara in one entry, a
+  // ड-initial surname, a ष-initial surname, and a stray “QM” token) — they are listed rather than
+  // ignored, and the list is capped so a systematic regression cannot hide behind it.
+  it("round-trips every seeded staff name except the documented source oddities", () => {
+    const src = js();
+    const { romanToDev, devToRoman } = new Function(
+      "window",
+      `${src.slice(src.indexOf("var PROTECTED_LATIN"), src.indexOf("function bilingualPair"))};` +
+      " return { romanToDev, devToRoman };",
+    )({ Sanscript }) as { romanToDev: (s: string) => string; devToRoman: (s: string) => string };
+    const IRREGULAR_SOURCE_SPELLINGS = ["दंुडाप्पा", "डावरे", "षेखर", "QM"];
+    const names = [...new Set(doc.assignments.filter((a) => a.person).map((a) => a.person!.nameMr))];
+    expect(names.length).toBeGreaterThan(100);
+    const broken = names.filter((n) => romanToDev(devToRoman(n)) !== n)
+      .filter((n) => !IRREGULAR_SOURCE_SPELLINGS.some((odd) => n.includes(odd)));
+    expect(broken, `names that must round-trip: ${broken.join(", ")}`).toEqual([]);
+    // the well-known ones, spelled the way the chart prints them
+    for (const n of ["गजेंद्र पाटील", "सुनिल पवार", "हेमंत मोहिते", "काळाराम मंदीर", "चौकी"])
+      expect(romanToDev(devToRoman(n)), n).toBe(n);
+  });
+
+  it("suggests a conversion, never applies one: the review strip gates every pair", () => {
+    const src = js();
+    // the engine is the library, not hand-written tables
+    expect(src).toContain("window.Sanscript");
+    expect(src).not.toContain("var TR_VOWELS");
+    // the pair has an editable preview plus accept/dismiss, and the accept path is the ONLY writer
+    expect(src).toContain('.tl-prev');
+    expect(src).toContain('class="tl-ok"');
+    expect(src).toContain('class="tl-no"');
+    const apply = src.slice(src.indexOf("function apply() {"), src.indexOf('strip.querySelector(".tl-ok")'));
+    expect(apply).toContain("target.value = value");
+    // every flyer's prose field gets the companion through ONE hook (a new editor cannot forget it)
+    expect(src).toContain("mountBilingualCompanions(document.getElementById(\"flyer-body\"))");
+    // …and a buckle/phone/search field is never turned into a name editor
+    expect(src).toContain("isNonProseField");
   });
 
   it("is local-only: no absolute URLs — every API call is a same-origin relative path", () => {
@@ -78,6 +148,18 @@ describe("browser authoring asset (web/chart-authoring.js)", () => {
       const p = t.replace(/\bapi\(\s*["'`]/, "");
       expect(p.startsWith("/"), `API target must be same-origin relative: ${p}`).toBe(true);
     }
+  });
+
+  // The transliteration engine is served from this repo's own dependency tree. A CDN <script> would
+  // put a name typed by the clerk on someone else's server — the local-only rule is about the RUNTIME,
+  // so this is checked rather than assumed.
+  it("gets its transliteration engine locally, never from a CDN", () => {
+    const server = read("server/index.ts");
+    expect(server).toContain('app.get("/vendor/sanscript.js"');
+    expect(server).toContain('"node_modules", "@indic-transliteration", "sanscript"');
+    const pkg = JSON.parse(read("package.json")) as { dependencies: Record<string, string> };
+    expect(pkg.dependencies["@indic-transliteration/sanscript"]).toBeTruthy();
+    expect(js()).not.toMatch(/cdn\.jsdelivr|unpkg\.com|cdnjs/);
   });
 
   it("never uses prompt() and never fakes a save", () => {
@@ -117,7 +199,9 @@ describe("authoring styles separated from the frozen baseline", () => {
     expect(css.match(/\{/g)!.length).toBe(css.match(/\}/g)!.length);
     const printBlock = css.slice(css.lastIndexOf("@media print"));
     expect(printBlock.length).toBeGreaterThan(0);
-    for (const sel of [".add-box", ".toast", ".flyer-overlay", ".flyer-card", "abbr.abbr::after"]) {
+    // the abbreviation bubble is a JS-positioned fixed layer now (#abbr-tip) — it must be hidden
+    // in print like every other piece of chrome
+    for (const sel of [".add-box", ".toast", ".flyer-overlay", ".flyer-card", "#abbr-tip"]) {
       expect(printBlock, `print must hide ${sel}`).toContain(sel);
     }
     expect(printBlock).toMatch(/display:\s*none\s*!important/);
@@ -129,6 +213,9 @@ describe("rendered page wiring (renderChart output)", () => {
     expect(html).toContain('__AUTH_CSS_HREF__');
     expect(html).toContain('__AUTH_JS_SRC__');
     expect(html).toContain('<script src="__AUTH_JS_SRC__" defer></script>');
+    // the offline transliteration engine loads before the authoring layer (it uses window.Sanscript)
+    expect(html).toContain('<script src="__VENDOR_JS_SRC__" defer></script>');
+    expect(html.indexOf("__VENDOR_JS_SRC__")).toBeLessThan(html.indexOf("__AUTH_JS_SRC__"));
     expect(html).not.toMatch(/<script(?![^>]*src)/); // no inline script blocks
   });
 

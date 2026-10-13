@@ -21,12 +21,28 @@ function baseConfig(): pg.ClientConfig {
   return { host, port, user, ...(password ? { password } : {}) };
 }
 
+/** True when this repo's own DB-name envs pin the database on purpose (local dev/test split). */
+function dbNamePinned(): boolean {
+  return isTestRun()
+    ? process.env.PANCHAVATI_TEST_DB !== undefined
+    : process.env.PANCHAVATI_DEV_DB !== undefined;
+}
+
 /** Pool for the requested database. Fails loudly on unusable config. */
 export function makePool(dbName: string): pg.Pool {
   if (!dbName || typeof dbName !== "string") {
     throw new Error(`Invalid database name: ${JSON.stringify(dbName)}`);
   }
-  return new pg.Pool({ ...baseConfig(), database: dbName, max: 5 });
+  // A hosted/managed server (demo deployment) hands us ONE database inside DATABASE_URL; forcing
+  // the local name on top of it would connect to a database that does not exist there. The local
+  // dev/test split still wins when its own variable was set explicitly, so nothing changes on a
+  // developer machine and the existing test DB selection keeps working.
+  const useUrlDatabase = !!process.env.DATABASE_URL && !dbNamePinned();
+  return new pg.Pool({
+    ...baseConfig(),
+    ...(useUrlDatabase ? {} : { database: dbName }),
+    max: 5,
+  });
 }
 
 export function isTestRun(): boolean {

@@ -83,7 +83,12 @@ export interface DocAvailability {
   detailMr: string | null;     // verbatim ("08 ते 10") — never parsed
 }
 
-export interface DocNotice { groupKey: string | null; sortOrder: number; textMr: string; }
+export interface DocNotice {
+  noticeId: number;          // chart_notices row id — the notice line's edit target (CRUD)
+  groupKey: string | null;
+  sortOrder: number;
+  textMr: string;
+}
 
 export interface DocManpowerCell {
   displayOrder: number;        // source row order (मंजूर → हजर → ...)
@@ -300,9 +305,10 @@ export async function projectChart(db: Queryable, chartId: number): Promise<Char
   }));
 
   const notices = (await db.query(
-    `SELECT group_key, sort_order, text_mr FROM chart_notices
+    `SELECT notice_id, group_key, sort_order, text_mr FROM chart_notices
       WHERE chart_id = $1 ORDER BY sort_order, notice_id`, [chartId]))
     .rows.map((r): DocNotice => ({
+      noticeId: Number(r.notice_id),
       groupKey: (r.group_key as string | null) ?? null,
       sortOrder: Number(r.sort_order),
       textMr: r.text_mr as string,

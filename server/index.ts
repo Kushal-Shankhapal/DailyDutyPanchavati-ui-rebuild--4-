@@ -13,13 +13,25 @@ import { finalizeChart, reopenForAmendment } from "./finalize.js";
 import { reassignSlot, addChowkiBlock, addOfficerBox, removeChowkiBlock, removeOfficerBox, addSupportSeat, removeSupportSeat } from "./assignments.js";
 import { renderChart } from "./render/chart-html.js";
 import { registerChartPresentationRoute } from "./presentation.js";
+import { registerStructureRoutes } from "./structure.js";
+import { registerNoticeRoutes } from "./notices.js";
 
 // PORT may be present-but-empty in some shells (Number("")===0 → random port);
 // fall back to the documented 3100 unless a real port number is provided.
 const port = Number(process.env.PORT) || 3100;
+// Local default is loopback — the duty chart is not reachable from the LAN. A demo deployment
+// sets HOST=0.0.0.0 because the platform proxies into the container from outside.
+const host = process.env.HOST || "127.0.0.1";
 const pool = makePool(DEV_DB);
 
-const app = Fastify({ logger: true });
+// Logging (user question 2026-10-13: “Whenever I npm run dev … this outputs, is this normal?”).
+// It IS normal pino output — Fastify logs every request at `info` — but it is noise for normal
+// work, so the default dev experience is now CALM: one startup banner and no per-request lines.
+// Level `warn` is what does that (request lines are `info`), so `LOG_LEVEL=info npm run dev`
+// brings the full request stream back and `LOG_LEVEL=silent` mutes pino entirely. Real problems
+// (errors, warnings) always print.
+const LOG_LEVEL = process.env.LOG_LEVEL ?? "warn";
+const app = Fastify({ logger: LOG_LEVEL === "silent" ? false : { level: LOG_LEVEL } });
 
 await app.register(cors, {
   origin: process.env.CORS_ORIGIN ?? "http://localhost:5173",
@@ -27,6 +39,14 @@ await app.register(cors, {
 
 // Health
 app.get("/health", async () => ({ ok: true, service: "panchavati" }));
+
+// The browser asks for /favicon.ico on every page load; without a route it is a 404 in the log
+// (and in the console). It is the same emblem the header uses, so serve that.
+app.get("/favicon.ico", async (_req, reply) => {
+  const abs = path.join(process.cwd(), "web", "assets", "Police_Logo.png");
+  if (!fs.existsSync(abs)) return reply.code(204).send();
+  return reply.header("Content-Type", "image/png").send(fs.readFileSync(abs));
+});
 
 // Static assets: frozen visual baseline (design/) + authoring layer (web/).
 // Browser code lives in web/ — server/ stays fetch-free (local-only static scan, invariant tests).
@@ -48,13 +68,44 @@ app.get("/design/panchavati-compv3.html", serveFile(path.join("design", "panchav
 // the browser page probes reachability before embedding it. Nothing here imports that app's code.
 // The browser keeps a SAME-ORIGIN url (/legacy/<date>) and this redirect is the only place that
 // knows the other app's origin — the client-side invariant "no absolute URLs" stays intact.
-const LEGACY_PORT = process.env.LEGACY_PORT || "3101";
-app.get("/legacy/:date", async (req, reply) => {
+// The reference app's origin is CONFIGURATION, never a hardcode: locally it is the supervised
+// process on :3101 (`npm run legacy:start`, or the second service in `npm run demo`); on a deployed
+// demo the legacy chart is its OWN service, so its public origin comes from LEGACY_URL and the
+// redirect below follows it. No other file knows that origin, and the browser keeps a same-origin
+// /legacy/<date> URL (client stays free of absolute URLs — local-only invariant).
+// A deployment that has no reference app sets LEGACY_URL=none (or leaves it empty) and the entry
+// answers an honest 404 instead of a dead link to a laptop's localhost (see render.yaml/docs/DEPLOY.md).
+const legacyOrigin = (value: string | undefined, port: string): string | null => {
+  if (value === undefined) return `http://localhost:${port}`;
+  const trimmed = value.trim().replace(/\/$/, "");
+  return trimmed === "" || trimmed.toLowerCase() === "none" ? null : trimmed;
+};
+const LEGACY_URL = legacyOrigin(process.env.LEGACY_URL, process.env.LEGACY_PORT || "3101");
+const LEGACY_URL_2 = legacyOrigin(process.env.LEGACY_URL_2, process.env.LEGACY2_PORT || "3102");
+const legacyRedirect = (base: string | null) => async (req: { params: unknown }, reply: {
+  code: (n: number) => { send: (b: unknown) => unknown }; redirect: (u: string) => unknown;
+}) => {
   const { date } = req.params as { date: string };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return reply.code(400).send({ error: "bad date" });
-  return reply.redirect(`http://localhost:${LEGACY_PORT}/charts/${date}`);
-});
+  if (!base) {
+    return reply.code(404).send({
+      error: "संदर्भ तक्ता या डिप्लॉयमध्ये उपलब्ध नाही",
+      hint: "legacy reference chart is a separate app — set LEGACY_URL to its origin (docs/DEPLOY.md)",
+    });
+  }
+  return reply.redirect(`${base}/charts/${date}`);
+};
+app.get("/legacy/:date", legacyRedirect(LEGACY_URL));
+// Second reference app (the other six-page build) — both can run side by side for comparison.
+app.get("/legacy2/:date", legacyRedirect(LEGACY_URL_2));
 app.get("/authoring.css", serveFile(path.join("web", "authoring.css"), "text/css; charset=utf-8"));
+// Offline transliteration engine for the bilingual fields (Sanscript 1.3.3, MIT). It is served from
+// this repo's own dependency tree — no CDN, no network call at runtime, so no chart data and no
+// name ever leaves the machine (AGENTS.md). One copy, pinned by package.json + lockfile.
+app.get("/vendor/sanscript.js", serveFile(
+  path.join("node_modules", "@indic-transliteration", "sanscript", "sanscript.js"),
+  "application/javascript; charset=utf-8",
+));
 app.get("/chart-presentation.css", serveFile(path.join("web", "chart-presentation.css"), "text/css; charset=utf-8"));
 app.get("/chart-authoring.js", serveFile(path.join("web", "chart-authoring.js"), "text/javascript; charset=utf-8"));
 // Maharashtra Police emblem for the app header — binary, so it cannot go through serveFile
@@ -111,6 +162,7 @@ app.get("/charts/:date", async (req, reply) => {
       .replace("__CSS_HREF__", "/design/compv3.css")
       .replace("__AUTH_CSS_HREF__", "/authoring.css")
       .replace("__PRESENTATION_CSS_HREF__", "/chart-presentation.css")
+      .replace("__VENDOR_JS_SRC__", "/vendor/sanscript.js")
       .replace("__AUTH_JS_SRC__", "/chart-authoring.js")
   );
 });
@@ -264,6 +316,10 @@ app.patch("/api/charts/:date/labels", async (req, reply) => {
 
 // Enumerated per-element display controls only; source rows and labels are untouched.
 registerChartPresentationRoute(app, pool);
+// Chart-local STRUCTURE (clerk-owned tables, matrix columns, typed values) and the author-entered
+// notice lines — same narrow-write discipline: bounded operations, DRAFT only, FINALIZED → 409.
+registerStructureRoutes(app, pool);
+registerNoticeRoutes(app, pool);
 
 // Add an अधिकारी box (edit-mode `+ अधिकारी बॉक्स जोडा`) — display entry in
 // presentation_overrides.officerBoxes + a real रिक्त रायटर seat in the office column.
@@ -493,9 +549,48 @@ app.patch("/api/masters/staff/:id", async (req, reply) => {
   return { ok: true };
 });
 
+/** One human-readable startup block instead of a stream of JSON: what is running, where, and how
+ *  to stop it (user 2026-10-13, items 1 + 4 — “is this normal?” and “make sure you close every
+ *  terminal or node process”). */
+function banner() {
+  const base = `http://${host === "0.0.0.0" ? "127.0.0.1" : host}:${port}`;
+  const date = process.env.CHART_DATE || "2026-09-10";
+  const legacy = LEGACY_URL ?? "(not configured — set LEGACY_URL, docs/DEPLOY.md)";
+  console.log([
+    "",
+    "  पंचवटी दैनिक कर्तव्य तक्ता — dev server",
+    "  " + "─".repeat(64),
+    `  तक्ता (chart)        ${base}/charts/${date}`,
+    `  नमुना (frozen mock)  ${base}/design/panchavati-compv3.html`,
+    `  API                  ${base}/api/charts`,
+    `  जुना ६-पृष्ठ तक्ता    ${base}/legacy/${date}`,
+    `                       ↳ ${legacy}  (start it: npm run legacy:start)`,
+    `  bound to             ${host}:${port}${host === "0.0.0.0" ? "  (reachable from outside this machine — deployment mode)" : "  (loopback only)"}`,
+    "  " + "─".repeat(64),
+    "  both reference apps + this server:  npm run demo",
+    "  per-request log lines:              LOG_LEVEL=info npm run dev",
+    "  stop: Ctrl+C   ·   clean up left-over servers: npm run stop",
+    "",
+  ].join("\n"));
+}
+
+/** Ctrl+C must actually stop this process (and free the port) — nothing left behind. */
+let closing = false;
+const shutdown = async (signal: string) => {
+  if (closing) return;
+  closing = true;
+  console.log(`\n  ${signal} — stopping the chart server …`);
+  try { await app.close(); } catch { /* already closed */ }
+  try { await pool.end(); } catch { /* pool already drained */ }
+  process.exit(0);
+};
+process.on("SIGINT", () => void shutdown("SIGINT"));
+process.on("SIGTERM", () => void shutdown("SIGTERM"));
+
 const start = async () => {
   try {
-    await app.listen({ port, host: "127.0.0.1" });
+    await app.listen({ port, host });
+    banner();
   } catch (err) {
     app.log.error(err);
     process.exit(1);

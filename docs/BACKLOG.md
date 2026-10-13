@@ -162,3 +162,35 @@ Full gates: `npm run check` (typecheck + **83 tests** + doctor x2 DBs), `npm run
 | 15 | A load-time SyntaxError in the client script killed all chrome while every test passed | FIXED + guarded: `new Function(js())` parse test and a transliterator name-table test added (`tests/authoring.test.ts`, 85 tests total) |
 
 Next (needs a user decision, in order): pick the dense-table option (T21) → pick the notice placement (N13/T21) → implement notice CRUD (id → endpoint → flyer) → date-selector visual from the Kushal/Arjish reference (T20) → then the 11/09 chart + event annex.
+## Round 5 (2026-10-13) — the 13-item list, bilingual engine, deploy, print-fit
+
+| # | Ask (user words) | Status |
+|---|---|---|
+| 1 | “Whenever I npm run dev … this outputs, is this normal?” | DONE — calm default: `LOG_LEVEL=warn` (request lines are `info`), one banner, `/favicon.ico`, Ctrl+C closes app+pool |
+| 2 | “manual running command stuff wont work when we deploy this for demo on render, think something good” | DONE — `render.yaml` + `docs/DEPLOY.md` + `HOST`/`DATABASE_URL`/`LEGACY_URL` config; seeding stays a deliberate one-off (T23) |
+| 3 | Dropdowns hidden behind the sticky second bar | DONE — `#appbar` z-index 90 above `.chart-toolbar` 60; `.ab-menu` 95 |
+| 4 | “close every terminal or node processes you open” | DONE — `npm run stop` (this project's ports) and `npm run stop:all`; `npm run demo` reaps every child on Ctrl+C |
+| 5 | Navbar items look like buttons — should read as seamless text | DONE — `#appbar .ab-gbtn` transparent/no border, hover+active+open reveal it; `मराठी EN लॉगिन` keep their boxed look |
+| 6 | Login window contents must follow the मराठी/EN toggle | DONE — every label in `openLogin()` carries `data-lang` spans |
+| 7 | Main officer block: no special border, compact to its content, वपोनि गजेंद्र पाटील, keep writer/chalak/rtpc only, जागा as already-empty cells | DONE — `.sr-pi-card` fits content with the ordinary frame, no colon after वपोनि, ऑपरेटर dropped, `+ जागा` replaced by real empty seats via the support API |
+| 8 | No underlines under abbreviations; one-line tooltip above-left; never clipped by the parent | DONE — `abbr.abbr` border 0, JS-positioned `#abbr-tip` (fixed layer, `white-space: nowrap`) |
+| 9 | Remove the empty/duplicate rows (कार्यालयीन अंमलदार, व.पो.नि.सो. रायटर, ठाणे अंमलदार कक्ष देखरेख, the blank line under विशेष तपास पथक) | DONE — `dropEmptyHeadings` + `dropPersons` (display-only; rows still counted for the no-loss ledger) |
+| 10 | Date selector: “copy the style and behaviour from kushal's repo as it is” | DONE — T20 resolved against `…/kushals repo/archive/src/web/components/AppNav.tsx`; this round removed the double scroll and pinned the search row |
+| 11 | Add and delete columns, tables, headers — everything CRUDable like officer/chowki boxes | DONE — `server/structure.ts` (`PATCH /api/charts/:date/structure`: free tables, row/column add/remove, matrix columns add/hide, typed cells) + `server/notices.ts` (notice lines) + the client flyers |
+| 12 | Clerk block shows the signed-in clerk, editable; drop the ठाणे दैनंदिनी नोंद line | DONE — sign-off values are author text (`presentation_overrides.values`, `PATCH …/values`), the client fills the signed-in clerk, the second line is gone |
+| 13 | “do all the recommended A options for everything” (dense tables + notices) + brainstorm the whole chart | DONE for A/A (T21 resolved: scan session cards + folded hourly strip are on the court/special sheet; court register as one card per heading). Coherence pass + open items listed below |
+| 14 | “use external tools or libraries instead of making that urself from scratch” for the mr⇄en converter | DONE — Sanscript 1.3.3 (MIT) served locally + Marathi conventions + protected tokens + a review strip before anything is written |
+| 15 | Advanced-search icon in the date-selector search area, WIP, leading to the navbar's advanced search | ICON DONE (badged WIP → the same Coming-Soon flyer). The PAGE is NOT built: T24 requires reading `HistoricalSearchView.tsx` in Kushal's repo first — no planning before that |
+
+### Open after round 5 (in priority order)
+
+1. **Advanced search page** — read Kushal's `HistoricalSearchView.tsx` (+ how `AppNav` routes `/search`), then decide the data surfaces it may query. Explicit user instruction: learn from the old implementation, do not design a new one.
+2. **English companion persistence** for chart-local text (T22.1) — the editor offers both scripts today; whether a stored English twin is needed (and on which surfaces) is undecided, and the chart prints Marathi only.
+3. **Public demo data decision** (T23) — private URL vs reference-only seed vs explicit approval to seed the real chart.
+4. **11/09 chart + event annex**, assignment suggestions, print verification of both days.
+5. **Chart-wide coherence pass** (the user's item 13 tail) — the honest findings are in `docs/COHERENCE_AUDIT_1013.md`.
+
+### Whole-chart coherence pass (user item 13 tail)
+
+Written up in `docs/COHERENCE_AUDIT_1013.md`: what repeats, what is missing, where the whitespace is,
+and which of those are decisions rather than bugs.

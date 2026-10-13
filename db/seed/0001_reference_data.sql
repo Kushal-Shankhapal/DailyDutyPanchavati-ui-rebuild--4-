@@ -424,13 +424,19 @@ WHERE NOT (tv.layout ? 'courtDutyCodes')
 -- role/qualifier token (SEMANTIC/10.md Table 1 col 1) and to the office-column writer row the
 -- source names for that branch (col 4). Display grouping only (Layer C) — no operational data.
 -- Replaces the earlier flat officerBoxWriters object (shape change → replace, still idempotent).
+-- THREE boxes, not four (user 2026-10-14: “we have three officers only … 1st is the main one I
+-- got confused, we have their box above big and all, so yeah just three”). The Sr-PI card above
+-- the band is the station head; the subordinate band is the source's तपास / प्रषा / गुन्हे trio.
+-- The fourth box the mock drew — “विशेष तपास पथक” with a bare “विशेष” chip and no writer row in
+-- any source chart — is removed as chart structure. Nothing is lost from the data: that box never
+-- carried an assignment (the source names no विशेष writer, OPEN_QUESTIONS), and every row it could
+-- have claimed still renders in the office column.
 UPDATE template_versions tv
 SET layout = (tv.layout - 'officerBoxWriters') || '{
   "officerBoxes": [
     {"label": "तपास",  "writerDutyTitle": "पोनि.तपास॰रायटर",      "writerRole": "रायटर"},
     {"label": "प्रषा",  "writerDutyTitle": "पोनि.प्रशासन॰रायटर",   "writerRole": "रायटर"},
-    {"label": "गुन्हे", "writerDutyTitle": "पोनि.गुन्हे॰रायटर",     "writerRole": "रायटर"},
-    {"label": "विशेष", "title": "विशेष तपास पथक", "writerDutyTitle": "", "writerRole": "रायटर"}
+    {"label": "गुन्हे", "writerDutyTitle": "पोनि.गुन्हे॰रायटर",     "writerRole": "रायटर"}
   ]
 }'::jsonb
 WHERE tv.template_id = (SELECT template_id FROM chart_templates WHERE name = 'Panchavati Compact v3');

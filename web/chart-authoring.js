@@ -79,144 +79,206 @@
     return rankShort(s.rank_code) + buck + " " + (s.name_mr || "");
   }
 
-  // ---------- EN ⇄ मराठी लिप्यंतर (offline, rule-based, approximate) -----------
-  // The clerk types a name in EITHER script and the other field is filled as a suggestion which
-  // stays fully editable — nothing is submitted on its own, and no dictionary, key or service is
-  // involved (invariant: no chart data leaves the machine). Encoding, shown in every form hint:
-  //   aa=आ  ii/ee=ई  uu/oo=ऊ | T=ट D=ड N=ण L=ळ S=ष | r+consonant = र् | n/m+consonant = ं | wa=वा
-  var TR_VOWELS = [
-    ["aa", "आ", "ा"], ["ai", "ऐ", "ै"], ["au", "औ", "ौ"], ["ou", "औ", "ौ"],
-    ["ee", "ई", "ी"], ["ii", "ई", "ी"], ["oo", "ऊ", "ू"], ["uu", "ऊ", "ू"],
-    ["A", "आ", "ा"], ["I", "ई", "ी"], ["U", "ऊ", "ू"],
-    ["a", "अ", ""], ["i", "इ", "ि"], ["u", "उ", "ु"], ["e", "ए", "े"],
-    ["o", "ओ", "ो"], ["R", "ऋ", "ृ"],
-  ];
-  var TR_CONSONANTS = [
-    ["wa", "वा"], ["kshh", "क्ष"], ["ksh", "क्ष"], ["shri", "श्री"],
-    ["dny", "ज्ञ"], ["jny", "ज्ञ"], ["chh", "छ"], ["C", "छ"], ["kh", "ख"], ["gh", "घ"],
-    ["ch", "च"], ["jh", "झ"], ["Th", "ठ"], ["Dh", "ढ"], ["th", "थ"], ["dh", "ध"],
-    ["ph", "फ"], ["bh", "भ"], ["sh", "श"], ["Sh", "ष"], ["S", "ष"], ["ny", "ञ"],
-    ["ng", "ंग"], ["T", "ट"], ["D", "ड"], ["N", "ण"], ["L", "ळ"],
-    ["k", "क"], ["g", "ग"], ["j", "ज"], ["t", "त"], ["d", "द"], ["n", "न"],
-    ["p", "प"], ["f", "फ"], ["b", "ब"], ["m", "म"], ["y", "य"], ["r", "र"],
-    ["l", "ल"], ["v", "व"], ["w", "व"], ["s", "स"], ["h", "ह"],
-  ];
-  function trMatch(table, s, i) {
-    for (var k = 0; k < table.length; k++) {
-      var t = table[k];
-      if (s.substr(i, t[0].length) === t[0]) return { len: t[0].length, val: t[1], matra: t[2] };
+  // ---------- EN ⇄ मराठी लिप्यंतर (Sanscript + Marathi conventions, offline) ------
+  // The transliterator is a REAL library now, not hand-written rules (user 2026-10-13: “maybe use
+  // external tools or libraries instead of making that urself from scratch”). Sanscript 1.3.3
+  // (MIT, github.com/indic-transliteration/sanscript.js) is a dependency of this repo and is served
+  // from this machine — no network call, no key, no upload, so chart data still never leaves the
+  // machine. Sanscript is Sanskrit-first, so a thin, explicit MARATHI CONVENTION layer sits on top:
+  //   · roman → Devanagari goes through the `optitrans` scheme, where typing “gajendra” already
+  //     means गजेंद्र — plain ITRANS would demand an explicit virama to suppress the inherent अ;
+  //   · a word-final virama is dropped (Marathi prints गजेंद्र, never गजेन्द्र्);
+  //   · a nasal + virama in front of a STOP becomes the anusvara, which is how the station writes
+  //     those names (gAngurDe → गांगुर्डे, gajendra → गजेंद्र), while कन्या-style clusters keep
+  //     their explicit nasal;
+  //   · Devanagari → roman drops the word-final inherent ‘a’ (Marathi schwa deletion: सुनिल → sunil,
+  //     पाटील → pATIl, रिक्त → rikt) and folds the anusvara to a plain ‘n’ before a consonant
+  //     (गजेंद्र → gajendr, बंद → band), so the Latin side stays ASCII.
+  // Syntax = ITRANS, the scheme the form hints print: aa=आ ii/ee=ई uu/oo=ऊ | T=ट D=ड N=ण L=ळ S=ष |
+  // M=ं | r+consonant = र्. A capital at the START of a word is just capitalisation (Patil → पाटील),
+  // a capital INSIDE a word is the retroflex marker (paTil → पटिल, gaNesh → गणेश).
+  //
+  // Nothing is applied to a field silently: a conversion is only SUGGESTED, the clerk reviews (and
+  // may edit) it in the review strip, and it lands in the other field only when they accept it —
+  // see bilingualPair below (user 2026-10-13: “user should be able to see, verify and edit the
+  // converted text before moving on”).
+  //
+  // Latin codes / protected tokens are NEVER transliterated (AGENTS.md): CCTNS, Dial 112 MERS, DB,
+  // MERS, TOTAL, Office, ME and the rank codes (PI/API/PSI/PROB_PSI/GPS/ASI/LASI/HC/LHC/PN/LPN/
+  // PC/LPC) are codes and proper nouns, so “CCTNS” must not turn into “छछटनस” and “MERS” stays
+  // “MERS”. Devanagari words are always converted in the Latin direction — romanising a name cannot
+  // alter its canonical Devanagari spelling, which is the chart's own text.
+  var PROTECTED_LATIN = ["CCTNS", "Dial", "MERS", "DB", "TOTAL", "Office", "ME", "PI", "API",
+    "PSI", "PROB_PSI", "GPS", "ASI", "LASI", "HC", "LHC", "PN", "LPN", "PC", "LPC", "BIMA"];
+  function isProtectedLatin(tok) {
+    var bare = String(tok).replace(/^[("'\u201c]+/, "").replace(/[.,;:!?)"'\u201d]+$/, "");
+    for (var i = 0; i < PROTECTED_LATIN.length; i++) {
+      if (bare.toLowerCase() === PROTECTED_LATIN[i].toLowerCase()) return true;
     }
-    return null;
+    return false;
   }
-  function trConsonant(table, s, i) {
-    for (var k = 0; k < table.length; k++) {
-      if (s.substr(i, table[k][0].length) === table[k][0]) return { len: table[k][0].length, val: table[k][1] };
+  /** The loaded library, or null when it did not arrive — the aid then does nothing rather than
+   *  guessing at a name (a silently wrong name is worse than no suggestion at all). */
+  function translitEngine() {
+    var S = (typeof window !== "undefined") ? window.Sanscript : null;
+    return (S && typeof S.t === "function") ? S : null;
+  }
+  function translitReady() { return translitEngine() !== null; }
+  /** One word: roman (ITRANS) → Devanagari, with the Marathi conventions above. */
+  function romanWord(word) {
+    var S = translitEngine();
+    if (!S) return null;
+    if (!/[A-Za-z]/.test(word)) return word;              // digits/punctuation only — untouched
+    if (/[\u0900-\u097F]/.test(word)) return word;        // already Devanagari — untouched
+    if (isProtectedLatin(word)) return word;              // codes are never transliterated
+    // Capital E/O are the same vowel a clerk means by e/o (this aid has no short-e vowel). Every
+    // OTHER capital keeps its ITRANS meaning — A=आ, I=ई, T=ट, N=ण, S=ष, L=ळ — because a name that
+    // starts with a long vowel is the common case, not an exception (Aher → आहेर, Akash → आकाश).
+    // A word-initial capital that is not one of those keys (Patil, Deshmukh) is read as the plain
+    // letter, which is how the old aid read it too.
+    // A word-initial capital that carries no ITRANS meaning is plain capitalisation (Patil →
+    // पतिल, Sanjay → संजय, Dattatray → दत्तात्रय — how a clerk writes a name in English). The
+    // letters that DO carry ITRANS meaning stay as typed: A/I/U are the long vowels (Aher → आहेर,
+    // Akash → आकाश) and T is the retroflex ट (Tukaram → टुकाराम), which is what Marathi names need.
+    var w = word.replace(/E/g, "e").replace(/O/g, "o")
+      .replace(/^([BCDFGHJKLNPQSVWXYZ])/, function (m) { return m.toLowerCase(); });
+    var dev = S.t(w, "itrans", "devanagari");
+    dev = dev.replace(/्(?=\s|$)/g, "");                  // no printed word-final virama
+    dev = dev.replace(/्$/, "");
+    // Marathi writes a homorganic nasal before a stop as the anusvara (gajendra → गजेंद्र,
+    // gAngurDe → गांगुर्डे) — but a doubled nasal is a real conjunct, so न्न stays न्न (jagannAth).
+    return dev.replace(/([\u0919\u091e\u0923\u0928\u092e])्(?=[\u0915-\u092d])/g,
+      function (m, nasal, off, whole) { return whole.charAt(off + 2) === nasal ? m : "ं"; });
+  }
+  /** One word: Devanagari → roman (ITRANS), with Marathi schwa deletion. */
+  function devWord(word) {
+    var S = translitEngine();
+    if (!S) return null;
+    if (!/[\u0900-\u097F]/.test(word)) return word;       // digits/punctuation only — untouched
+    var roman = S.t(word, "devanagari", "itrans");
+    // The anusvara becomes a plain ASCII ‘n’ only where it IS a nasal+stop — before a stop letter.
+    // Before a semivowel or sibilant it keeps ITRANS' ‘M’ (सांव... stays sAMv..., never “sanv…”),
+    // so the roman form round-trips back to the same Devanagari.
+    roman = roman.replace(/M(?=[kKgGcCjJtTdDnNpPbB])/g, "n");
+    return roman.replace(/a$/, "");                       // the word-final inherent ‘a’ is silent
+  }
+  /** Convert word by word; whitespace and the original text survive exactly. */
+  function mapWords(text, fn) {
+    return String(text || "").split(/(\s+)/).map(function (tok) {
+      if (!tok.trim()) return tok;
+      var out = fn(tok);
+      return out === null ? tok : out;
+    }).join("");
+  }
+  /** Latin/roman → Devanagari. Input is returned unchanged when the library is unavailable. */
+  function romanToDev(input) { return mapWords(input, romanWord); }
+  /** Devanagari → Latin/roman (ITRANS), Marathi conventions. */
+  function devToRoman(input) { return mapWords(input, devWord); }
+
+  // ---------- the bilingual field pair, with a REVIEW step ---------------------
+  /** Two script fields for ONE value, either one usable for typing. A conversion is never written
+   *  straight into the other field: it is offered in a review strip where the clerk sees it, may
+   *  edit it, and accepts it (वापरा / Use) or drops it (रद्द / Cancel). A field the clerk edited by
+   *  hand always wins, and the pair is inert when the library did not load (two plain inputs). */
+  function bilingualPair(mrEl, enEl, opts) {
+    var container = (mrEl && mrEl.parentNode) || null;
+    if (!container || !mrEl || !enEl || !translitEngine()) return null;
+    opts = opts || {};
+    var what = opts.whatMr || "मजकूर";
+    var whatEn = opts.whatEn || "text";
+    var strip = el("div", { class: "tl-strip", hidden: "hidden" });
+    strip.innerHTML =
+      '<span class="tl-lbl"></span>' +
+      '<input type="text" class="tl-prev" aria-label="रूपांतरित मजकूर / converted text">' +
+      '<button type="button" class="tl-ok"><span data-lang="mr">वापरा</span><span data-lang="en">Use</span></button>' +
+      '<button type="button" class="tl-no"><span data-lang="mr">रद्द</span><span data-lang="en">Cancel</span></button>' +
+      '<span class="tl-what"></span>';
+    container.appendChild(strip);
+    var prev = strip.querySelector(".tl-prev");
+    var lbl = strip.querySelector(".tl-lbl");
+    var whatEl = strip.querySelector(".tl-what");
+    var pending = null;
+    var silent = false;
+    mrEl.setAttribute("data-tl", "mr");
+    enEl.setAttribute("data-tl", "en");
+    whatEl.innerHTML = '<span data-lang="mr">' + esc(what) + '</span><span data-lang="en">' + esc(whatEn) + "</span>";
+    function hide() { strip.hidden = true; pending = null; }
+    function offer(target, converted, toMr) {
+      if (converted === null || converted === "" || converted === target.value) { hide(); return; }
+      pending = target;
+      lbl.innerHTML = toMr
+        ? '<span data-lang="mr">सुचवलेले मराठी रूप</span><span data-lang="en">Suggested Marathi</span>'
+        : '<span data-lang="mr">सुचवलेले इंग्रजी रूप</span><span data-lang="en">Suggested English</span>';
+      prev.value = converted;
+      strip.hidden = false;
+      prev.focus();
+      try { prev.setSelectionRange(prev.value.length, prev.value.length); } catch (e) { /* not text-like */ }
     }
-    return null;
-  }
-  // A capital letter at the START of a word is just capitalisation (Patil → पतिल, Deshmukh →
-  // देशमुख); a capital INSIDE a word is the retroflex marker the hint documents (paTil → पटिल,
-  // gaNesh → गणेश, saaLunkhe → साळुंखे). Without this, “Patil” became “Pअतिल” and “Deshmukh”
-  // became डेशमुख — found live 2026-10-13.
-  function trNormalize(input) {
-    var s = String(input || "");
-    var out = "";
-    for (var i = 0; i < s.length; i++) {
-      var ch = s.charAt(i);
-      var prev = i > 0 ? s.charAt(i - 1) : "";
-      out += (!/[A-Za-z]/.test(prev) && /[A-Z]/.test(ch)) ? ch.toLowerCase() : ch;
+    function apply() {
+      if (!pending) return;
+      var target = pending;
+      var value = prev.value;
+      hide();
+      silent = true;
+      target.value = value;
+      silent = false;
+      if (opts.onApply) opts.onApply(target, value);
     }
-    return out;
-  }
-  function romanToDev(input) {
-    var s = trNormalize(input);
-    var out = "";
-    var i = 0;
-    while (i < s.length) {
-      var ch = s.charAt(i);
-      if (!/[A-Za-z]/.test(ch)) { out += ch; i += 1; continue; }
-      var c = trConsonant(TR_CONSONANTS, s, i);
-      if (c) {
-        i += c.len;
-        var v = trMatch(TR_VOWELS, s, i);
-        if (v) { out += c.val + v.matra; i += v.len; continue; }   // consonant + matra
-        var next = s.charAt(i);
-        if (!/[A-Za-z]/.test(next)) { out += c.val; continue; }    // word-final: inherent अ
-        // न / म before another consonant is the anusvara (shinde → शिंदे, saLunkhe → साळुंखे),
-        // decided BEFORE the consonant is written — otherwise the letter leaks through.
-        if (c.val === "न" || c.val === "म") { out += "ं"; continue; }
-        // A vowel-less ‘r’ right after a ONE-LETTER consonant is the repha (pra→प्र, kra→क्र,
-        // tri→त्र). In “para” the ‘a’ between p and r was already consumed as that consonant's
-        // matra, so “para” stays पर; “wa” (वा) already carries its own vowel, so “pawar” = पवार.
-        if (next === "r" && c.len === 1 && c.val !== "र") { out += c.val + "्"; continue; }
-        if (c.val === "र") { out += "र्"; continue; }
-        out += c.val;                                              // bare consonant = inherent अ
-        continue;
-      }
-      var v2 = trMatch(TR_VOWELS, s, i);
-      if (v2) { out += v2.val; i += v2.len; continue; }
-      out += ch;
-      i += 1;
-    }
-    return out;
-  }
-  var DEV_CONS = {
-    "क": "k", "ख": "kh", "ग": "g", "घ": "gh", "ङ": "ng", "च": "ch", "छ": "chh",
-    "ज": "j", "झ": "jh", "ञ": "ny", "ट": "T", "ठ": "Th", "ड": "D", "ढ": "Dh",
-    "ण": "N", "त": "t", "थ": "th", "द": "d", "ध": "dh", "न": "n", "प": "p",
-    "फ": "ph", "ब": "b", "भ": "bh", "म": "m", "य": "y", "र": "r", "ल": "l",
-    "व": "v", "श": "sh", "ष": "Sh", "स": "s", "ह": "h", "ळ": "L", "क़": "q",
-    "क्ष": "ksh", "ज्ञ": "dny", "श्री": "shri",
-  };
-  var DEV_MATRA = {
-    "ा": "aa", "ि": "i", "ी": "ii", "ु": "u", "ू": "uu", "ृ": "R", "े": "e",
-    "ै": "ai", "ो": "o", "ौ": "au", "ं": "n", "ँ": "n", "ः": "h", "्": "",
-  };
-  var DEV_INDEP = {
-    "अ": "a", "आ": "aa", "इ": "i", "ई": "ii", "उ": "u", "ऊ": "uu", "ऋ": "R",
-    "ए": "e", "ऐ": "ai", "ओ": "o", "औ": "au", "ऑ": "o",
-  };
-  function devToRoman(input) {
-    var s = String(input || "");
-    var out = "";
-    var i = 0;
-    while (i < s.length) {
-      var two = s.substr(i, 2);
-      var ch = s.charAt(i);
-      if (DEV_CONS[two]) { out += DEV_CONS[two]; i += 2; continue; }
-      if (DEV_CONS[ch]) {
-        out += DEV_CONS[ch];
-        i += 1;
-        var m = DEV_MATRA[s.charAt(i)];
-        if (m !== undefined) { out += m; i += 1; continue; }
-        out += (i >= s.length) ? "" : "a";                  // inherent अ, dropped at word end
-        continue;
-      }
-      if (DEV_INDEP[ch] !== undefined) { out += DEV_INDEP[ch]; i += 1; continue; }
-      if (DEV_MATRA[ch] !== undefined) { out += DEV_MATRA[ch]; i += 1; continue; }
-      out += ch;
-      i += 1;
-    }
-    return out;
-  }
-  // TWO fields, either script, live both ways — but the field the clerk touched by hand always
-  // wins: once they edit Marathi themselves the English field stops overwriting it (and vice
-  // versa), so the aid can never fight the person entering the name.
-  function bindTranslit(mrEl, enEl) {
-    if (!mrEl || !enEl) return;
-    var mrManual = false, enManual = false;
     mrEl.addEventListener("input", function () {
-      mrManual = true;
-      if (enManual) return;
-      enEl.value = devToRoman(mrEl.value);
+      if (silent) return;
+      offer(enEl, devToRoman(mrEl.value), false);
     });
     enEl.addEventListener("input", function () {
-      enManual = true;
-      if (mrManual) return;
-      mrEl.value = romanToDev(enEl.value);
+      if (silent) return;
+      offer(mrEl, romanToDev(enEl.value), true);
     });
+    strip.querySelector(".tl-ok").addEventListener("click", apply);
+    strip.querySelector(".tl-no").addEventListener("click", hide);
+    prev.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); apply(); }
+      if (e.key === "Escape") { e.preventDefault(); hide(); }
+    });
+    return { hide: hide, apply: apply };
   }
-
+  /** A Latin typing companion for a single-field editor: the field keeps the chart's own text, the
+   *  companion is where a clerk may type roman, and the same review strip turns it into Marathi
+   *  (or shows the Latin form of what is already there). Every text field in every flyer gets one,
+   *  so the aid is uniform and no editor can silently drift out of it. */
+  /** Fields that are NOT prose: numbers, phone numbers, buckle numbers, search boxes. A name is
+   *  transliterated; a buckle number is not. */
+  function isNonProseField(input) {
+    var id = (input.id || "") + " " + (input.className || "");
+    var ph = (input.getAttribute("placeholder") || "") + " " + (input.getAttribute("aria-label") || "");
+    if (/buckle|phone|search|numeric|tel|no\b|num\b/i.test(id)) return true;
+    if (/बकल|फोन|शोध|क्रमांक|number|buckle|phone|search|ddd/i.test(ph)) return true;
+    if (input.getAttribute("inputmode") === "numeric") return true;
+    if (input.getAttribute("type") && input.getAttribute("type") !== "text") return true;
+    return false;
+  }
+  function mountBilingualCompanion(input) {
+    if (!input || !translitEngine()) return;
+    if (input.getAttribute("data-tl")) return;                        // part of an explicit pair
+    if (isNonProseField(input)) return;                               // a buckle number is not a name
+    var row = input.parentNode;
+    if (!row || row.querySelector("[data-tl-en]")) return;            // already mounted in this form
+    var label = input.getAttribute("aria-label") || input.getAttribute("placeholder") || "मजकूर";
+    var companion = el("input", {
+      type: "text", "data-tl-en": "1", class: "tl-roman",
+      placeholder: "इंग्रजी/रोमन — उदा. gajendra pATIl",
+      "aria-label": label + " — इंग्रजी/रोमन रूप",
+    });
+    input.parentNode.insertBefore(companion, input.nextSibling);
+    bilingualPair(input, companion, { whatMr: label, whatEn: "roman form" });
+  }
+  /** Every text field inside a flyer body gets the companion (one per form). */
+  function mountBilingualCompanions(root) {
+    if (!root || !translitEngine()) return;
+    // Every `<input>` is offered one; `isNonProseField` is what rejects the checkboxes, ranks,
+    // buckles, phones and search boxes — not the selector, because an input with no `type`
+    // attribute IS a text field and `[type="text"]` would silently skip it (found live).
+    var inputs = root.querySelectorAll(".flyer-mini-form input");
+    for (var i = 0; i < inputs.length; i++) mountBilingualCompanion(inputs[i]);
+  }
   // ---------- edit mode -------------------------------------------------------
   function isEdit() { return document.body.classList.contains("mode-edit"); }
   function setMode(on) {
@@ -230,14 +292,13 @@
         ? '<span data-lang="mr">पूर्वावलोकन</span><span data-lang="en">Preview</span>'
         : '<span data-lang="mr">संपादन</span><span data-lang="en">Edit</span>';
     }
-    document.querySelectorAll(".dt td.slot, [data-label]").forEach(function (node) {
+    // Every editable thing gets keyboard access in edit mode — seats, names, values, notice
+    // lines and the chart-local table/column cells all share one rule.
+    document.querySelectorAll(".dt td.slot, .sr-pi-body .v.slot, [data-label], .val[data-value-key], .notice-line, [data-table-cell], [data-table-col], [data-table-title], [data-matrix-cell]").forEach(function (node) {
       if (on) {
         node.setAttribute("tabindex", "0");
         node.setAttribute("role", "button");
-        node.setAttribute("aria-label",
-          node.classList.contains("slot")
-            ? "संपादन करा: " + node.textContent.trim()
-            : "नाव बदला: " + node.textContent.trim());
+        node.setAttribute("aria-label", "संपादन करा: " + node.textContent.trim());
       } else {
         node.removeAttribute("tabindex");
         node.removeAttribute("role");
@@ -297,6 +358,9 @@
     ensureFlyer();
     document.getElementById("flyer-title").textContent = title;
     flyer.hidden = false;
+    // EVERY flyer's prose field gets the bilingual companion here — one hook, so a new editor can
+    // never ship without the aid (and never has to remember to add it).
+    mountBilingualCompanions(document.getElementById("flyer-body"));
     var first = flyer.querySelector("input, button.flyer-close");
     if (first) first.focus();
   }
@@ -355,7 +419,9 @@
       document.getElementById("staff-search").addEventListener("input", function (e) {
         renderStaffList(e.target.value);
       });
-      bindTranslit(document.getElementById("nc-name"), document.getElementById("nc-nameen"));
+      bilingualPair(document.getElementById("nc-name"), document.getElementById("nc-nameen"),
+        { whatMr: "नाव", whatEn: "name" });
+      mountBilingualCompanions(document.getElementById("flyer-body"));
       document.getElementById("nc-submit").addEventListener("click", quickCreate);
       renderStaffList("");
       openFlyerShell("कर्मचारी निवडा — " + ctx.label);
@@ -463,7 +529,9 @@
       ' <div class="flyer-actions"><button type="button" class="flyer-btn-submit" id="me-save">जतन करा</button>' +
       ' <button type="button" class="flyer-btn-ghost" id="me-cancel">परत</button></div>' +
       "</div>";
-    bindTranslit(document.getElementById("me-name"), document.getElementById("me-nameen"));
+    bilingualPair(document.getElementById("me-name"), document.getElementById("me-nameen"),
+      { whatMr: "नाव", whatEn: "name" });
+    mountBilingualCompanions(document.getElementById("flyer-body"));
     document.getElementById("me-cancel").addEventListener("click", function () { openStaffPicker(slotCtx); });
     document.getElementById("me-save").addEventListener("click", function () {
       var nameMr = (document.getElementById("me-name").value || "").trim();
@@ -693,6 +761,256 @@
       .catch(function (e) { toast("अयशस्वी: " + e.message, "err"); });
   }
 
+  // ---------- author-owned VALUES (sign-off lines …) ---------------------------
+  // A few lines on the sheet are the author's own text, not machine output (user 2026-10-13,
+  // item 12: “only show the person names who's logged in … also make it editable”). They render
+  // with data-value-key + the COMPUTED default, are stored per chart in
+  // presentation_overrides.values (snapshots at FINALIZE) and never touch a master.
+  function openValueEdit(el) {
+    if (busy || !isEdit()) return;
+    ensureFlyer();
+    var key = el.getAttribute("data-value-key") || "";
+    var def = el.getAttribute("data-default") || "";
+    var cur = el.textContent.trim();
+    var clerk = getClerk();
+    var clerkText = clerk ? clerkLabel(clerk) : "";
+    var body = document.getElementById("flyer-body");
+    body.innerHTML =
+      '<div class="flyer-slot-info">' + esc(cur || "—") + "</div>" +
+      '<div class="flyer-opt" style="cursor:default;">' +
+      '  <h4>मजकूर बदला</h4>' +
+      '  <p>हा मजकूर तुमचा आहे — तक्त्यावर तसाच छापला जाईल. रिक्त सोडल्यास मूळ मजकूर परत येईल.</p>' +
+      '  <div class="flyer-mini-form">' +
+      '   <input id="ve-text" value="' + esc(cur) + '" placeholder="मजकूर" aria-label="मजकूर">' +
+      (clerkText
+        ? '   <button type="button" class="flyer-btn-ghost" id="ve-clerk">लॉगिन केलेला लेखनिक वापरा — ' + esc(clerkText) + "</button>"
+        : '   <p class="tr-hint">लॉगिन केल्यास येथे तुमचे नाव आपोआप येईल.</p>') +
+      (def !== "" ? '   <p class="tr-hint">मूळ मजकूर: ' + esc(def) + "</p>" : "") +
+      '   <div class="flyer-actions"><button type="button" class="flyer-btn-submit" id="ve-save">जतन करा</button>' +
+      '   <button type="button" class="flyer-btn-ghost" id="ve-cancel">रद्द</button></div>' +
+      "  </div></div>";
+    var inp = document.getElementById("ve-text");
+    var clerkBtn = document.getElementById("ve-clerk");
+    if (clerkBtn) clerkBtn.addEventListener("click", function () { inp.value = clerkText; inp.focus(); });
+    document.getElementById("ve-cancel").addEventListener("click", closeFlyer);
+    document.getElementById("ve-save").addEventListener("click", function () {
+      if (busy) return;
+      busy = true;
+      api("/api/charts/" + DATE + "/values", {
+        method: "PATCH", body: JSON.stringify({ key: key, text: (inp.value || "").trim() }),
+      }).then(function () { closeFlyer(); reloadSoon(400, "✓ मजकूर जतन झाला"); })
+        .catch(function (e) { busy = false; toast("जतन अयशस्वी: " + e.message, "err"); });
+    });
+    openFlyerShell("मजकूर बदला");
+    inp.focus();
+    inp.select();
+  }
+  // The signed-in clerk's own name replaces the chart's default sign-off text as long as the
+  // clerk has not typed a value of their own (a typed value always wins — it is the author's
+  // explicit choice). Print picks the DOM up, so the sheet carries the name of whoever prepared
+  // it on this machine.
+  function paintClerkValues() {
+    var c = getClerk();
+    if (!c) return;
+    var label = clerkLabel(c);
+    Array.prototype.forEach.call(document.querySelectorAll('.val[data-value-key="signoff.1"]'), function (el) {
+      var def = el.getAttribute("data-default") || "";
+      if (el.textContent.trim() !== def.trim() || def.trim() === "") return;  // typed value wins
+      el.textContent = label;
+      el.setAttribute("data-clerk", "1");
+    });
+  }
+
+  // ---------- chart-local STRUCTURE: tables, columns, notice lines --------------
+  // Everything the clerk can add or delete on the sheet lives in
+  // daily_charts.presentation_overrides (tables / matrix) or in chart_notices (notice lines) and
+  // is written through two narrow endpoints. No free-form HTML, no new chart geometry.
+  function structureOp(payload, okMsg) {
+    if (busy) return;
+    busy = true;
+    api("/api/charts/" + DATE + "/structure", { method: "PATCH", body: JSON.stringify(payload) })
+      .then(function () { busy = false; closeFlyer(); reloadSoon(400, okMsg || "✓ जतन झाले"); })
+      .catch(function (e) { busy = false; toast("जतन अयशस्वी: " + e.message, "err"); });
+  }
+  function openTableAdd() {
+    if (busy || !isEdit()) return;
+    ensureFlyer();
+    document.getElementById("flyer-body").innerHTML =
+      '<div class="flyer-slot-info">नवीन तक्ता — तक्त्यावर स्वतंत्र बॉक्स म्हणून छापला जाईल</div>' +
+      '<div class="flyer-opt" style="cursor:default;">' +
+      '  <h4>तक्त्याचे नाव व स्तंभ</h4>' +
+      '  <div class="flyer-mini-form">' +
+      '   <input id="tb-title" placeholder="तक्त्याचे नाव (उदा. बंदोबस्त तपशील)" aria-label="तक्त्याचे नाव">' +
+      '   <input id="tb-cols" value="तपशील, नोंद" aria-label="स्तंभ">' +
+      '   <p class="tr-hint">स्तंभ स्वल्पविरामाने वेगळे करा. नंतर ओळी, स्तंभ व मजकूर वाढवता/बदलता येतो.</p>' +
+      '   <button type="button" class="flyer-btn-submit" id="tb-save">तक्ता जोडा</button>' +
+      "  </div></div>";
+    document.getElementById("tb-save").addEventListener("click", function () {
+      var title = (document.getElementById("tb-title").value || "").trim();
+      if (!title) { toast("तक्त्याचे नाव आवश्यक आहे", "err"); return; }
+      var cols = (document.getElementById("tb-cols").value || "").split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+      structureOp({ op: "table.add", title: title, columns: cols.length ? cols : ["तपशील"] }, "✓ तक्ता जोडला");
+    });
+    openFlyerShell("+ तक्ता जोडा");
+    document.getElementById("tb-title").focus();
+  }
+  function openMatrixColumnAdd() {
+    if (busy || !isEdit()) return;
+    ensureFlyer();
+    document.getElementById("flyer-body").innerHTML =
+      '<div class="flyer-slot-info">मनुष्यबळ मॅट्रिक्स — नवीन स्तंभ</div>' +
+      '<div class="flyer-opt" style="cursor:default;">' +
+      '  <h4>स्तंभाचे शीर्षक</h4>' +
+      '  <div class="flyer-mini-form">' +
+      '   <input id="mc-label" placeholder="शीर्षक (उदा. होमगार्ड)" aria-label="स्तंभ शीर्षक">' +
+      '   <p class="tr-hint">नवीन स्तंभातील आकडे प्रत्येक ओळीत टाइप करून भरता येतात.</p>' +
+      '   <button type="button" class="flyer-btn-submit" id="mc-save">स्तंभ जोडा</button>' +
+      "  </div></div>";
+    document.getElementById("mc-save").addEventListener("click", function () {
+      var label = (document.getElementById("mc-label").value || "").trim();
+      if (!label) { toast("शीर्षक आवश्यक आहे", "err"); return; }
+      structureOp({ op: "matrix.column.add", label: label }, "✓ स्तंभ जोडला");
+    });
+    openFlyerShell("+ स्तंभ जोडा");
+    document.getElementById("mc-label").focus();
+  }
+  function openCellEdit(el) {
+    if (busy || !isEdit()) return;
+    ensureFlyer();
+    var cur = el.textContent.trim();
+    var payload = null;
+    var extra = "";
+    if (el.hasAttribute("data-table-title")) {
+      var tid = el.getAttribute("data-table-title");
+      payload = function (text) { return { op: "table.title", id: tid, text: text }; };
+      extra = '<button type="button" class="flyer-btn-danger" id="ce-del">हा तक्ता काढा</button>';
+    } else if (el.hasAttribute("data-table-col")) {
+      var cid = el.getAttribute("data-table-col"), ci = el.getAttribute("data-col");
+      payload = function (text) { return { op: "table.col.label", id: cid, index: Number(ci), text: text }; };
+      extra = '<button type="button" class="flyer-btn-danger" id="ce-del-col">हा स्तंभ काढा</button>';
+    } else if (el.hasAttribute("data-table-cell")) {
+      var cellId = el.getAttribute("data-table-cell"), r0 = el.getAttribute("data-row"), c0 = el.getAttribute("data-col");
+      payload = function (text) { return { op: "table.cell", id: cellId, row: Number(r0), col: Number(c0), text: text }; };
+      extra = '<button type="button" class="flyer-btn-danger" id="ce-del-row">ही ओळ काढा</button>';
+    } else {
+      var mkey = el.getAttribute("data-matrix-cell");
+      payload = function (text) { return { op: "matrix.cell", key: mkey, text: text }; };
+    }
+    document.getElementById("flyer-body").innerHTML =
+      '<div class="flyer-slot-info">' + esc(cur || "(रिक्त)") + "</div>" +
+      '<div class="flyer-opt" style="cursor:default;">' +
+      '  <h4>मजकूर बदला</h4>' +
+      '  <div class="flyer-mini-form">' +
+      '   <input id="ce-text" value="' + esc(cur) + '" aria-label="मजकूर">' +
+      '   <div class="flyer-actions"><button type="button" class="flyer-btn-submit" id="ce-save">जतन करा</button>' +
+      '   <button type="button" class="flyer-btn-ghost" id="ce-cancel">रद्द</button></div>' + extra +
+      "  </div></div>";
+    document.getElementById("ce-cancel").addEventListener("click", closeFlyer);
+    document.getElementById("ce-save").addEventListener("click", function () {
+      structureOp(payload((document.getElementById("ce-text").value || "").trim()), "✓ जतन झाले");
+    });
+    var delCol = document.getElementById("ce-del-col");
+    if (delCol) delCol.addEventListener("click", function () {
+      if (!confirm("हा स्तंभ काढायचा? त्यातील मजकूर या तक्त्यावरून वजा होईल.")) return;
+      structureOp({ op: "table.col.remove", id: el.getAttribute("data-table-col"), index: Number(el.getAttribute("data-col")) }, "✓ स्तंभ काढला");
+    });
+    var delRow = document.getElementById("ce-del-row");
+    if (delRow) delRow.addEventListener("click", function () {
+      if (!confirm("ही ओळ काढायची?")) return;
+      structureOp({ op: "table.row.remove", id: el.getAttribute("data-table-cell"), index: Number(el.getAttribute("data-row")) }, "✓ ओळ काढली");
+    });
+    var delTbl = document.getElementById("ce-del");
+    if (delTbl) delTbl.addEventListener("click", function () { removeTable(el.getAttribute("data-table-title")); });
+    openFlyerShell("मजकूर बदला");
+    var inp = document.getElementById("ce-text");
+    inp.focus();
+    inp.select();
+  }
+  function removeTable(id) {
+    if (busy || !id) return;
+    if (!confirm("हा तक्ता काढायचा?\n\nफक्त या तक्त्यावरील नोंद वजा होईल.")) return;
+    structureOp({ op: "table.remove", id: id }, "✓ तक्ता काढला");
+  }
+  // Notice lines live in chart_notices (one row per line) — same narrow-write discipline, its own
+  // endpoint, and a FINALIZED chart answers 409 (amendment = new version).
+  function openNoticeEdit(noteEl, group) {
+    if (busy || !isEdit()) return;
+    ensureFlyer();
+    var id = noteEl ? Number(noteEl.getAttribute("data-notice")) : null;
+    var cur = noteEl ? noteEl.textContent.trim() : "";
+    document.getElementById("flyer-body").innerHTML =
+      '<div class="flyer-slot-info">' + esc(group || "सूचना") + (id ? " — सूचना क्र. " + id : " — नवीन सूचना") + "</div>" +
+      '<div class="flyer-opt" style="cursor:default;">' +
+      '  <h4>' + (id ? "सूचना बदला" : "नवीन सूचना") + "</h4>" +
+      '  <div class="flyer-mini-form">' +
+      '   <input id="nt-text" value="' + esc(cur) + '" placeholder="सूचना मजकूर" aria-label="सूचना मजकूर">' +
+      '   <input id="nt-group" value="' + esc(group || "") + '" placeholder="गट (उदा. रात्रगस्त सुचना)" aria-label="गट">' +
+      '   <div class="flyer-actions"><button type="button" class="flyer-btn-submit" id="nt-save">जतन करा</button>' +
+      '   <button type="button" class="flyer-btn-ghost" id="nt-cancel">रद्द</button></div>' +
+      (id ? '<button type="button" class="flyer-btn-danger" id="nt-del">ही सूचना काढा</button>' : "") +
+      "  </div></div>";
+    document.getElementById("nt-cancel").addEventListener("click", closeFlyer);
+    function payload() {
+      return {
+        id: id, text: (document.getElementById("nt-text").value || "").trim(),
+        group: (document.getElementById("nt-group").value || "").trim() || "सूचना",
+      };
+    }
+    document.getElementById("nt-save").addEventListener("click", function () {
+      var p = payload();
+      if (!p.text) { toast("मजकूर आवश्यक आहे", "err"); return; }
+      var call = id
+        ? api("/api/charts/" + DATE + "/notices/" + id, { method: "PATCH", body: JSON.stringify({ text: p.text, group: p.group }) })
+        : api("/api/charts/" + DATE + "/notices", { method: "POST", body: JSON.stringify({ text: p.text, group: p.group }) });
+      busy = true;
+      call.then(function () { busy = false; closeFlyer(); reloadSoon(400, "✓ सूचना जतन झाली"); })
+        .catch(function (e) { busy = false; toast("जतन अयशस्वी: " + e.message, "err"); });
+    });
+    var delBtn = document.getElementById("nt-del");
+    if (delBtn) delBtn.addEventListener("click", function () {
+      if (!confirm("ही सूचना काढायची?")) return;
+      busy = true;
+      api("/api/charts/" + DATE + "/notices/" + id, { method: "DELETE" })
+        .then(function () { busy = false; closeFlyer(); reloadSoon(400, "✓ सूचना काढली"); })
+        .catch(function (e) { busy = false; toast("काढता आले नाही: " + e.message, "err"); });
+    });
+    openFlyerShell(id ? "सूचना बदला" : "+ सूचना");
+    document.getElementById("nt-text").focus();
+  }
+
+  // ---------- abbreviation tooltip --------------------------------------------
+  // The full form of a rank token (वपोनि → वरिष्ठ पोलीस निरीक्षक) appears ABOVE-LEFT of the token
+  // on one line. It is a fixed-position layer rather than a CSS ::after bubble because a bubble is
+  // clipped by the block's own overflow — user 2026-10-13: “if the parent box ends, inside
+  // abbrevation dropdown cuts down, this should not happen”.
+  function initAbbrTip() {
+    var tip = el("div", { id: "abbr-tip", hidden: "hidden" });
+    document.body.appendChild(tip);
+    function target(node) {
+      return node && node.closest ? node.closest("abbr.abbr[data-full]") : null;
+    }
+    function show(node) {
+      var full = node.getAttribute("data-full") || "";
+      if (!full) return;
+      tip.textContent = full;
+      tip.hidden = false;
+      var r = node.getBoundingClientRect();
+      var tr = tip.getBoundingClientRect();
+      var left = Math.max(6, Math.min(window.innerWidth - tr.width - 6, r.left));
+      var top = r.top - tr.height - 5;
+      if (top < 6) top = r.bottom + 5;    // no room above the token: flip below it
+      tip.style.left = Math.round(left) + "px";
+      tip.style.top = Math.round(top) + "px";
+    }
+    function hide() { tip.hidden = true; }
+    document.addEventListener("mouseover", function (e) { var n = target(e.target); if (n) show(n); });
+    document.addEventListener("mouseout", function (e) { if (target(e.target)) hide(); });
+    document.addEventListener("focusin", function (e) { var n = target(e.target); if (n) show(n); });
+    document.addEventListener("focusout", hide);
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") hide(); });
+    window.addEventListener("scroll", hide, true);
+  }
+
   // ---------- events ----------------------------------------------------------
   function onDocumentClick(e) {
     var t = e.target;
@@ -703,17 +1021,30 @@
       if (a === "clear") { patchAssignment({ staffId: null }); return; }
     }
     if (t.id === "bima-toggle") return; // change handler below
-    // Sr-PI support seat: `+ जागा` creates a real VACANT_RIKT row, ✕ removes it again. The
-    // server refuses both when the chart is FINALIZED and when a person is in the seat.
-    var seatAdd = t.closest && t.closest("[data-add-seat]");
-    if (seatAdd) {
+    // An UNFILLED Sr-PI support seat (चालक / RTPC दिवस-रात्र) is an ordinary empty cell the
+    // clerk fills: the real VACANT_RIKT row is created on demand, then the same staff picker
+    // opens for it. No `+ जागा` button any more (user 2026-10-13).
+    var newSeat = t.closest && t.closest(".new-seat[data-seat-role]");
+    if (newSeat) {
       if (!isEdit() || busy) return;
+      var role = newSeat.getAttribute("data-seat-role");
+      var shift = newSeat.getAttribute("data-seat-shift");
       busy = true;
       api("/api/charts/" + DATE + "/support", {
-        method: "POST",
-        body: JSON.stringify({ role: seatAdd.getAttribute("data-add-seat"), shift: seatAdd.getAttribute("data-shift") }),
-      }).then(function () { busy = false; reloadSoon(400, "✓ जागा तयार झाली — आता नेमा"); })
-        .catch(function (e) { busy = false; toast("जागा तयार झाली नाही: " + e.message, "err"); });
+        method: "POST", body: JSON.stringify({ role: role, shift: shift }),
+      }).then(function (r) {
+        busy = false;
+        return loadMasters().then(function () {
+          openStaffPicker({
+            el: newSeat, id: Number(r.assignmentId), staffId: null, isBima: false,
+            shift: shift, text: "", label: role + " " + (shift === "NIGHT" ? "रात्रपाळी" : "दिवसपाळी"),
+          });
+        });
+      }).catch(function (e) {
+        busy = false;
+        if (/आधीच/.test(e.message)) { reloadSoon(400, "ही जागा आधीच होती — तक्ता ताजा होत आहे"); return; }
+        toast("जागा तयार झाली नाही: " + e.message, "err");
+      });
       return;
     }
     var seatDel = t.closest && t.closest("[data-del-seat]");
@@ -736,6 +1067,35 @@
       }
       return;
     }
+    // ---- chart-local structure CRUD (item 11) ----
+    var tblDel = t.closest && t.closest("[data-table-del]");
+    if (tblDel) { if (isEdit()) removeTable(tblDel.getAttribute("data-table-del")); return; }
+    var addRow = t.closest && t.closest("[data-table-add-row]");
+    if (addRow) { if (isEdit()) structureOp({ op: "table.row.add", id: addRow.getAttribute("data-table-add-row") }, "✓ ओळ जोडली"); return; }
+    var addCol = t.closest && t.closest("[data-table-add-col]");
+    if (addCol) { if (isEdit()) structureOp({ op: "table.col.add", id: addCol.getAttribute("data-table-add-col") }, "✓ स्तंभ जोडला"); return; }
+    var cellEl = t.closest && t.closest("[data-table-cell], [data-table-col], [data-table-title]");
+    if (cellEl) { if (isEdit()) openCellEdit(cellEl); return; }
+    var mColAdd = t.closest && t.closest("[data-matrix-col-add]");
+    if (mColAdd) { if (isEdit()) openMatrixColumnAdd(); return; }
+    var mColDel = t.closest && t.closest("[data-matrix-col-del]");
+    if (mColDel) {
+      if (isEdit()) structureOp({ op: "matrix.column.remove", key: mColDel.getAttribute("data-matrix-col-del") }, "✓ स्तंभ काढला");
+      return;
+    }
+    var mColHide = t.closest && t.closest("[data-matrix-col-hide]");
+    if (mColHide) {
+      if (isEdit()) structureOp({ op: "matrix.column.hide", key: mColHide.getAttribute("data-matrix-col-hide") }, "✓ स्तंभ लपवला");
+      return;
+    }
+    var mCell = t.closest && t.closest("[data-matrix-cell]");
+    if (mCell) { if (isEdit()) openCellEdit(mCell); return; }
+    var nAdd = t.closest && t.closest("[data-notice-add]");
+    if (nAdd) { if (isEdit()) openNoticeEdit(null, nAdd.getAttribute("data-notice-add")); return; }
+    var note = t.closest && t.closest(".notice-line[data-notice]");
+    if (note) { if (isEdit()) openNoticeEdit(note, note.getAttribute("data-notice-group") || ""); return; }
+    var tblAdd = t.closest && t.closest("[data-table-add]");
+    if (tblAdd) { if (isEdit()) openTableAdd(); return; }
     var addBtn = t.closest && t.closest(".add-box");
     if (addBtn && !addBtn.disabled) {
       if (addBtn.getAttribute("data-add") === "chowki") openAddChowki();
@@ -749,6 +1109,9 @@
     // not seats still rename, and a group label is renameable by clicking its own text.
     var slot = t.closest && t.closest(".slot");
     if (slot && isEdit()) { openStaffPicker(slotContext(slot)); return; }
+    // Sign-off / other author-owned VALUES: clicking the value edits the text (not the label).
+    var valEl = t.closest && t.closest(".val[data-value-key]");
+    if (valEl && isEdit()) { openValueEdit(valEl); return; }
     var nameEl = t.closest && t.closest("[data-label]");
     if (nameEl && isEdit()) { openRename(nameEl); }
   }
@@ -760,76 +1123,132 @@
   function onDocumentKeydown(e) {
     if (e.key === "Escape" && flyer && !flyer.hidden) { closeFlyer(); return; }
     if ((e.key === "Enter" || e.key === " ") && e.target.classList && e.target.classList.contains("slot")) {
-      if (isEdit()) { e.preventDefault(); openStaffPicker(slotContext(e.target)); }
+      if (isEdit() && !e.target.classList.contains("new-seat")) { e.preventDefault(); openStaffPicker(slotContext(e.target)); }
     }
     if ((e.key === "Enter" || e.key === " ") && e.target.hasAttribute && e.target.hasAttribute("data-label")) {
       if (isEdit()) { e.preventDefault(); openRename(e.target); }
     }
-  }
-
-  // ---------- header: date selector -------------------------------------------
-  // The date control is chrome (`.no-print`): it only navigates between the chart dates that
-  // actually exist in PostgreSQL — no calendar maths, no invented dates.
+  }  // ---------- header: date selector -------------------------------------------
+  // Kushal's reference picker, ported to this chrome (user 2026-10-13, item 10: “copy the style
+  // and behaviour from there as it is”): a two-line date control (date over weekday, आज chip
+  // when it is today) that opens a searchable card grouped आगामी → अलीकडील ७ दिवस → ऐतिहासिक व
+  // डेमो तारखा, each row showing the weekday and an availability dot. It is chrome (`.no-print`)
+  // and it only NAVIGATES: a date with no chart is muted and inert — the picker never invents a
+  // date and never sends the clerk to a page that does not exist.
   var MR_DIGITS = "०१२३४५६७८९";
+  var MR_WEEKDAYS = ["रविवार", "सोमवार", "मंगळवार", "बुधवार", "गुरुवार", "शुक्रवार", "शनिवार"];
+  var EN_WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   function toMrDate(iso) {
     var p = String(iso).slice(0, 10).split("-");
     if (p.length !== 3) return iso;
     var t = function (s) { return String(s).replace(/\d/g, function (d) { return MR_DIGITS[Number(d)]; }); };
     return t(p[2]) + "/" + t(p[1]) + "/" + t(p[0]);
   }
+  function isoOf(d) {
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  function addDaysIso(iso, delta) {
+    var d = new Date(iso + "T00:00:00Z");
+    d.setUTCDate(d.getUTCDate() + delta);
+    return d.toISOString().slice(0, 10);
+  }
+  function wdOf(iso, lang) {
+    var d = new Date(iso + "T00:00:00Z");
+    if (isNaN(d.getTime())) return "";
+    return (lang === "en" ? EN_WEEKDAYS : MR_WEEKDAYS)[d.getUTCDay()];
+  }
   function initDateMenu() {
     var btn = document.getElementById("date-btn");
     var menu = document.getElementById("date-menu");
     if (!btn || !menu) return;
     var loaded = false;
+    var available = {};
+    var todayIso = isoOf(new Date());
+    var tomorrowIso = addDaysIso(todayIso, 1);
+    if (DATE === todayIso) {
+      btn.classList.add("today");
+      var chip = el("span", { class: "today-chip" },
+        '<span data-lang="mr">आज</span><span data-lang="en">Today</span>');
+      var dl = btn.querySelector(".dl");
+      (dl || btn).appendChild(chip);
+    }
     function close() { menu.hidden = true; btn.setAttribute("aria-expanded", "false"); }
+    function dateRow(iso) {
+      var isCur = iso === DATE;
+      var has = !!available[iso];
+      var cls = "dm-item" + (isCur ? " cur" : "") + (iso === todayIso ? " today" : "") + (has ? " live" : " off");
+      var badge = iso === todayIso
+        ? '<span class="today-chip"><span data-lang="mr">आज</span><span data-lang="en">Today</span></span>'
+        : iso === tomorrowIso
+          ? '<span class="tom-chip"><span data-lang="mr">उद्या</span><span data-lang="en">Tomorrow</span></span>'
+          : "";
+      return '<div class="' + cls + '" role="option" tabindex="' + (has && !isCur ? "0" : "-1") + '" data-date="' + esc(iso) + '"' +
+        (has ? "" : ' aria-disabled="true"') + ">" +
+        '<span class="ddate"><span data-lang="mr">' + esc(toMrDate(iso)) + '</span><span data-lang="en">' + esc(iso.split("-").reverse().join("/")) + "</span>" + badge + "</span>" +
+        '<span class="dmeta"><span class="wd"><span data-lang="mr">' + esc(wdOf(iso, "mr")) + '</span><span data-lang="en">' + esc(wdOf(iso, "en")) + "</span></span>" +
+        (has ? '<span class="dot" title="तक्ता उपलब्ध"></span>' : '<span class="nodot">तक्ता नाही</span>') + "</span></div>";
+    }
+    function head(t) { return '<div class="dm-head">' + esc(t) + "</div>"; }
+    function render(q) {
+      var query = (q || "").trim().toLowerCase();
+      var match = function (iso) {
+        if (!query) return true;
+        return iso.indexOf(query) >= 0 || toMrDate(iso).indexOf(query) >= 0;
+      };
+      var recent = [];
+      for (var i = 0; i < 7; i++) recent.push(addDaysIso(todayIso, -i));
+      var recentSet = {};
+      recent.forEach(function (d) { recentSet[d] = 1; });
+      var historical = Object.keys(available).filter(function (d) { return !recentSet[d] && d !== tomorrowIso; }).sort().reverse();
+      if (DATE && !recentSet[DATE] && DATE !== tomorrowIso && historical.indexOf(DATE) < 0) historical.unshift(DATE);
+      var sections = [
+        { head: "आगामी", items: [tomorrowIso].filter(match) },
+        { head: "अलीकडील ७ दिवस", items: recent.filter(match).sort().reverse() },
+        { head: "ऐतिहासिक व डेमो तारखा", items: historical.filter(match) },
+      ].filter(function (s) { return s.items.length > 0; });
+      // The ADVANCED SEARCH icon sits at the right end of the date menu's own search area. It is a
+      // WIP entry (badged Coming Soon, disabled-looking) that leads to the same place the navbar's
+      // “ऐतिहासिक शोध” leaf does — the full filter/slider screen Kushal's repo builds in
+      // HistoricalSearchView.tsx (date + staff + location + duty + operation filters, SlidersHorizontal
+      // icon). It deliberately does NOT start a second search implementation here: see
+      // docs/BACKLOG.md → “advanced search”, which requires that reference to be read first.
+      var advBtn = '<button type="button" class="dm-adv" data-wip="प्रगत शोध / Advanced search"'
+        + ' title="प्रगत शोध (Coming Soon)" aria-label="प्रगत शोध — Coming Soon">'
+        + '<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">'
+        + '<path d="M4 7h10M18 7h2M4 17h4M12 17h8M4 12h6M14 12h6"></path>'
+        + '<circle cx="16" cy="7" r="2"></circle><circle cx="10" cy="17" r="2"></circle><circle cx="12" cy="12" r="2"></circle>'
+        + '</svg><span class="wip-dot">WIP</span></button>';
+      var searchRow = '<div class="dm-search"><input id="dm-q" type="search" placeholder="तारीख शोधा (उदा. २१/०९)" value="' + esc(q || "") + '" aria-label="तारीख शोधा">' + advBtn + "</div>";
+      if (!sections.length) {
+        menu.innerHTML = searchRow + '<div class="dm-none">कोणतीही तारीख सापडली नाही</div>';
+      } else {
+        menu.innerHTML = searchRow +
+          '<div class="dm-list">' + sections.map(function (s) { return head(s.head) + s.items.map(dateRow).join(""); }).join("") + "</div>";
+      }
+      var q2 = document.getElementById("dm-q");
+      if (q2) {
+        q2.addEventListener("input", function () { render(q2.value); });
+        q2.focus();
+      }
+      menu.querySelectorAll(".dm-item.live").forEach(function (it) {
+        var go = function () { location.href = "/charts/" + it.getAttribute("data-date"); };
+        it.addEventListener("click", go);
+        it.addEventListener("keydown", function (e) {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); }
+        });
+      });
+    }
     function open() {
       menu.hidden = false;
       btn.setAttribute("aria-expanded", "true");
-      if (loaded) return;
+      if (loaded) { render(""); return; }
+      menu.innerHTML = '<div class="dm-none">तारखा लोड होत आहेत…</div>';
       api("/api/charts").then(function (list) {
         loaded = true;
-        if (!list || !list.length) {
-          menu.innerHTML = '<div class="dm-head">कोणताही तक्ता सापडला नाही</div>';
-          return;
-        }
-        // Grouped the way a clerk thinks about dates (Kushal/Arjish picker grammar): आज, उद्या,
-        // मागील ७ दिवस, then the older charts. Only dates that really exist are links — an empty
-        // group says so instead of offering a dead date.
-        var today = new Date(); today.setHours(0, 0, 0, 0);
-        var dayMs = 86400000;
-        var groups = [
-          { key: "today", head: "आज", items: [] },
-          { key: "tmrw", head: "उद्या", items: [] },
-          { key: "week", head: "मागील ७ दिवस", items: [] },
-          { key: "old", head: "जुने तक्ते (संदर्भासाठी)", items: [] },
-        ];
-        list.forEach(function (c) {
-          var d = new Date(c.date + "T00:00:00");
-          var back = Math.round((today - d) / dayMs);
-          var g = back === 0 ? groups[0] : back === -1 ? groups[1] : (back >= 1 && back <= 7) ? groups[2] : groups[3];
-          g.items.push(c);
-        });
-        menu.innerHTML = groups.map(function (g) {
-          var body = g.items.length
-            ? g.items.map(function (c) {
-              var cur = c.date === DATE ? " cur" : "";
-          return '<div class="dm-item' + cur + '" role="option" tabindex="0" data-date="' + esc(c.date) + '">' +
-            '<span><span data-lang="mr">' + esc(toMrDate(c.date)) + '</span><span data-lang="en">' + esc(c.date.split("-").reverse().join("/")) + '</span></span>' +
-            '<span class="st">' + esc(c.lifecycle) + "</span></div>";
-            }).join("")
-            : '<div class="dm-none">तक्ता नाही</div>';
-          return '<div class="dm-head">' + esc(g.head) + "</div>" + body;
-        }).join("");
-        menu.querySelectorAll(".dm-item").forEach(function (it) {
-          var go = function () { location.href = "/charts/" + it.getAttribute("data-date"); };
-          it.addEventListener("click", go);
-          it.addEventListener("keydown", function (e) {
-            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); }
-          });
-        });
+        (list || []).forEach(function (c) { available[c.date] = c; });
+        render("");
       }).catch(function () {
-        menu.innerHTML = '<div class="dm-head">तारखा लोड झाल्या नाहीत</div>';
+        menu.innerHTML = '<div class="dm-none">तारखा लोड झाल्या नाहीत</div>';
       });
     }
     btn.addEventListener("click", function (e) {
@@ -897,22 +1316,27 @@
       });
       var seen = {};
       cands = cands.filter(function (p) { if (seen[p.staffId]) return false; seen[p.staffId] = 1; return true; });
+      // The login window follows the मराठी/EN toggle like the rest of the chrome (user
+      // 2026-10-13, item 6) — every label ships both scripts, CSS shows one at a time.
+      function bi(mrText, enText) {
+        return '<span data-lang="mr">' + mrText + '</span><span data-lang="en">' + enText + "</span>";
+      }
       var body = document.getElementById("flyer-body");
       body.innerHTML =
-        '<div class="flyer-slot-info">तक्ता तयार करणारे हजेरी लेखनिक — ' + esc(DATE) + "</div>" +
-        (cur ? '<p style="font-size:12px; color:#334155; margin:6px 0 4px;">सध्या लॉगिन: <b>' + esc(clerkLabel(cur)) + "</b></p>" : "") +
+        '<div class="flyer-slot-info">' + bi("तक्ता तयार करणारे हजेरी लेखनिक — " + esc(DATE), "Clerk preparing this chart — " + esc(DATE)) + "</div>" +
+        (cur ? '<p style="font-size:12px; color:#334155; margin:6px 0 4px;">' + bi("सध्या लॉगिन: ", "Signed in as: ") + "<b>" + esc(clerkLabel(cur)) + "</b></p>" : "") +
         '<div class="flyer-opt" style="cursor:default;">' +
-        "  <h4>[१] तक्त्यावरील हजेरी लेखनिक निवडा</h4>" +
+        "  <h4>" + bi("[१] तक्त्यावरील हजेरी लेखनिक निवडा", "[1] Pick a clerk from this chart") + "</h4>" +
         '  <div class="flyer-list" id="clerk-list" style="max-height:170px;"></div>' +
         "</div>" +
         '<div class="flyer-opt" style="cursor:default;">' +
-        "  <h4>[२] नाव, हुद्दा व बकल नंबर</h4>" +
+        "  <h4>" + bi("[२] नाव, हुद्दा व बकल नंबर", "[2] Name, rank and buckle number") + "</h4>" +
         '  <div class="flyer-mini-form">' +
-        '   <input id="lg-name" placeholder="पूर्ण नाव" aria-label="नाव">' +
-        '   <select id="lg-rank" aria-label="हुद्दा"></select>' +
-        '   <input id="lg-buckle" placeholder="बकल नंबर" aria-label="बकल नंबर" inputmode="numeric">' +
-        '   <button type="button" class="flyer-btn-submit" id="lg-save">लॉगिन करा</button>' +
-        (cur ? '   <button type="button" class="flyer-btn-danger" id="lg-out">बाहेर पडा</button>' : "") +
+        '   <input id="lg-name" placeholder="' + (isEnLang() ? "Full name" : "पूर्ण नाव") + '" aria-label="नाव / name">' +
+        '   <select id="lg-rank" aria-label="हुद्दा / rank"></select>' +
+        '   <input id="lg-buckle" placeholder="' + (isEnLang() ? "Buckle number" : "बकल नंबर") + '" aria-label="बकल नंबर" inputmode="numeric">' +
+        '   <button type="button" class="flyer-btn-submit" id="lg-save">' + bi("लॉगिन करा", "Sign in") + "</button>" +
+        (cur ? '   <button type="button" class="flyer-btn-danger" id="lg-out">' + bi("बाहेर पडा", "Sign out") + "</button>" : "") +
         "  </div>" +
         "</div>";
       var rankSel = document.getElementById("lg-rank");
@@ -932,7 +1356,8 @@
       }
       var list = document.getElementById("clerk-list");
       if (!cands.length) {
-        list.innerHTML = '<div style="padding:8px; color:#94a3b8; font-size:11px;">या तक्त्यावर हजेरी लेखनिक नोंद नाही — खाली नाव भरा.</div>';
+        list.innerHTML = '<div style="padding:8px; color:#94a3b8; font-size:11px;">'
+          + bi("या तक्त्यावर हजेरी लेखनिक नोंद नाही — खाली नाव भरा.", "No clerk is recorded on this chart — fill the form below.") + "</div>";
       } else {
         cands.forEach(function (p) {
           // compact chart-name form, exactly as the chart prints it (rank + buckle + name)
@@ -954,7 +1379,7 @@
       if (outBtn) outBtn.addEventListener("click", function () { setClerk(null); closeFlyer(); toast("लॉगआउट झाले", "ok"); });
       document.getElementById("lg-save").addEventListener("click", function () {
         var name = (document.getElementById("lg-name").value || "").trim();
-        if (!name) { toast("कृपया नाव प्रविष्ट करा", "err"); return; }
+        if (!name) { toast(isEnLang() ? "Please enter a name" : "कृपया नाव प्रविष्ट करा", "err"); return; }
         var rc = rankSel.value;
         var buckle = (document.getElementById("lg-buckle").value || "").trim();
         setClerk({
@@ -962,9 +1387,10 @@
           buckleNo: buckleApplies(rc) ? (buckle || null) : null,
         });
         closeFlyer();
+        paintClerkValues();
         toast("लॉगिन: " + clerkLabel(getClerk()), "ok");
       });
-      openFlyerShell("हजेरी लेखनिक लॉगिन");
+      openFlyerShell(isEnLang() ? "Clerk sign-in" : "हजेरी लेखनिक लॉगिन");
     }).catch(function (e) {
       busy = false;
       toast("लॉगिन उघडता आले नाही: " + e.message, "err");
@@ -984,6 +1410,7 @@
       b.classList.toggle("on", b.getAttribute("data-lang-set") === (en ? "en" : "mr"));
     });
   }
+  function isEnLang() { return document.body.classList.contains("lang-en"); }
   function initLang() {
     var saved = "mr";
     try { saved = localStorage.getItem("pd_lang") || "mr"; } catch (e) { /* private mode */ }
@@ -1213,14 +1640,22 @@
   // Same-origin by design: the server's /legacy/<date> route redirects to the legacy app (which
   // keeps :3101 because this repo's own chart server owns :3100). No absolute URL in the browser
   // code — that is both the local-only invariant and one fewer thing to get wrong.
-  var LEGACY_URL = "/legacy/" + DATE;
-  function legacyProbe(cb) {
+  // TWO reference builds can run side by side (user 2026-10-13: “I guess we can have both running
+  // for reference”): Kushal's build loads the data into the real six-page chart, the other one is
+  // the earlier showcase build. Both keep their own database; `npm run demo` starts ours plus both
+  // of them, `npm run legacy:start` starts the first alone. Only same-origin /legacy… URLs are used
+  // here (the server owns the other app's origin), and each is PROBED before it is offered.
+  var LEGACY_TARGETS = [
+    { key: "kushal", url: "/legacy/" + DATE, label: "कुशल — डेटासह जुना ६-पृष्ठ तक्ता", port: "३१०१", cmd: "npm run legacy:start", embed: true },
+    { key: "arjish", url: "/legacy2/" + DATE, label: "अर्जिश — संदर्भ ६-पृष्ठ तक्ता", port: "३१०२", cmd: "npm run legacy:start:arjish", embed: false }
+  ];
+  function legacyProbe(url, cb) {
     var done = false;
     var finish = function (up) { if (!done) { done = true; cb(up); } };
     setTimeout(function () { finish(false); }, 2500);
     // opaque no-cors request: resolves when SOMETHING answers, rejects when nothing is listening.
     try {
-      fetch(LEGACY_URL, { mode: "no-cors", cache: "no-store" })
+      fetch(url, { mode: "no-cors", cache: "no-store" })
         .then(function () { finish(true); }, function () { finish(false); });
     } catch (e) { finish(false); }
   }
@@ -1229,38 +1664,43 @@
     var body = document.getElementById("flyer-body");
     body.innerHTML = '<div class="flyer-slot-info">जुना ६-पृष्ठ तक्ता — १० सप्टेंबर २०२६</div>'
       + '<div class="flyer-opt" style="cursor:default;">'
-      + "<h4>स्वतंत्र संदर्भ अ‍ॅप (स्वतःचा डेटाबेस)</h4>"
-      + '<p class="wip-note">हा डिसेंबर-आधीचा सहा-पृष्ठ तक्ता आहे — स्वतंत्र अ‍ॅप, स्वतंत्र डेटाबेस (panchavati_dev) व स्वतःचे API. तुलनेसाठी इथेच उघडतो; याचे बदल या तक्त्यावर परिणाम करत नाहीत.</p>'
-      + '<div id="lg-status" class="lg-status">तपासत आहे…</div>'
-      + '<div id="lg-body"></div></div>';
+      + "<h4>दोन स्वतंत्र संदर्भ अ‍ॅप (प्रत्येकाचा स्वतःचा डेटाबेस)</h4>"
+      + '<p class="wip-note">ही सहा-पृष्ठ तक्त्याची जुनी अ‍ॅप्स आहेत — स्वतंत्र डेटाबेस व स्वतःचे API. फक्त तुलनेसाठी इथे उघडतात; त्यांचे बदल या तक्त्यावर परिणाम करत नाहीत. एकत्र चालवण्यासाठी: <b>npm run demo</b>.</p>'
+      + LEGACY_TARGETS.map(function (targ) {
+        return '<div class="lg-card" id="lg-card-' + targ.key + '">'
+          + '<div class="lg-row"><b>' + esc(targ.label) + '</b><span class="lg-status" id="lg-st-' + targ.key + '">तपासत आहे…</span></div>'
+          + '<div id="lg-body-' + targ.key + '"></div></div>';
+      }).join("")
+      + "</div>";
     openFlyerShell("जुना ६-पृष्ठ तक्ता");
-    var paint = function (up) {
-      var st = document.getElementById("lg-status");
-      var host = document.getElementById("lg-body");
+    LEGACY_TARGETS.forEach(function (targ) { paintLegacy(targ); });
+  }
+  function paintLegacy(targ) {
+    legacyProbe(targ.url, function (up) {
+      var st = document.getElementById("lg-st-" + targ.key);
+      var host = document.getElementById("lg-body-" + targ.key);
       if (!st || !host) return;
       if (up) {
         st.className = "lg-status on";
-        st.textContent = "चालू आहे — जुना अ‍ॅप (पोर्ट ३१०१) उत्तर देत आहे";
-        host.innerHTML = '<div class="lg-actions"><button type="button" class="flyer-btn-submit" id="lg-open">नवीन टॅबमध्ये उघडा</button></div>'
-          + '<iframe id="lg-frame" class="lg-frame" src="' + esc(LEGACY_URL) + '" title="जुना ६-पृष्ठ तक्ता" loading="lazy"></iframe>';
-        document.getElementById("lg-open").addEventListener("click", function () {
-          window.open(LEGACY_URL, "_blank", "noopener");
+        st.textContent = "चालू आहे (पोर्ट " + targ.port + ")";
+        host.innerHTML = '<iframe class="lg-frame' + (targ.embed ? "" : " short") + '" src="' + esc(targ.url) + '" title="' + esc(targ.label) + '" loading="lazy"></iframe>'
+          + '<div class="lg-actions"><button type="button" class="flyer-btn-submit" id="lg-open-' + targ.key + '">नवीन टॅबमध्ये उघडा</button></div>';
+        document.getElementById("lg-open-" + targ.key).addEventListener("click", function () {
+          window.open(targ.url, "_blank", "noopener");
         });
       } else {
         st.className = "lg-status off";
         st.textContent = "बंद आहे — सध्या चालू नाही";
-        host.innerHTML = '<p class="wip-note">उघडण्यासाठी टर्मिनलमध्ये एकदा चालवा:</p>'
-          + '<p class="lg-cmd">npm run legacy:start</p>'
-          + '<div class="lg-actions"><button type="button" class="flyer-btn-ghost" id="lg-retry">पुन्हा तपासा</button></div>';
-        document.getElementById("lg-retry").addEventListener("click", function () {
+        host.innerHTML = '<p class="wip-note">उघडण्यासाठी एकदा चालवा:</p><p class="lg-cmd">' + esc(targ.cmd) + "</p>"
+          + '<div class="lg-actions"><button type="button" class="flyer-btn-ghost" id="lg-retry-' + targ.key + '">पुन्हा तपासा</button></div>';
+        document.getElementById("lg-retry-" + targ.key).addEventListener("click", function () {
           st.className = "lg-status";
           st.textContent = "तपासत आहे…";
           host.innerHTML = "";
-          legacyProbe(paint);
+          paintLegacy(targ);
         });
       }
-    };
-    legacyProbe(paint);
+    });
   }
 
   // ---------- WIP leaves: visible AND explorable ------------------------------
@@ -1293,7 +1733,9 @@
   var amendBtn = document.getElementById("amend-btn");
   if (amendBtn) amendBtn.addEventListener("click", reopenChart);
   initDateMenu();
+  initAbbrTip();
   paintClerk();
+  paintClerkValues();
   var userBtn = document.getElementById("ab-user");
   if (userBtn) {
     userBtn.addEventListener("click", function (e) { e.stopPropagation(); openLogin(); });

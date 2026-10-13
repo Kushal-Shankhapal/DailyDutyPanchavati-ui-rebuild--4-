@@ -1,13 +1,13 @@
 <!--
 Purpose: Current implementation truth for the clean-rebuild repo.
 Current role: First-read state file; updated at the end of every working session.
-Last meaningful change: 2026-10-13 — active chart route unified with the verified server-rendered ChartDocument; compact-v4 chrome/header corrections applied; 83 tests and print audit green.
+Last meaningful change: 2026-10-13 (round 5) — bilingual fields on Sanscript with a review gate, calm dev output, Render blueprint, print-fit repair (sheet 2 overflow) and the header/date-menu/advanced-search corrections; 96 tests and print audit green.
 Constraint/dependency: Must reflect verified facts only; speculation belongs in OPEN_QUESTIONS.md.
 -->
 
 # CURRENT_STATE
 
-> Updated: 2026-10-13 · Phase: **P1 — renderer fidelity + authoring + presentation controls + React demo shell done** (`npm run check` green: typecheck + **83** tests + doctor; 8 migrations).
+> Updated: 2026-10-13 (round 5) · Phase: **P1 — renderer fidelity + authoring + presentation controls + bilingual fields + deploy blueprint done** (`npm run check` green: typecheck + **96** tests + doctor; 8 migrations; `npm run print:audit` 6/6 sheets).
 
 > **Active demo route (2026-10-13):** `/app/charts/2026-09-10` redirects to `/charts/2026-09-10`; there is one active chart implementation, the verified server-rendered ChartDocument surface. Its persistent header and chart toolbar now follow the consolidated decisions in `docs/COMPACT_V4_DECISIONS.md`. React source remains dormant until it can match the ChartDocument without loss. No migration or database reset was performed.
 >
@@ -231,3 +231,89 @@ Driven by the user's numbered list. What shipped:
 
 Verification for this round: `npm run check` (typecheck + **85 tests** + doctor ×2 DBs) green; `npm run print:audit` 6/6; `npm run render:chart` no-loss 212/212; duplicate-slot audit 0; legacy reference app reachable (HTTP 200 on `/charts/2026-09-10`, port 3101); browser pass at 1440px on `/charts/2026-09-10` for the chrome (nav scale, sticky bar, EN toggle, master-data flyer, legacy flyer, chowki grid geometry).
 
+## Round 5 (2026-10-13 — the 13-item user list + bilingual engine + print-fit repair)
+
+All numbers below are measured, not estimated.
+
+### 1. Calm dev output (user item 1: “is this normal?”)
+
+It WAS normal — Fastify logs every request through pino — but it is noise, so the default changed:
+`server/index.ts` now starts at `LOG_LEVEL=warn` (request lines are `info`, so they simply do not
+print), prints ONE startup banner (chart URL, frozen mock, API, the legacy reference entry, the bind
+address, how to stop, how to get request logs back), and answers `/favicon.ico` with the emblem
+instead of a 404. `LOG_LEVEL=info npm run dev` restores the old stream; `LOG_LEVEL=silent` mutes it.
+Ctrl+C now closes the Fastify instance and the pg pool before exiting. Verified: banner printed,
+`favicon.ico` 200, zero request lines while browsing.
+
+### 2. Deployability (user item 2: “manual running won't work when we deploy for the demo”)
+
+- `LEGACY_URL` / `LEGACY_URL_2` are configuration, and `LEGACY_URL=none` makes `/legacy/<date>` an
+  honest 404 instead of a redirect to a laptop's `localhost:3101`.
+- `HOST` (loopback by default; `0.0.0.0` for a platform) — the server previously hardcoded
+  `127.0.0.1`, which no host could reach.
+- `server/db.ts` now uses the database inside `DATABASE_URL` instead of forcing the local
+  `panchavati3_dev`/`panchavati3_test` names (the local split still wins when its own env var is set
+  on purpose, so dev and test behaviour is unchanged).
+- `render.yaml` — a Render Blueprint (one web service + Postgres, `npm ci --include=dev && npm run
+  db:migrate` in the build, `/health` check). **The build does not seed**: the chart seed is the
+  station's real 10/09 allocation, and putting it behind a public URL is the user's decision, not a
+  build side effect (OPEN_QUESTIONS T23).
+- `docs/DEPLOY.md` — the operator steps, including `npm run demo` (chart app + both reference apps,
+  one Ctrl+C reaps everything) and `npm run stop` / `stop:all`.
+
+### 3. Print-fit repair (found by `npm run print:audit`, not by eye)
+
+Sheet 2 measured **810px against 775px** — the chowki sheet was carrying the गस्त/स्कॅनिंग schedule
+as well, and once the chowki cells became equal-height (an earlier user ask) the pair no longer fit.
+Fix: the schedule moved to the court/special sheet (688px), the chowki sheet returns to being the
+mock's six-chowki sheet (498px), and print-density rules now cover the new session cards and the
+folded hourly strip. `npm run print:audit` → **all 6 sheets fit** (658 / 498 / 688 / 663 / 579 /
+649px). `tools/print-audit.mjs` also gained per-section heights for an overflowing sheet, so the next
+overflow says which part grew. Structural guard: `tests/render.test.ts` + `render-fidelity.test.ts`
+assert the schedule is NOT on the chowki sheet.
+
+### 4. Bilingual fields: a real transliteration library + a review gate (user's new ask)
+
+- **Engine replaced.** The hand-written roman⇄Devanagari tables are gone. `@indic-transliteration/
+  sanscript` 1.3.3 (MIT) does the transliteration, served from this repo's own dependency tree via
+  `/vendor/sanscript.js` (no CDN, no network call, no key — chart data still never leaves the
+  machine; `tests/authoring.test.ts` pins the local route and the package pin).
+- **A documented MARATHI CONVENTION layer** sits on top, because Sanscript is Sanskrit-first:
+  roman→Devanagari uses `itrans`; a word-final virama is dropped (गजेंद्र, never गजेन्द्र्); a nasal
+  + virama before a stop becomes the anusvara (gajendra → गजेंद्र, gAngurDe → गांगुर्डे) while a
+  doubled nasal stays a conjunct (jagannAth → जगन्नाथ); Devanagari→roman drops the word-final
+  inherent ‘a’ (सुनिल → sunil, पाटील → pATIl, रिक्त → rikt) and folds the anusvara to ‘n’ only before
+  a stop (संवद्रे stays saMvadre); a word-initial capital with no ITRANS meaning is plain
+  capitalisation (Patil → पतिल, Sanjay → संजय) while A/I/U/T keep their long-vowel/retroflex meaning
+  (Aher → आहेर, TukArAm → टुकाराम); digits and punctuation pass through untouched (Devanagari digits
+  stay a display transform), and protected tokens (CCTNS, Dial 112 MERS, DB, MERS, TOTAL, Office, ME,
+  the rank codes) are NEVER transliterated.
+- **Measured quality:** every seeded staff name round-trips Devanagari → roman → Devanagari except
+  four documented source oddities (a doubled-anusvara entry, डावरे, षेखर, and a stray “QM” token):
+  **175/179 exact**, asserted in `tests/authoring.test.ts`.
+- **Review gate (the “see, verify and edit before moving on” ask).** A conversion is never applied
+  silently: `bilingualPair()` offers the suggested text in an editable review strip with वापरा /
+  रद्द, and only वापरा writes it into the other field. ONE hook (`mountBilingualCompanions`) mounts a
+  companion field + strip for the prose field of EVERY flyer, so a new editor cannot ship without the
+  aid; buckle/phone/search/number fields are explicitly excluded. Verified live: typing
+  `gajendra pATIl` in the companion offered “गजेंद्र पाटील”, left the field at “पोशि ५६९ …” until
+  वापरा, then wrote it.
+
+### 5. UI corrections in the same round
+
+- **Sr-PI card header centred symmetrically** — `justify-content: center`, fixed 12px inner gap;
+  measured 101px / 101px margin either side of “वपोनि गजेंद्र पाटील · ठाणे प्रमुख”.
+- **Date selector has ONE scroll region** (it had two nested ones). The panel is a clipped flex
+  column now: the search row is pinned, only `.dm-list` scrolls, and the search input itself never
+  scrolls (`min-width: 0`, border-box, no `type=search` decoration).
+- **Advanced-search entry** added at the right of that search row: an icon-only, honestly badged WIP
+  button that opens the same Coming-Soon entry as the navbar's ऐतिहासिक शोध leaf. The real page is
+  NOT started — OPEN_QUESTIONS T24 requires reading Kushal's `HistoricalSearchView.tsx` first.
+
+### Verification for this round
+
+`npm run check` green (typecheck + **96** tests + doctor on both DBs); `npm run print:audit` 6/6;
+`npm run render:chart` 212/212 rows lossless with the vendor script tag resolved; live browser pass on
+`/charts/2026-09-10` for the bilingual pair (suggestion → accept), the centred card header, the
+single-scroll date menu and the WIP advanced-search icon. Both databases were restored to the
+documented baseline (212 assignments, `presentation_overrides = {}`).

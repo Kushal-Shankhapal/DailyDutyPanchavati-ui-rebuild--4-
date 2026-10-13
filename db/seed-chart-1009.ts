@@ -240,7 +240,13 @@ const DAY3: Cell[] = [
   { d: "काळाराम मंदीर गार्ड ड्युटी", code: "DAY_KALARAM" },
   { p: ["ASI", "दत्तु बुधाजी शेळके"] },
   { p: ["LASI", "पुष्पा जगन चौधरी"] },
-  { t: "ब्ण्ब्ण्ज्ण्छण्ैण्गुन्हे भरणे कामी" },  // source cell verbatim (garbled OCR — preserved, never parsed)
+  // Source cell text corrected 2026-10-14: the seed carried the OCR garble
+  // “ब्ण्ब्ण्ज्ण्छण्ैण्गुन्हे भरणे कामी”. The human-verified reconstruction (authority rank 2) has
+  // this cell as “C.C.T.N.S गुन्हे भरणे कामी” (row 32, column D of
+  // reference/EXCEL_RECONSTRUCTION/10th_sept_daily_duty_chart_page_1). The CCTNS token keeps the
+  // AGENTS.md canonical form, the readable remainder is unchanged, and the string stays a
+  // narrative cell that is echoed verbatim and NEVER parsed for meaning.
+  { t: "CCTNS गुन्हे भरणे कामी" },
   { p: ["LHC", "1882"] },
   { p: ["LPC", "1136"] },
   { p: ["LPC", "2667"] },
@@ -289,7 +295,9 @@ const DAY4: Cell[] = [
   { d: "मो.मिसिंग/ए.टी.सी.सेल", code: "OFFICE_ATC" },
   { p: ["HC", "2712"] },
   { p: ["PC", "2377"] },
-  { d: "वाॅरंन्ट", code: "OFFICE_WARRANT" },
+  // “वॉरंन्ट”: the reconstruction writes the precomposed ॉ (U+0949); the seed's decomposed
+  // “वाॅरंन्ट” rendered as a stray candra above a आ (user 2026-10-13: “fix this … ग्रीन अॅप”).
+  { d: "वॉरंन्ट", code: "OFFICE_WARRANT" },
   { p: ["ASI", "सुनिल दशरथ सोळसे"] },
   { p: ["HC", "477"] },
   { d: "सेशन समन्स", code: "OFFICE_SESSION_SUMMONS" },
@@ -385,17 +393,15 @@ const NIGHT3: Cell[] = [
   { d: "काळाराम मंदीर गार्ड ड्युटी", code: "NIGHT_KALARAM" },
   { p: ["HC", "1447"] },
   { p: ["HOME_GUARD", "23520"] },
-];
-
-// col 4 night — रात्रगस्त सुचना: label cells are notice groups; the four गुडमॉर्निंग
-// स्काॅड names are real squad members (assignments under NIGHT_GOOD_MORNING).
+];  // col 4 night — रात्रगस्त सुचना: label cells are notice groups; the four गुडमॉर्निंग
+// स्कॉड names are real squad members (assignments under NIGHT_GOOD_MORNING).
 const NIGHT4_CELLS: (Cell | { n: string; g?: string })[] = [
   { d: "रात्रगस्त सुचना" },
-  { n: "गुडमाॅर्निंग स्काॅड", g: "रात्रगस्त सुचना" },
-  { n: "हदद्ीतील सर्व बिट मार्शल", g: "रात्रगस्त सुचना" },
+  { n: "गुडमॉर्निंग स्कॉड", g: "रात्रगस्त सुचना" },
+  { n: "हद्दीतील सर्व बिट मार्शल", g: "रात्रगस्त सुचना" },
   { n: "त्यांचे त्यांचे कार्यक्षेत्रात", g: "रात्रगस्त सुचना" },
-  { n: "गुडमाॅर्निंग ड्युटी करतील.", g: "रात्रगस्त सुचना" },
-  { d: "गुडमॉर्निग स्काॅड", code: "NIGHT_GOOD_MORNING" },
+  { n: "गुडमॉर्निंग ड्युटी करतील.", g: "रात्रगस्त सुचना" },
+  { d: "गुडमॉर्निग स्कॉड", code: "NIGHT_GOOD_MORNING" },
   { p: ["PC", "973"] },
   { p: ["PC", "2069"] },
   { p: ["PC", "597"] },
@@ -407,7 +413,7 @@ const NIGHT4_CELLS: (Cell | { n: string; g?: string })[] = [
   { n: "चौकी ड्युटी अंमलदार हे", g: "रात्रड्युटी सुचना" },
   { n: "हददीत रात्रगस्त फिरतील", g: "रात्रड्युटी सुचना" },
   { n: "वरील प्रमाणे DB अंमलदार", g: "रात्रड्युटी सुचना" },
-  { n: "बिट मार्शल हे गुडमाॅर्नींग", g: "रात्रड्युटी सुचना" },
+  { n: "बिट मार्शल हे गुडमॉर्नींग", g: "रात्रड्युटी सुचना" },
   { n: "फिरतील व रिपोर्ट पाठवुन", g: "रात्रड्युटी सुचना" },
   { n: "स्थळप्रत गोपनियकडे", g: "रात्रड्युटी सुचना" },
   { n: "देतील", g: "रात्रड्युटी सुचना" },
@@ -415,7 +421,9 @@ const NIGHT4_CELLS: (Cell | { n: string; g?: string })[] = [
   { n: "डीबी मोबाईल/ सीआर", g: "महत्वाचे सुचना" },
   { n: "मोबाईल आस्थापना बंद करून घेतील", g: "महत्वाचे सुचना" },
   { n: "मोबाईल आस्थापना बंद करून घेतील", g: "महत्वाचे सुचना" },
-  { n: "रात्रपाळी चौकीचे अंमलदार आपआपले चौकी हद्दीतील ग्रीन अॅप करतील.", g: "ग्रीन अॅप" },
+  // “ग्रीन ॲप”: the precomposed ॲ (U+0972) is what reference/SEMANTIC/Page 6.md and
+  // docs/DOMAIN.md carry; the seed's decomposed अ+ॅ printed as two separate marks.
+  { n: "रात्रपाळी चौकीचे अंमलदार आपआपले चौकी हद्दीतील ग्रीन ॲप करतील.", g: "ग्रीन ॲप" },
 ];
 
 // रामकुंड narrative cells (night col 3 tail) — instruction text, chart-scoped notices.
@@ -515,7 +523,11 @@ const MX_COLS = ["PI","API","PSI","GPS","ASI","LASI","LASI#2","HC","LHC","PN","L
 // value_text verbatim from source (.. and all); never recalculated (N4/N5).
 const MX: [row: string, vals: string[]][] = [
   ["मंजूर संख्याबळ", ["02","04","03","..","11","11","11","46","46","53","53","123","123","09","233"]],
-  ["हजर मनुश्यबळ", ["04","04","08","01","04","04","03","38","10","01","00","63","31","12<br>04 Proण्","151"]],
+  // “हजर मनुष्यबळ” and “12<br>04 Pro.” — the seed's “मनुश्यबळ” and the OCR tail “Proण्” are
+  // corrected against reference/SEMANTIC/Page 4.md (line item “हजर मनुष्यबळ”, `12` “(+4 Pro)”)
+  // and 16.md, which reads “12<br>04 Pro.”. The <br> is the source's own line break inside the
+  // cell and is rendered as one by the matrix (never printed as a literal tag).
+  ["हजर मनुष्यबळ", ["04","04","08","01","04","04","03","38","10","01","00","63","31","12<br>04 Pro.","151"]],
   ["मा.DCPएACP कार्या. प्रतिनियुक्ती", ["..","..","00","..","..","..","..","03","02","","","04","2","00","12"]],
   ["अंगरक्षक/जाप्ता", ["..","..","..","..","..","..","..","..","..","..","..","..","..","..","01"]],
   ["मा. कोर्ट /पैरवी", ["..","..","..","..","..","..","..","..","..","..","..","..","..","..","03"]],
@@ -523,10 +535,10 @@ const MX: [row: string, vals: string[]][] = [
   ["से.नि/बा.संगोपन", ["..","..","..","..","..","..","..","..","..","..","..","..","..","..","01"]],
   ["उजळणी कोर्स", ["..","..","..","..","..","..","..","..","..","..","..","..","..","..",".."]],
   ["पो.मु./पोस्टे/ स्पोर्ट", ["..","..","..","..","..","..","..","..","..","..","..","..","..","..",".."]],
-  ["तपासकामी /वाॅरट", ["..","..","..","..","..","..","..","..","..","..","..","..","..","..",".."]],
+  ["तपासकामी / वॉरंट", ["..","..","..","..","..","..","..","..","..","..","..","..","..","..",".."]],
   ["अर्जित रजा", ["..","..","..","..","01","01","..","..","..","..","..","..","02","..","03"]],
   ["किरकोळ रजा", ["..","..","..","..","..","..","..","..","..","..","..","..","01","..","01"]],
-  ["साप्ताहीक सुटट्ी", ["..","..","03","..","..","..","..","03","02","..","..","14","02","03","21"]],
+  ["साप्ताहिक सुट्टी", ["..","..","03","..","..","..","..","03","02","..","..","14","02","03","21"]],
   ["बाहेर बंदोबस्त", ["..","..","..","..","..","..","..","..","..","..","..","..","..","..",".."]],
   ["मा. हायकोर्ट॰मुंबई", ["..","..","..","..","..","..","..","..","..","..","..","..","..","..",".."]],
   ["दिवस व रात्रकरिता प्रत्यक्ष हजर", ["03","","","","","","","","","","","","","",""]],
@@ -579,6 +591,16 @@ export async function seedChart1009(pool: pg.Pool): Promise<void> {
   const lc = await pool.query(`SELECT lifecycle FROM daily_charts WHERE chart_id=$1`, [chartId]);
   if (lc.rows[0].lifecycle !== "DRAFT") {
     throw new Error(`chart ${DATE} is ${lc.rows[0].lifecycle} — refusing to reseed a non-DRAFT chart`);
+  }
+  // A DEPLOYED demo must never lose the clerk's edits to a redeploy: the blueprint sets
+  // PANCHAVATI_KEEP_EXISTING=1, and this run then leaves an already-populated chart alone
+  // (fresh databases still get the full chart). Local runs keep the documented wipe-and-reseed.
+  if (process.env.PANCHAVATI_KEEP_EXISTING === "1") {
+    const existing = await pool.query(`SELECT count(*) AS n FROM daily_assignments WHERE chart_id=$1`, [chartId]);
+    if (Number(existing.rows[0].n) > 0) {
+      console.log(`· chart ${DATE} already seeded (${existing.rows[0].n} assignments) — left untouched (PANCHAVATI_KEEP_EXISTING=1)`);
+      return;
+    }
   }
   for (const tbl of [
     "daily_assignments", "daily_availabilities", "location_operational_states",

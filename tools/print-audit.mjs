@@ -95,6 +95,12 @@ const MEASURE = `(() => {
         dense: p.classList.contains('dense'),
         extent,
         over: Math.round(extent - (A4 - bottomPad)),
+        // Per-section heights (print media): when a sheet overflows, this says WHICH part grew,
+        // which is the difference between guessing and fixing it.
+        parts: [...p.children].map((c) => ({
+          cls: (c.className || c.tagName).toString().split(' ')[0],
+          h: Math.round(c.getBoundingClientRect().height),
+        })),
       };
     }),
   });
@@ -140,13 +146,17 @@ try {
   if (error) throw new Error(error);
 
   console.log(`print-audit ${url}`);
-  console.log(`  A4 landscape = ${a4}px, page padding-bottom = ${bottomPad}px`);
-  for (const s of sheets) {
+  console.log(`  A4 landscape = ${a4}px, page padding-bottom = ${bottomPad}px`);  for (const s of sheets) {
     const mark = s.over > 0 ? "✗ OVERFLOW" : "✓";
     console.log(
       `  ${mark} sheet ${s.sheet}${s.dense ? " (dense)" : "        "} extent ${s.extent}px ` +
-        `(${s.over > 0 ? `+${s.over}` : s.over}px vs the sheet)`,
+      `(${s.over > 0 ? `+${s.over}` : s.over}px vs the sheet)`,
     );
+    if (s.over > 0) {
+      for (const part of s.parts ?? []) {
+        console.log(`      · ${part.cls}: ${part.h}px`);
+      }
+    }
   }
   const bad = sheets.filter((s) => s.over > 0);
   console.log(

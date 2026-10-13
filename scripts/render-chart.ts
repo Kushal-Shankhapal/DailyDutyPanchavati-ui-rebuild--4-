@@ -41,6 +41,9 @@ try {
     .replace("__CSS_HREF__", "../design/compv3.css")
     .replace("__AUTH_CSS_HREF__", "../web/authoring.css")
     .replace("__PRESENTATION_CSS_HREF__", "../web/chart-presentation.css")
+    // the offline transliteration engine (Sanscript, MIT) travels with the dependency tree — the
+    // static preview points at the installed copy, exactly like the server route does
+    .replace("__VENDOR_JS_SRC__", "../node_modules/@indic-transliteration/sanscript/sanscript.js")
     .replace("__AUTH_JS_SRC__", "../web/chart-authoring.js"), "utf8");
   console.log(`✔ rendered ${dateArg} (${useSnapshot ? "snapshot" : "projection"}): rows ${stats.rowsRendered}/${stats.rowsTotal} → ${path.relative(root, outFile)}`);
 } finally {

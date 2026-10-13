@@ -150,9 +150,207 @@
   min-height: 34px;
 }
 
-.ab-datebtn::before {
-  content: "🗓";
-  font-size: 13px;
+/* 10. Date selector — Kushal's reference picker (user 2026-10-13: “copy the style and behaviour
+   from there as it is”): a two-line control (bold date over the weekday) with a calendar glyph
+   and a chevron, highlighted with an आज chip when the chart is today, opening a searchable
+   card grouped आगामी → अलीकडील ७ दिवस → ऐतिहासिक व डेमो तारखा. Rows carry the weekday and an
+   availability dot; a date with no chart is muted and inert. */
+.ab-datebtn .cal {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  flex: none;
+  opacity: .85;
+}
+
+.chart-toolbar .ab-datebtn {
+  padding: 4px 10px;
+  border-radius: 8px;
+  gap: 8px;
+}
+
+.chart-toolbar .ab-datebtn.today {
+  background: #eaf2fe;
+  border-color: #5ea0ec;
+  box-shadow: 0 0 0 2px rgba(94, 160, 236, .22);
+}
+
+.ab-datebtn .dl {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.15;
+}
+
+.ab-datebtn .dl .w {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.chart-toolbar .ab-datebtn.today .dl .d {
+  color: #17427f;
+}
+
+.ab-datebtn .today-chip,
+.ab-datemenu .today-chip {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .2px;
+  color: #1d63c6;
+  background: #dbeafe;
+  border: 1px solid #93c5fd;
+  border-radius: 3px;
+  padding: 0 4px;
+}
+
+.ab-datebtn .today-chip {
+  align-self: center;
+}
+
+.ab-datemenu {
+  width: 258px;
+  border-radius: 12px;
+  padding: 7px;
+}
+
+.ab-datemenu .dm-search {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  border-radius: 5px;
+  padding: 4px 7px;
+  margin-bottom: 5px;
+  overflow: hidden;
+}
+
+.ab-datemenu .dm-search input {
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  color: #0f172a;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ab-datemenu .dm-search input::-webkit-search-cancel-button {
+  display: none;
+}
+
+/* Advanced search (WIP) at the right end of the date menu's search row: icon only, honestly badged
+   — it opens the same Coming-Soon entry the navbar's “ऐतिहासिक शोध” leaf opens, never a half-usable
+   screen of its own. */
+.ab-datemenu .dm-adv {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 5px;
+  border: 1px solid #cbd5e1;
+  border-radius: 5px;
+  background: #fff;
+  color: #475569;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.ab-datemenu .dm-adv:hover {
+  border-color: var(--navy-3);
+  color: var(--navy);
+  background: #f1f5f9;
+}
+
+.ab-datemenu .dm-adv .wip-dot {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  color: #b45309;
+  background: #fef3c7;
+  border-radius: 3px;
+  padding: 1px 3px;
+}
+
+.ab-datemenu .dm-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.ab-datemenu .dm-item {
+  gap: 8px;
+  font-size: 12.5px;
+}
+
+.ab-datemenu .dm-item .ddate {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ab-datemenu .dm-item .dmeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.ab-datemenu .dm-item.today:not(.cur) {
+  color: #047857;
+}
+
+.ab-datemenu .dm-item.cur .dmeta,
+.ab-datemenu .dm-item.cur .wd {
+  color: #cbd5e1;
+}
+
+.ab-datemenu .dm-item.off {
+  color: #b6c2d1;
+  cursor: default;
+  font-weight: 500;
+}
+
+.ab-datemenu .dm-item.off:hover {
+  background: transparent;
+}
+
+.ab-datemenu .dm-item .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #3b82f6;
+  display: inline-block;
+}
+
+.ab-datemenu .dm-item.cur .dot {
+  background: #93c5fd;
+}
+
+.ab-datemenu .dm-item .tom-chip {
+  font-size: 9px;
+  font-weight: 800;
+  color: #4338ca;
+  background: #e0e7ff;
+  border: 1px solid #a5b4fc;
+  border-radius: 3px;
+  padding: 0 4px;
+}
+
+.ab-datemenu .dm-item .nodot {
+  font-size: 9px;
+  color: #b6c2d1;
 }
 
 .ab-datebtn .d {
@@ -176,20 +374,34 @@
   background: rgba(255, 255, 255, .12);
 }
 
+/* ONE scroll region, not two (user 2026-10-13: “remove that double scroll from date selector”).
+   The panel used to scroll AND host a scrolling list, so a scrollbar appeared inside a scrollbar.
+   The panel is now a clipped column: its own scroll is gone, the search box stays pinned at the
+   top, and the LIST is the only thing that scrolls. */
 .ab-datemenu {
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
   z-index: 70;
   min-width: 230px;
-  max-height: 320px;
-  overflow-y: auto;
+  max-height: min(72vh, 420px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: #fff;
   color: #0f172a;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   box-shadow: 0 12px 28px rgba(2, 8, 23, .35);
   padding: 6px;
+}
+
+/* The collapsed menu MUST be gone: `.ab-datemenu` sets display:flex, which overrode the UA's
+   `[hidden]{display:none}` and left a 13px slice of the menu (its search row) permanently
+   visible under the date button — and a second click therefore looked like it did nothing
+   (hidden was set, the slice stayed). The attribute now wins outright. */
+.ab-datemenu[hidden] {
+  display: none !important;
 }
 
 .ab-datemenu .dm-head {
@@ -757,52 +969,18 @@ body.mode-edit .box-del:hover {
   grid-template-columns: 1fr;
 }
 
-/* ---- abbreviation tooltip (hover AND keyboard focus; preview only) ---------- */
+/* ---- abbreviation tooltip (hover AND keyboard focus; preview only) ----------
+   The full form is shown by #abbr-tip, positioned by chart-authoring.js in a fixed layer above
+   the token: a CSS ::after bubble is clipped by the block's own overflow (user 2026-10-13:
+   “if the parent box ends, inside abbreviation dropdown cuts down”). No dotted underline. */
 abbr.abbr {
   font-style: normal;
   text-decoration: none;
   cursor: help;
-  border-bottom: 1px dotted var(--ink-faint);
-  position: relative;
 }
 
-abbr.abbr:hover,
 abbr.abbr:focus {
-  border-bottom-color: var(--navy);
   outline: none;
-}
-
-abbr.abbr:focus {
-  border-bottom-style: solid;
-}
-
-abbr.abbr::after {
-  content: attr(data-full);
-  position: absolute;
-  left: 0;
-  top: 100%;
-  margin-top: 3px;
-  z-index: 60;
-  background: var(--navy);
-  color: #fff;
-  font-size: 10.5px;
-  font-weight: 600;
-  font-style: normal;
-  padding: 3px 7px;
-  border-radius: 4px;
-  white-space: normal;
-  max-width: 220px;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity .12s ease;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, .22);
-  pointer-events: none;
-}
-
-abbr.abbr:hover::after,
-abbr.abbr:focus::after {
-  opacity: 1;
-  visibility: visible;
 }
 
 /* ---- 3-option staff picker flyer (moved from compv3.css, 502-round) --------- */
@@ -1128,6 +1306,16 @@ abbr.abbr:focus::after {
   border-top: 1px solid var(--line-soft);
 }
 
+/* A row that starts directly under a column/table heading keeps NO top rule: the heading band
+   already draws one (`.blk > .bh { border-bottom }`, `.sub-col-title { border-bottom }`), and the
+   two together read as a double border (user 2026-10-13: “remove its upper border … this will get
+   rid of that double border look”). The rule above is more specific than the baseline
+   `.dt tr.g:first-child`, so the exception has to be repeated here. */
+.page .blk .body .dt tr.g:first-child > th,
+.page .blk .body .dt tr.g:first-child > td {
+  border-top: 0;
+}
+
 /* ---- print density: composite sheets whose real content exceeds one A4 -----
    The mock's type scale fits a page when its sample data is small; the 10/09 source
    carries ~2× that volume on the command band (page 1) and the leave/court page. Those
@@ -1244,9 +1432,12 @@ abbr.abbr:focus::after {
     line-height: 1.08;
   }
 
-  /* Sheet 2 (compact-v5): six chowki blocks plus the गस्त व स्कॅनिंग schedule share this sheet
-     (field sheet). Measured overflow before this block: 800px vs 775px — the scan tables keep
-     their rows, only padding/leading tighten, and nothing goes below 9.5px. */
+  /* Sheet 2 (compact-v5): the six-chowki band (field sheet). Measured overflow before this block:
+     800px vs 775px — the blocks keep their rows, only padding/leading tighten, and nothing goes
+     below 9.5px. The गस्त/स्कॅनिंग schedule that used to ride along at the bottom of this sheet
+     now lives on sheet 3: with the source's own session cards plus the folded hourly strip it
+     measured 810px here (2026-10-13 print:audit) once the chowki cells became equal-height, and a
+     35px-tight sheet breaks again the moment either section grows. */
   .page.chowki .sec {
     margin: 3px 0 2px;
   }
@@ -1312,6 +1503,23 @@ abbr.abbr:focus::after {
     line-height: 1.15;
   }
 
+  /* Sheet 3 hosts the court/special cards and, since the chowki sheet could no longer hold it,
+     the गस्त व स्कॅनिंग schedule (source session cards + the hourly strip folded into three
+     sub-columns). Same rows in the same order, only leading/padding tighten. */
+  .page.dense .grid.g-scan-sessions,
+  .page.dense .grid.g-scan-hours {
+    gap: 5px;
+  }
+
+  .page.dense .grid.g-scan-sessions .tbl th,
+  .page.dense .grid.g-scan-sessions .tbl td,
+  .page.dense .grid.g-scan-hours .tbl th,
+  .page.dense .grid.g-scan-hours .tbl td {
+    font-size: 9.5px;
+    padding: 1px 5px;
+    line-height: 1.15;
+  }
+
   /* leave/court lists: the mock's 4 columns leave whole grid rows half empty when one
      list (साप्ताहिक सुट्टी, 20 people) is far longer than its neighbours — six columns
      let the long lists share the sheet instead of forcing a second one. */
@@ -1351,13 +1559,16 @@ abbr.abbr:focus::after {
 }
 
 body.mode-edit .sr-pi-body .v.slot {
-  outline: 1px dashed var(--navy-3);
-  outline-offset: 2px;
-  border-radius: 3px;
+  cursor: pointer;
 }
 
-body.mode-edit .sr-pi-body .v.slot:hover {
-  background: #eef4fb;
+/* same affordance as a desk slot: dashed outline + tint on hover, nothing at rest */
+body.mode-edit .sr-pi-body .v.slot:hover,
+body.mode-edit .sr-pi-body .v.new-seat:hover {
+  outline: 1px dashed var(--navy-3);
+  outline-offset: 1px;
+  border-radius: 2px;
+  background: #f0f7ff;
 }
 
 /* `+ जागा` and ✕ — edit-mode only (also `.no-print`, so they never reach the sheet) */
@@ -1705,16 +1916,385 @@ body:not(.mode-edit) .sr-pi-body .seat-x {
   background: #fff;
 }
 
+/* two legacy reference builds side by side (user 2026-10-13): each gets its own status row and
+   its own frame, so it is always clear which app answered. */
+.lg-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 7px 8px;
+  margin-bottom: 8px;
+  background: #f8fafc;
+}
+
+.lg-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+
+.lg-card .lg-status {
+  margin-bottom: 0;
+}
+
+.lg-frame.short {
+  height: 30vh;
+}
+
+/* ============================================================================
+   Round 4 (user feedback 2026-10-13, third message) — navbar, dropdown layering,
+   abbreviation tooltips, the station-officer card, and the new CRUD surfaces.
+   ========================================================================== */
+
+/* 3. The nav dropdowns were painted UNDER the sticky chart bar: `z-index` only compares inside
+   one stacking context, and #appbar created its own at 30 while .chart-toolbar sits at 60, so
+   80 on the menu could never win. The identity bar is now above the chart bar (and still below
+   the flyer overlay at 100). */
+#appbar {
+  z-index: 90;
+}
+
+.ab-menu {
+  z-index: 95;
+}
+
+/* 5. Nav items read as buttons because the frozen baseline styles EVERY `.toolbar button` with a
+   border and a dark fill. They are text: no box, no border until you touch them. The language
+   toggle, the login chip and the toolbar actions keep their own boxed look. */
+#appbar .ab-gbtn {
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding: 7px 9px;
+  color: #b9c8dd;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+#appbar .ab-gbtn:hover {
+  background: rgba(255, 255, 255, .08);
+  color: #fff;
+}
+
+#appbar .ab-gbtn:active {
+  background: rgba(255, 255, 255, .16);
+}
+
+#appbar .ab-gbtn.active,
+#appbar .ab-group.open .ab-gbtn {
+  color: #fff;
+  border-bottom-color: #d2a85b;
+  background: rgba(255, 255, 255, .06);
+}
+
+/* 7. The station-officer card is an ordinary box now: no heavy navy frame (it matched nothing
+   else on the sheet) and it hugs its own content — the old 520px min-width is what left white
+   space to the left and right inside it while the officer boxes below sat tight. */
+.page .sr-pi-card {
+  width: fit-content;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0 auto 9px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+}
+
+/* The card's header line reads symmetrically in its own space (user 2026-10-13): “वपोनि गजेंद्र
+   पाटील   ठाणे प्रमुख” sits centred as ONE group, with equal breathing room on both sides and a
+   fixed gap between the rank+name and the chip — not left-hugging the frame. */
+.page .sr-pi-header {
+  justify-content: center;
+  gap: 12px;
+  padding: 4px 14px;
+}
+
+.page .sr-pi-header .sr-pi-title,
+.page .sr-pi-header .chip {
+  flex: 0 0 auto;
+}
+
+.page .sr-pi-body {
+  justify-content: flex-start;
+  gap: 3px 16px;
+  padding: 5px 10px;
+}
+
+.page .sr-pi-body .grp + .grp {
+  padding-left: 16px;
+}
+
+/* An unfilled support seat is an ORDINARY cell, not a dotted box: the card's चालक/RTPC दिवस/रात्र
+   rows used to carry a permanent dashed rectangle in edit mode and a wider min-width than every
+   real value cell, which is what the clerk saw as “very thin dotted lines or rectangles in the
+   empty spaces” (user 2026-10-13: “treat them and space after them as normal cells as everything
+   else”). The seat now has the same geometry as a value cell and the same affordance as every
+   other slot in the chart — a dashed outline on HOVER only. Clicking it still creates the real
+   VACANT_RIKT seat through the support API (`+ जागा` is gone). */
+.sr-pi-body .v.new-seat {
+  display: inline-block;
+  min-width: 12mm;
+}
+
+body.mode-edit .sr-pi-body .v.new-seat {
+  cursor: pointer;
+}
+
+/* 8. Abbreviations: the dotted underline is gone; the full form appears ABOVE-LEFT of the token
+   on ONE line. The bubble is a JS-positioned element (#abbr-tip) because a CSS ::after bubble
+   cannot escape the .blk / .tbl-wrap overflow clip — it was cut off at the parent box edge. */
+abbr.abbr {
+  border-bottom: 0;
+}
+
+abbr.abbr:hover,
+abbr.abbr:focus {
+  background: #eef4fb;
+  border-radius: 2px;
+  outline: none;
+}
+
+#abbr-tip {
+  position: fixed;
+  z-index: 180;
+  background: var(--navy);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 600;
+  font-style: normal;
+  line-height: 1.2;
+  padding: 3px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, .22);
+  pointer-events: none;
+}
+
+#abbr-tip[hidden] {
+  display: none;
+}
+
+/* ---- bilingual pair + review strip (user 2026-10-13) ----------------------- */
+/* A converted value is OFFERED, never applied: the strip shows the suggestion in an editable
+   field and only “वापरा / Use” copies it into the other script field. Same look in every flyer,
+   because one hook mounts it for all of them. */
+.tl-roman {
+  border-style: dashed !important;
+}
+
+.tl-strip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 4px 0 2px;
+  padding: 4px 6px;
+  border: 1px solid #cfe0f5;
+  border-left: 3px solid var(--navy-3);
+  border-radius: 4px;
+  background: #f3f8ff;
+}
+
+.tl-strip[hidden] {
+  display: none;
+}
+
+.tl-strip .tl-lbl {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--navy);
+  white-space: nowrap;
+}
+
+.tl-strip .tl-prev {
+  flex: 1 1 170px;
+  min-width: 120px;
+  font-size: 11.5px;
+  padding: 3px 6px;
+  border: 1px solid var(--navy-3);
+  border-radius: 3px;
+  background: #fff;
+}
+
+.tl-strip .tl-ok,
+.tl-strip .tl-no {
+  font: inherit;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.tl-strip .tl-ok {
+  border: 1px solid #15803d;
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.tl-strip .tl-ok:hover {
+  background: #dcfce7;
+}
+
+.tl-strip .tl-no {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: #475569;
+}
+
+.tl-strip .tl-what {
+  font-size: 10px;
+  color: #64748b;
+}
+
+/* ---- CRUD surfaces (user 2026-10-13, item 11) ------------------------------- */
+/* Scan schedule (Option A): the source's own session cards + the hourly strip folded into three
+   sub-columns, so no short table stretches to the height of the long one beside it. */
+.grid.g-scan-sessions,
+.grid.g-scan-hours {
+  grid-template-columns: repeat(3, 1fr);
+  align-items: start;
+}
+
+.grid.g-scan-hours {
+  margin-top: 6px;
+}
+
+.grid.g-scan-sessions .tbl thead th {
+  text-align: center;
+  font-size: 11px;
+  background: #e7edf5;
+}
+
+/* Court/summons/warrant: one small card per heading (the source prints a heading line with the
+   names under it, never a page-wide register). */
+.grid.g-court,
+.grid.g-tables {
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  align-items: start;
+  gap: 6px;
+}
+
+.grid.g-tables {
+  min-width: 190px;
+  margin-top: 8px;
+}
+
+.blk.court .body {
+  gap: 1px;
+}
+
+.blk.court .p.note .n {
+  color: var(--ink-soft);
+}
+
+@media (max-width: 1120px) {
+
+  .grid.g-scan-sessions,
+  .grid.g-scan-hours {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* The ✕ controls for chart-local tables, columns and notice lines: edit mode only, and the
+   `.no-print` class keeps them off the sheet. Nothing here changes printed content. */
+.col-x,
+.notice-x {
+  display: none;
+  border: 1px solid #fecdd3;
+  border-radius: 3px;
+  background: #fff;
+  color: #b42318;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 1px 4px;
+  margin-left: 4px;
+  cursor: pointer;
+}
+
+body.mode-edit .col-x,
+body.mode-edit .notice-x {
+  display: inline-block;
+}
+
+body.mode-edit .col-x:hover,
+body.mode-edit .notice-x:hover {
+  background: #fff1f2;
+}
+
+.add-box.tiny,
+.col-add .add-box.tiny {
+  padding: 2px 6px;
+  min-height: 0;
+  font-size: 10px;
+  border-radius: 3px;
+}
+
+body:not(.mode-edit) .col-add,
+body:not(.mode-edit) .add-box.tiny,
+body:not(.mode-edit) .tbl-actions {
+  display: none;
+}
+
+.tbl-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+/* editable value cells (sign-off lines) and notice lines: the same “click me in edit mode”
+   affordance every name already has. */
+body.mode-edit .val[data-value-key],
+body.mode-edit .notice-line {
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+body.mode-edit .val[data-value-key]:hover,
+body.mode-edit .notice-line:hover {
+  background: #eef4fb;
+  outline: 1px dashed var(--navy-3);
+}
+
+body.mode-edit [data-table-cell],
+body.mode-edit [data-table-col],
+body.mode-edit [data-table-title],
+body.mode-edit [data-matrix-cell] {
+  cursor: pointer;
+}
+
+body.mode-edit [data-table-cell]:hover,
+body.mode-edit [data-table-col]:hover,
+body.mode-edit [data-table-title]:hover,
+body.mode-edit [data-matrix-cell]:hover {
+  background: #eef4fb;
+  outline: 1px dashed var(--navy-3);
+}
+
 /* ---- print: authoring chrome NEVER prints --------------------------------- */
 @media print {
 
   #pv-panel,
   #pv-hidden,
+  #abbr-tip,
   .add-box,
   .box-del,
+  .col-x,
+  .notice-x,
+  .tbl-actions,
   .toast,
   .flyer-overlay,
   .flyer-card {
+    display: none !important;
+  }
+
+  /* the bilingual review strip is chrome, never a printed value */
+  .tl-strip,
+  .tl-roman {
     display: none !important;
   }
 
@@ -1726,10 +2306,6 @@ body:not(.mode-edit) .sr-pi-body .seat-x {
 
   abbr.abbr {
     border-bottom: 0 !important;
-  }
-
-  abbr.abbr::after {
-    display: none !important;
   }
 
   body.mode-edit .dt td.slot {

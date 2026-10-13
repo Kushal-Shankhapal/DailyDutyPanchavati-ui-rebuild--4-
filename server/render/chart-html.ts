@@ -67,6 +67,12 @@ function chartName(p: DocPerson): string {
   if (p.cadre != null && p.cadre !== "OFFICER") return toks[toks.length - 1];
   return toks.length <= 2 ? toks.join(" ") : `${toks[0]} ${toks[toks.length - 1]}`;
 }
+/** Plain-TEXT person line (no markup) — for VALUES that are stored/echoed as text (a sign-off
+ *  line the clerk may edit and re-save), where an <abbr> element cannot travel. */
+function personText(p: DocPerson): string {
+  const short = p.rankShortFormMr ?? p.rankCode;
+  return `${short}${p.buckleNo ? ` ${toMr(p.buckleNo)}` : ""} ${chartName(p)}`;
+}
 function timeRange(start: string | null, end: string | null): string {
   if (!start || !end) return "";
   const sh = start.slice(0, 2), eh = end.slice(0, 2);
@@ -110,12 +116,13 @@ const isLabel = (r: DocAssignment): boolean => r.person === null && r.notesMr ==
  *  those rows render as the Sr-PI card and the officer boxes, never twice in the desks. */
 const STATION_LEADERSHIP_DUTY = "DAY_STATION_LEADERSHIP";
 const isVacant = (r: DocAssignment): boolean => r.allocationState === "VACANT_RIKT";
-/** Assignment column reserved for the Sr-PI card's support seats (रायटर / चालक / RTPC /
- *  ऑपरेटर). A dedicated column keeps them out of every duty-desk walk: they belong to the
- *  card, not to a desk. The source charts carry only रायटर, so the rest are seats the clerk
- *  creates in edit mode — never invented data (user 2026-10-13: “ensure everything is crudable”). */
+/** Assignment column reserved for the Sr-PI card's support seats (रायटर / चालक / RTPC).
+ *  A dedicated column keeps them out of every duty-desk walk: they belong to the card, not to a
+ *  desk. The source chart carries only रायटर, so the rest are seats the clerk fills (they render
+ *  as ordinary empty cells and are created on demand — never invented data; user 2026-10-13:
+ *  “only keep writer, chalak (both day and night), and rtpc (both day and night), drop operator”). */
 const SRPI_SUPPORT_COL = 9;
-export const SRPI_SUPPORT_ROLES = ["रायटर", "चालक", "RTPC", "ऑपरेटर"] as const;
+export const SRPI_SUPPORT_ROLES = ["रायटर", "चालक", "RTPC"] as const;
 
 export interface RenderStats {
   rowsTotal: number;
@@ -142,15 +149,25 @@ export interface Names {
   p(key: string, label: string, kind?: PresentationElement["kind"], empty?: boolean): string;
   /** Presentation hook plus the existing editable-name attributes. */
   e(key: string, def: string, kind?: PresentationElement["kind"], empty?: boolean): string;
+  /** Resolved TEXT VALUE (not a name): a chart-local typed value wins over the computed one.
+   *  Values are author-entered strings (sign-off names, notes cells) — never source semantics. */
+  v(key: string, def: string): string;
+  /** Markup for an editable value: the resolved text + the key + the computed default. */
+  vt(key: string, def: string, cls: string): string;
 }
-const NO_NAMES: Names = { t: (_key, def) => def, a: () => "", p: () => "", e: () => "" };
+const NO_NAMES: Names = {
+  t: (_key, def) => def, a: () => "", p: () => "", e: () => "",
+  v: (_key, def) => def, vt: (_key, def, cls) => `<span class="${cls}">${def}</span>`,
+};
 function makeNames(doc: ChartDocument, elements?: Map<string, PresentationElement>): Names {
   const ov = (doc.template.overrides ?? {}) as {
     labels?: Record<string, string>;
     labelsAll?: Record<string, string>;
+    values?: Record<string, string>;
   };
   const byKey = ov.labels ?? {};
   const byText = ov.labelsAll ?? {};
+  const byVal = ov.values ?? {};
   const a = (key: string, def: string): string => {
     if (key === "" || def === "") return "";
     const ovr = byKey[key] !== undefined ? "element" : byText[def] !== undefined ? "all" : "";
@@ -177,6 +194,12 @@ function makeNames(doc: ChartDocument, elements?: Map<string, PresentationElemen
     // real value — so the flag has to be passed explicitly by every caller that knows.
     e: (key, def, kind = "label", empty = false) =>
       def === "" ? "" : `${a(key, def)}${p(key, def, kind, empty)}`,
+    // A VALUE is editable text the clerk owns (sign-off names, added cells) — the server prints
+    // the resolved text and the client may re-address it, exactly like an editable name.
+    v: (key, def) => (byVal[key] !== undefined ? byVal[key] : def),
+    vt: (key, def, cls) => `<span class="${cls} val" data-value-key="${h(key)}"`
+      + (def !== "" ? ` data-default="${h(def)}"` : "")
+      + `>${h(byVal[key] !== undefined ? byVal[key] : def)}</span>`,
   };
 }
 
@@ -189,7 +212,21 @@ function makeNames(doc: ChartDocument, elements?: Map<string, PresentationElemen
  *  re-emitted, so no stray standalone rows and no double text (no-loss accounting intact). */
 function renderGroups(
   rows: DocAssignment[], count: (n: number) => void,
-  opts?: { hideLocationLabels?: boolean; absorbLabels?: boolean },
+  opts?: {
+    hideLocationLabels?: boolean;
+    absorbLabels?: boolean;
+    /** A heading with no value rows left prints nothing: in the office register every heading
+     *  introduces a run of rows, and a run that moved into an officer box / the Sr-PI card
+     *  (or never had rows in the source) leaves an orphan heading the clerk asked us to drop
+     *  (user 2026-10-13: “कार्यालयीन अंमलदार / व.पो.नि.साो. रायटर — why are these two empty”).
+     *  Display only; the row is still counted for the no-loss ledger. */
+    dropEmptyHeadings?: boolean;
+    /** Persons whose post group is a DUPLICATE of the officer band above: when every value row
+     *  of the group is such a person (and the row carries no location of its own — a chowki/desk
+     *  duty is real information and always prints), the group is not repeated here. The officer
+     *  box already owns that person's row (“one row, one home”). Rows still counted. */
+    dropPersons?: Set<number>;
+  },
   n: Names = NO_NAMES,
 ): string {
   const groups: Group[] = [];
@@ -207,9 +244,19 @@ function renderGroups(
     const titleKey = g.label ? `grp.${g.label.assignmentId}` : "";
     const title = titleDef === "" ? "" : disp(n.t(titleKey, titleDef));
     const titleAttr = n.e(titleKey, titleDef, "label");
+    // Duplicate post group (a person already printed in the officer band of this sheet).
+    if (opts?.dropPersons && g.rows.length > 0 && g.rows.every((r) =>
+      r.location === null && r.person !== null && opts.dropPersons!.has(r.person.staffId))) {
+      if (g.label) count(1);
+      count(g.rows.length);
+      continue;
+    }
     if (g.label) count(1);  // no-loss accounting: the label row materialises as block heading/group anchor
     if (g.rows.length === 0) {
       if (hideLabel) continue; // represented by the block heading
+      // A heading with nothing under it prints nothing (counted above) — but a VACANT_SEAT row is
+      // not a heading: it is a real रिक्त seat the clerk can fill, so it always renders.
+      if (opts?.dropEmptyHeadings && !(g.label != null && isVacant(g.label))) continue;
       const vacant = g.label != null && isVacant(g.label);
       if (opts?.absorbLabels && !vacant) continue; // counted above; the .fx line carries it
       if (!vacant && g.label) {
@@ -481,8 +528,39 @@ export function renderChart(doc: ChartDocument): { html: string; stats: RenderSt
   const n = makeNames(doc, elementMap);
   const col = (shift: "DAY" | "NIGHT", c: number) =>
     doc.assignments.filter((a) => a.shift === shift && a.columnNo === c);
-  const dtTable = (rows: DocAssignment[], opts?: { hideLocationLabels?: boolean }) =>
-    `<table class="dt"><tbody>\n${renderGroups(rows, count, opts, n)}</tbody></table>`;
+  const dtTable = (
+    rows: DocAssignment[],
+    opts?: { hideLocationLabels?: boolean; dropEmptyHeadings?: boolean; dropPersons?: Set<number> },
+  ) => `<table class="dt"><tbody>\n${renderGroups(rows, count, opts, n)}</tbody></table>`;
+
+  // ---- chart-local STRUCTURE (user 2026-10-13, item 11) ------------------------
+  // The clerk can add/remove whole TABLES they own (title, column headers, rows, cells) and
+  // add/remove COLUMNS on the manpower matrix — the same CRUD the officer/chowki boxes already
+  // have, extended to the rest of the sheet. It lives in daily_charts.presentation_overrides
+  // (chart-local, snapshots at FINALIZE, never touches the template or the masters) and is
+  // validated + written by PATCH /api/charts/:date/structure.
+  interface FreeTable { id: string; title: string; columns: string[]; rows: string[][]; }
+  interface StructureOverrides {
+    tables?: FreeTable[];
+    matrix?: { addedColumns?: MatrixColumn[]; hiddenColumns?: string[]; cells?: Record<string, string> };
+  }
+  const structure = (doc.template.overrides.structure ?? {}) as StructureOverrides;
+  const extraTables: FreeTable[] = Array.isArray(structure.tables) ? structure.tables : [];
+  const freeTableHtml = (t: FreeTable): string => `<div class="blk free-tbl">
+      <div class="bh"><div class="nm" data-table-title="${h(t.id)}" data-default="${h(t.title)}">${raw(t.title)}</div><span class="chip num">${toMr(String(t.rows.length))}</span><button type="button" class="box-del no-print" data-table-del="${h(t.id)}" title="हा तक्ता काढा (संपादन मोड)">✕</button></div>
+      <div class="body">
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr>${t.columns.map((c, ci) => `<th data-table-col="${h(t.id)}" data-col="${ci}" data-default="${h(c)}">${raw(c)}</th>`).join("")}</tr></thead>
+          <tbody>
+            ${t.rows.map((r, ri) => `<tr>${t.columns.map((_, ci) => `<td data-table-cell="${h(t.id)}" data-row="${ri}" data-col="${ci}">${raw(r[ci] ?? "")}</td>`).join("")}</tr>`).join("\n            ")}
+          </tbody>
+        </table></div>
+        <div class="tbl-actions no-print"><button type="button" class="add-box tiny" data-table-add-row="${h(t.id)}">+ ओळ</button><button type="button" class="add-box tiny" data-table-add-col="${h(t.id)}">+ स्तंभ</button></div>
+      </div>
+    </div>`;
+  const freeTablesHtml = extraTables.length
+    ? `<div class="grid g-tables">\n    ${extraTables.map(freeTableHtml).join("\n    ")}\n  </div>`
+    : "";
 
   const courtCodes = (doc.template.layout.courtDutyCodes as string[] | undefined) ?? [];
   const day4 = col("DAY", 4);
@@ -528,8 +606,13 @@ export function renderChart(doc: ChartDocument): { html: string; stats: RenderSt
   const seatLine = (label: string, role: string, shift: "DAY" | "NIGHT"): string => {
     const r = srpiSeat(role, shift);
     if (r === null) {
-      return `<div class="ln"><span class="k">${label}</span><span class="v empty"></span>`
-        + `<button type="button" class="add-seat no-print" data-add-seat="${role}" data-shift="${shift}" title="नवीन जागा तयार करा (संपादन मोड)" aria-label="${role} ${label} जागा तयार करा">+ जागा</button></div>`;
+      // No `+ जागा` button any more (user 2026-10-13: “treat them as already empty cells for a
+      // name to fill”). The seat renders as an ordinary empty cell: in edit mode it is
+      // highlighted, clicking it creates the real VACANT_RIKT seat through the support API and
+      // opens the same staff picker every other slot uses. No person is ever invented here.
+      return `<div class="ln"><span class="k">${label}</span>`
+        + `<span class="v slot new-seat" data-seat-role="${h(role)}" data-seat-shift="${shift}"`
+        + ` aria-label="${h(role)} ${label} रिक्त जागा — कर्मचारी नेमा"></span></div>`;
     }
     count(1);   // support seats live outside every desk walk — they are accounted here
     return `<div class="ln"><span class="k">${label}</span>${srpiValue(r)}`
@@ -537,7 +620,7 @@ export function renderChart(doc: ChartDocument): { html: string; stats: RenderSt
   };
   const srPiCard = srpi ? `<div class="sr-pi-card">
     <div class="sr-pi-header">
-      <div class="sr-pi-title"><span class="rk"><abbr class="abbr" data-full="${h(srpi.rankNameMr ?? "वरिष्ठ पोलीस निरीक्षक")}" aria-label="${h(srpi.rankNameMr ?? "वरिष्ठ पोलीस निरीक्षक")}" tabindex="0">${h(srpi.rankShortFormMr ?? srpi.rankCode)}</abbr>:</span> <span class="nm">${chartName(srpi)}</span></div>
+      <div class="sr-pi-title"><span class="rk"><abbr class="abbr" data-full="${h(srpi.rankNameMr ?? "वरिष्ठ पोलीस निरीक्षक")}" aria-label="${h(srpi.rankNameMr ?? "वरिष्ठ पोलीस निरीक्षक")}" tabindex="0">${h(srpi.rankShortFormMr ?? srpi.rankCode)}</abbr></span> <span class="nm">${chartName(srpi)}</span></div>
       <span class="chip c-sr">ठाणे प्रमुख</span>
     </div>
     <div class="sr-pi-body">
@@ -554,11 +637,6 @@ export function renderChart(doc: ChartDocument): { html: string; stats: RenderSt
          <span class="lb">RTPC:</span>
          ${seatLine("दिवस:", "RTPC", "DAY")}
          ${seatLine("रात्र:", "RTPC", "NIGHT")}
-       </div>
-       <div class="grp"${n.e("support.srpi.operator", "ऑपरेटर", "support", seatGroupEmpty("ऑपरेटर"))}>
-         <span class="lb">ऑपरेटर:</span>
-         ${seatLine("दिवस:", "ऑपरेटर", "DAY")}
-         ${seatLine("रात्र:", "ऑपरेटर", "NIGHT")}
        </div>
     </div>
   </div>` : "";
@@ -615,8 +693,11 @@ export function renderChart(doc: ChartDocument): { html: string; stats: RenderSt
     const roleKey = `box.${box.label}.role`;
     const th = `<th class="role"${rows.length > 1 ? ` rowspan="${rows.length}"` : ""}${n.e(roleKey, box.writerRole)}>${disp(n.t(roleKey, box.writerRole))}</th>`;
     const body = rows.length === 0
-      // no verified writer row for this post — an open slot, never an invented name
-      ? `<tr class="g">${th}<td><span class="blank"></span></td></tr>`
+      // A box with no writer row AT ALL (nothing configured for its title) prints just its
+      // heading — the empty “रायटर + blank” line under “विशेष तपास पथक” was pure whitespace
+      // (user 2026-10-13: “remove that just like we removed in above officer boxes”). A box whose
+      // seat exists and is रिक्त still prints its रिक्त row.
+      ? ""
       : rows.map((r, i) =>
         `<tr${i === 0 ? ` class="g"` : ""}>${i === 0 ? th : ""}<td${slotAttrs(r)}>${r.person ? personLine(r.person) : `<span class="chip c-vac">रिक्त</span>`}</td></tr>`,
       ).join("\n        ");
@@ -627,8 +708,8 @@ export function renderChart(doc: ChartDocument): { html: string; stats: RenderSt
     const name = head ? personLine(head) : disp(n.t(nameKey, nameDef));
     return `<div class="blk">
        <div class="bh"><div class="nm"${head ? "" : n.e(nameKey, nameDef, "section")}>${name}</div><span class="chip c-off"${n.e(`box.${box.label}`, box.label)}>${disp(n.t(`box.${box.label}`, box.label))}</span>${extraLabels.has(box.label)
-        ? `<button type="button" class="box-del no-print" data-box-del="officer" data-box-label="${h(box.label)}" title="हा बॉक्स काढा (संपादन मोड)">✕</button>` : ""}</div>
-      <div class="body"><table class="dt"><tbody>\n        ${body}\n      </tbody></table></div>
+        ? `<button type="button" class="box-del no-print" data-box-del="officer" data-box-label="${h(box.label)}" title="हा बॉक्स काढा (संपादन मोड)">✕</button>` : ""}</div>${body === "" ? "" : `
+      <div class="body"><table class="dt"><tbody>\n        ${body}\n      </tbody></table></div>`}
     </div>`;
   };
 
@@ -660,11 +741,23 @@ export function renderChart(doc: ChartDocument): { html: string; stats: RenderSt
     ${officerAddBox}
   </div>`;
 
-  const deskBlock = (key: string, title: string, win: string | undefined, rows: DocAssignment[]) =>
+  const deskBlock = (
+    key: string, title: string, win: string | undefined, rows: DocAssignment[],
+    opts?: { hideLocationLabels?: boolean; dropEmptyHeadings?: boolean; dropPersons?: Set<number> },
+  ) =>
     `<div class="blk core">
       <div class="bh"><div class="nm"${n.e(key, title, "section")}>${disp(n.t(key, title))}</div>${win ? `<span class="win">${win}</span>` : ""}</div>
-      <div class="body">${dtTable(rows)}</div>
+      <div class="body">${dtTable(rows, opts)}</div>
     </div>`;
+  // Persons already printed in the officer band of THIS sheet (the Sr-PI card + every officer
+  // box head). A duty-desk post group that only repeats one of them is dropped (counted 
+  // elsewhere): “ठाणे अंमलदार कक्ष देखरेख — पोनि सुनिल पवार … remove this from here, we have a
+  // special box at the top for him” (user 2026-10-13). Rows with a location of their own always
+  // print — a chowki/desk duty is different information, never a duplicate of a box heading.
+  const bandPersons = new Set<number>([
+    ...(srpi ? [srpi.staffId] : []),
+    ...[...boxHeads].filter((x): x is number => x != null),
+  ]);
 
   const tail = tailSections();   // hoisted below: officer summary / patrol-scan schedule / sign-off
 
@@ -677,9 +770,9 @@ export function renderChart(doc: ChartDocument): { html: string; stats: RenderSt
   // office/court sheet (where it sat next to the 743px court register and left ~465px of blank).
   // Court/summons/warrant/special keep their own sheet — their volume would overflow this band.
   const p1Lower = `<div class="grid g-core">
-      ${deskBlock("p1.desk.day", "दिवस पाळी कर्तव्य", "वेळ: ०९:०० ते २१:००", dayDesk)}
-      ${deskBlock("p1.desk.night", "रात्र पाळी कर्तव्य", "वेळ: २१:०० ते ०९:००", col("NIGHT", 1))}
-      ${deskBlock("p1.desk.office", "कार्यालयीन शाखा व कारकून", undefined, officeDesk)}
+      ${deskBlock("p1.desk.day", "दिवस पाळी कर्तव्य", "वेळ: ०९:०० ते २१:००", dayDesk, { dropPersons: bandPersons })}
+      ${deskBlock("p1.desk.night", "रात्र पाळी कर्तव्य", "वेळ: २१:०० ते ०९:००", col("NIGHT", 1), { dropPersons: bandPersons })}
+      ${deskBlock("p1.desk.office", "कार्यालयीन शाखा व कारकून", undefined, officeDesk, { dropEmptyHeadings: true })}
   </div>`;
 
     const page1 = page("", doc, `  ${srPiCard}
@@ -747,24 +840,79 @@ ${p1Lower}
   const looseHtml = loose.length
     ? `<div class="blk"><div class="ch-head"><div class="nm"${n.e("blk.loose", "इतर", "section")}>${n.t("blk.loose", "इतर")}</div></div>
       <div class="body">${dtTable(loose)}</div></div>` : "";
+  // This sheet is the mock's six-chowki sheet and nothing else. The गस्त/स्कॅनिंग schedule used to
+  // ride along at the bottom and pushed the box 35px past one A4 sheet once the schedule became
+  // the source's own session cards + folded hourly strip (print:audit, 2026-10-13); a 35px-tight
+  // sheet breaks again the moment either section grows, so the schedule moved to the sheet that
+  // has room (see page 3) instead of the chowki band being squeezed.
   const page2 = page("", doc, `  <div class="grid g-chowki">
     ${blocks.map(blockHtml).join("\n    ")}
     ${looseHtml}
     <button type="button" class="add-box" data-add="chowki">+ चौकी जोडा</button>
-   </div>
-${tail.scanSection}`, { kind: "chowki" }, n);
+   </div>`, { kind: "chowki" }, n);
 
   // ---- page 3: court, summons, warrant and special duties ----------------------
-  // The office register moved to the command sheet's third lane (compact-v5), so this sheet is one
-  // FULL-WIDTH register: fewer wrapped cells than the old half-width column, no empty twin block.
-  const courtDesk = courtSplit || specialRows.length > 0
-    ? deskBlock("p1.desk.court", "कोर्ट, समन्स, वॉरंट व विशेष कक्ष", undefined, [...courtRows, ...specialRows])
-    : "";
-  const page3 = page("", doc, courtDesk
-    ? `  <div class="grid g-desk alone">
-    ${courtDesk}
+  // Option A (user 2026-10-13: “we can copy it as it is”): the source never prints this as one
+  // page-wide register — it prints a heading line with the names stacked under it. Each heading
+  // becomes its own small card in an auto-fit grid: same rows, same vocabulary, roughly a
+  // quarter of the height, and no page-wide row carrying one name and 90% empty width (measured
+  // 36 rows / 707px before). Every value row and every heading is still printed exactly once.
+  const groupByLabel = (rows: DocAssignment[]): { head: DocAssignment | null; rows: DocAssignment[] }[] => {
+    const out: { head: DocAssignment | null; rows: DocAssignment[] }[] = [];
+    for (const r of rows) {
+      if (isLabel(r)) out.push({ head: r, rows: [] });
+      else if (out.length === 0) out.push({ head: null, rows: [r] });
+      else out[out.length - 1].rows.push(r);
+    }
+    return out;
+  };
+  // A continuation label with no rows of its own (the source's note cell, e.g. “वायरलेस महिला
+  // अंमलदार” beside महिला कक्ष) is absorbed as a note line inside the preceding card instead of
+  // becoming an empty card of its own (user 2026-10-13: “why are these two empty … remove them”).
+  // A post that carries its own duty code keeps its card even with nobody assigned: the post
+  // exists on the chart and the clerk can fill it.
+  const courtPostGroups: { head: DocAssignment | null; rows: DocAssignment[]; notes: string[] }[] = [];
+  for (const g of groupByLabel([...courtRows, ...specialRows])) {
+    if (g.rows.length === 0 && g.head && g.head.dutyCode == null && courtPostGroups.length > 0) {
+      const def = g.head.dutyTitleMr ?? "";
+      const key = `grp.${g.head.assignmentId}`;
+      count(1);   // the row is printed — as the note line of the card it annotates
+      courtPostGroups[courtPostGroups.length - 1].notes.push(disp(n.t(key, def)));
+      continue;
+    }
+    courtPostGroups.push({ head: g.head, rows: g.rows, notes: [] });
+  }
+  const courtCards = courtPostGroups.map((g) => {
+    if (g.head) count(1);   // the heading row materialises as this card's title
+    const def = g.head ? (g.head.dutyTitleMr ?? "") : "";
+    const key = g.head ? `grp.${g.head.assignmentId}` : "court.other";
+    const title = def === "" ? "" : disp(n.t(key, def));
+    const noteLines = g.notes.map((t) => `<div class="p note"><span class="n">${t}</span></div>`).join("\n        ");
+    const chip = g.rows.length > 0 ? `<span class="chip num">${toMr(String(g.rows.length))}</span>` : "";
+    const body = `${noteLines}${g.rows.length ? dtTable(g.rows) : ""}`;
+    // A post title with NOTHING under it prints its name and stops there: the old markup always
+    // emitted an empty `.body`, which drew a second bordered band with no content — the two
+    // “empty tables” the clerk flagged on the court sheet (user 2026-10-13: “these two empty
+    // tables here: महिला कक्ष / वायरलेस महिला अंमलदार … also lots of whitespace”), and the source
+    // names no separate roster for those two posts (OPEN_QUESTIONS T25). Nothing is inferred:
+    // रिक्त is a source state and is never stamped onto a post the source leaves open.
+    return `<div class="blk court${body === "" ? " post-only" : ""}">
+      <div class="bh"><div class="nm"${n.e(key, def, "label")}>${title}</div>${chip}</div>${body === "" ? "" : `
+      <div class="body">${body}</div>`}
+    </div>`;
+  }).join("\n    ");
+  const courtDesk = courtPostGroups.length > 0
+    ? `<div class="grid g-desk alone">
+    <div class="blk core">
+      <div class="bh"><div class="nm"${n.e("p1.desk.court", "कोर्ट, समन्स, वॉरंट व विशेष कक्ष", "section")}>${disp(n.t("p1.desk.court", "कोर्ट, समन्स, वॉरंट व विशेष कक्ष"))}</div></div>
+      <div class="body"><div class="grid g-court">
+    ${courtCards}
+      </div></div>
+    </div>
   </div>`
-    : "", { dense: true }, n);
+    : "";
+  const page3 = page("", doc, `${courtDesk}
+${tail.scanSection}`, { dense: true }, n);
 
   // ---- page 4: availability (leave section + other duties) ---------------------
   // One block per SOURCE sub-group (category); the source's own column groups decide which
@@ -801,17 +949,20 @@ ${tail.scanSection}`, { kind: "chowki" }, n);
       </div>
     </div>`;
   };
-  const noticeGroups = new Map<string, string[]>();
-  for (const n of doc.notices) {
-    const k = n.groupKey ?? "सूचना";
+  // Notice LINES are author-entered text (`chart_notices`, one row per line) — so every line is
+  // an edit target with its real id (user 2026-10-13, item 11: “everything CRUDable”). The
+  // render stays a plain line list; the ✕/＋ controls are edit-mode-only chrome (never printed).
+  const noticeGroups = new Map<string, typeof doc.notices>();
+  for (const item of doc.notices) {
+    const k = item.groupKey ?? "सूचना";
     if (!noticeGroups.has(k)) noticeGroups.set(k, []);
-    noticeGroups.get(k)!.push(n.textMr);
+    noticeGroups.get(k)!.push(item);
   }
-  const noticeBlocks = [...noticeGroups.entries()].map(([k, lines]) =>
+  const noticeBlocks = [...noticeGroups.entries()].map(([k, items]) =>
     `<div class="blk">
-      <div class="bh"><div class="nm"${n.e(`notice.${k}`, k, "section")}>${disp(n.t(`notice.${k}`, k))}</div><span class="chip num">${toMr(String(lines.length))}</span></div>
+      <div class="bh"><div class="nm"${n.e(`notice.${k}`, k, "section")}>${disp(n.t(`notice.${k}`, k))}</div><span class="chip num">${toMr(String(items.length))}</span><button type="button" class="add-box tiny no-print" data-notice-add="${h(k)}" title="या गटात नवीन सूचना जोडा (संपादन मोड)">+ सूचना</button></div>
       <div class="body">
-        ${lines.map((t) => `<div class="p"><span class="n">${raw(t)}</span></div>`).join("\n        ")}
+        ${items.map((it) => `<div class="p notice-line" data-notice="${it.noticeId}" data-notice-group="${h(k)}"><span class="n">${raw(it.textMr)}</span></div>`).join("\n        ")}
       </div>
     </div>`).join("\n    "); const availSectionsHtml = buckets.map((blocks, i) => blocks.length === 0 ? "" : `  <div class="sec"${i === 0 ? "" : ` style="margin-top:10px;"`}><h2${n.e(`sec.avail.${i}`, availSections[i].title, "section")}>${disp(n.t(`sec.avail.${i}`, availSections[i].title))}</h2></div>
   <div class="grid g4">
@@ -826,23 +977,44 @@ ${tail.scanSection}`, { kind: "chowki" }, n);
   const page5 = page("", doc, `  <div class="sec"><h2${n.e("sec.notices", "सूचना व निर्देश", "section")}>${disp(n.t("sec.notices", "सूचना व निर्देश"))}</h2></div>
   <div class="grid g4">
     ${noticeBlocks}
+    <button type="button" class="add-box" data-notice-add="" title="नवीन सूचना गट जोडा (संपादन मोड)">+ सूचना गट</button>
    </div>
+${freeTablesHtml}
+<div class="sec" style="margin-top:10px;"><button type="button" class="add-box" data-table-add="1" title="नवीन तक्ता जोडा (संपादन मोड)">+ तक्ता जोडा</button></div>
 ${tail.officerSummarySection}`, { kind: "notices" }, n);
 
   // ---- page 4: manpower matrix + shift summary + sudden changes ----
-  const mcols = (doc.template.layout.matrixColumns as MatrixColumn[] | undefined) ?? [];
+  const matrixBase = (doc.template.layout.matrixColumns as MatrixColumn[] | undefined) ?? [];
+  const matrixAdds = structure.matrix?.addedColumns ?? [];
+  const matrixHidden = new Set(structure.matrix?.hiddenColumns ?? []);
+  const mcols = [...matrixBase, ...matrixAdds].filter((c) => !matrixHidden.has(c.key));
+  const mAdded = new Set(matrixAdds.map((c) => c.key));
   // Matrix headers/row names are editable NAMES; cell VALUES stay verbatim source data (never
-  // digit-transformed, never renamed) — header text keeps h() only, exactly as before.
-  const matrixHead = `<tr><th${n.e("mcol.detail", "तपशील")}>${h(n.t("mcol.detail", "तपशील"))}</th>${mcols.map((c) => `<th class="num"${n.e(`mcol.${c.key}`, c.label)}>${h(n.t(`mcol.${c.key}`, c.label))}</th>`).join("")}</tr>`;
+  // digit-transformed, never renamed) — header text keeps h() only, exactly as before. A column
+  // the CLERK added on this chart is not source data at all: its cells are typed text and its
+  // header carries the add/remove controls (column CRUD = user 2026-10-13, item 11).
+  const matrixHead = `<tr><th${n.e("mcol.detail", "तपशील")}>${h(n.t("mcol.detail", "तपशील"))}</th>${mcols.map((c) => mAdded.has(c.key)
+    ? `<th class="num added" data-matrix-col="${h(c.key)}" data-default="${h(c.label)}">${h(c.label)}<button type="button" class="col-x no-print" data-matrix-col-del="${h(c.key)}" title="हा स्तंभ काढा (संपादन मोड)">✕</button></th>`
+    : `<th class="num"${n.e(`mcol.${c.key}`, c.label)}>${h(n.t(`mcol.${c.key}`, c.label))}<button type="button" class="col-x no-print" data-matrix-col-hide="${h(c.key)}" title="हा स्तंभ लपवा (संपादन मोड)">✕</button></th>`).join("")}<th class="num no-print col-add"><button type="button" class="add-box tiny" data-matrix-col-add="1" title="नवीन स्तंभ जोडा (संपादन मोड)">+ स्तंभ</button></th></tr>`;
   const rowOrder = [...new Set(doc.manpower.map((c) => c.displayOrder))].sort((a, b) => a - b);
   const matrixBody = rowOrder.map((ord) => {
     const cells = doc.manpower.filter((c) => c.displayOrder === ord);
     const rowKey = cells[0]?.rowKey ?? "";
     const tds = mcols.map((mc) => {
+      if (mAdded.has(mc.key)) {
+        const typed = structure.matrix?.cells?.[`${rowKey}|${mc.key}`] ?? "";
+        return `<td class="num added" data-matrix-cell="${h(`${rowKey}|${mc.key}`)}">${h(typed)}</td>`;
+      }
       const cell = cells.find((c) => c.columnKey === mc.key);
       const v = cell ? cell.valueText : "";
       const muted = v === ".." || v === "" ? " muted" : "";
-      return `<td class="num${muted}">${h(v)}</td>`;  // verbatim source values — NEVER toMr
+      // Verbatim source values — NEVER toMr. A cell whose source stacks two numbers on two
+      // lines keeps that break (हजर मनुष्यबळ's OFFICE cell is “12” over “04 Pro.”): the seed
+      // stores the source's own <br>, each part is escaped separately and the break is re-emitted
+      // as a real <br>, so a tag in the data can never inject markup and the sheet never prints
+      // the literal text “<br>” (that was the reported “12<br>04 Proण्”).
+      const parts = v.split(/<br\s*\/?>/i).map(h);
+      return `<td class="num${muted}">${parts.join("<br>")}</td>`;
     }).join("");
     return `<tr><th${n.e(`mrow.${rowKey}`, rowKey)}>${disp(n.t(`mrow.${rowKey}`, rowKey))}</th>${tds}</tr>`;
   }).join("\n      ");
@@ -914,36 +1086,53 @@ ${tail.officerSummarySection}`, { kind: "notices" }, n);
     `<tr><th class="win num">${toMr(hhmm(s.startTime))} ते ${toMr(hhmm(s.endTime))}</th><td>${s.location ? disp(s.location.nameMr) : ""}</td><td>${s.person ? personLine(s.person) : ""}</td></tr>`)
     .join("\n        ");
 
-  const hazari = doc.assignments.filter((a) => a.dutyCode === "OFFICE_HAZARI_MASTER" && a.person).map((a) => personLine(a.person!));
-  // Sign-off LABELS are rename-able (span-wrapped so the value below <br> is never touched).
+  // Sign-off (user 2026-10-13, item 12): the VALUES are the author's, not machine output.
+  // “तक्ता तयार करणारे हजेरी लेखनिक” defaults to the chart's हजेरी मास्तर rows, the signed-in
+  // clerk's name is filled in by the client, and the clerk can type any text (persisted per
+  // chart). The ठाणे शिक्का line stays an empty, editable field — its second line
+  // “ठाणे दैनंदिनी नोंद क्र. ____ / २०२६” was removed by request.
+  const hazari = doc.assignments.filter((a) => a.dutyCode === "OFFICE_HAZARI_MASTER" && a.person).map((a) => personText(a.person!));
+  // Sign-off LABELS are rename-able (span-wrapped so the value below <br> is never touched);
+  // the VALUES are editable text through the same chart-local value store.
   const sig = (key: string, label: string, value: string): string =>
     `<div class="sig"><span${n.e(key, label, "section")}>${disp(n.t(key, label))}</span><br>${value}</div>`;
   const signoff = `<div class="signoff">
-    ${sig("signoff.1", "तक्ता तयार करणारे हजेरी लेखनिक:", hazari.map((p) => `<b>${p}</b>`).join(" / ") || "<b>—</b>")}
+    ${sig("signoff.1", "तक्ता तयार करणारे हजेरी लेखनिक:", n.vt("signoff.1", hazari.join(" / "), "sv"))}
     ${sig("signoff.2", "तपासणी अधिकारी (प्रभारी):", srpi ? `<b>${h(srpi.nameMr)}</b>, वरिष्ठ पोलीस निरीक्षक` : "<b>—</b>")}
-    ${sig("signoff.3", "ठाणे शिक्का व दैनिक डायरी नोंद:", `ठाणे दैनंदिनी नोंद क्र. ____ / ${toMr(doc.chartDate.slice(0, 4))}`)}
+    ${sig("signoff.3", "ठाणे शिक्का व दैनिक डायरी नोंद:", n.vt("signoff.3", "", "sv"))}
   </div>`;
 
-  // Session structure (patrol mobile + beat-marshal per session) — station-stable config
-  // (SEMANTIC 10.md Tables 10/11), rendered beside the hourly scan table as the mock does.
+  // ---- scan / patrol schedule: the source's own session cards (Option A) --------
+  // Session structure (patrol mobile + beat-marshal per session) is station-stable config
+  // (SEMANTIC 10.md Tables 10/11). Each session is its OWN small card instead of one 3-row body
+  // stretched to the height of the long table beside it (measured 281px for 3 rows; user
+  // 2026-10-13: “scan / patrol schedule, option A, the source is pretty good designed”).
   interface ScanSession { session: string; patrol: string; beat: string }
   const scanSessions = (doc.template.layout.scanSessions as ScanSession[] | undefined) ?? [];
-  const sessionTable = scanSessions.length ? `<div class="tbl-wrap">
+  const sessionCard = (s: ScanSession, i: number): string => `<div class="tbl-wrap card">
       <table class="tbl">
-        <thead><tr><th${n.e("scan.s.t", "सत्र व वेळ")}>${disp(n.t("scan.s.t", "सत्र व वेळ"))}</th><th${n.e("scan.s.p", "पेट्रोलिंग मोबाईल")}>${disp(n.t("scan.s.p", "पेट्रोलिंग मोबाईल"))}</th><th${n.e("scan.s.b", "बीट मार्शल नेमणूक")}>${disp(n.t("scan.s.b", "बीट मार्शल नेमणूक"))}</th></tr></thead>
+        <thead><tr><th colspan="2"${n.e(`scan.s.${i}.t`, s.session)}>${disp(n.t(`scan.s.${i}.t`, s.session))}</th></tr></thead>
         <tbody>
-        ${scanSessions.map((s) => `<tr><th class="win">${disp(s.session)}</th><td>${disp(s.patrol)}</td><td>${disp(s.beat)}</td></tr>`).join("\n        ")}
+          <tr><th${n.e(`scan.s.${i}.p`, "पेट्रोलिंग मोबाईल")}>${disp(n.t(`scan.s.${i}.p`, "पेट्रोलिंग मोबाईल"))}</th><td>${disp(s.patrol)}</td></tr>
+          <tr><th${n.e(`scan.s.${i}.b`, "बीट मार्शल नेमणूक")}>${disp(n.t(`scan.s.${i}.b`, "बीट मार्शल नेमणूक"))}</th><td>${disp(s.beat)}</td></tr>
         </tbody>
       </table>
-    </div>` : "";
-  const scanTable = `<div class="tbl-wrap">
+    </div>`;
+  const sessionCards = scanSessions.map(sessionCard).join("\n    ");
+
+  // The hourly session (बिट मार्शल व ऑफिस स्टाफ, 09:00–21:00, 12 rows) folds into 3 sub-columns of
+  // 4 rows — the source's own compact rectangle instead of one 12-row strip. Same rows, same
+  // order, each printed once; the header repeats per sub-column so every block reads on its own.
+  const scanChunkTable = (rows: typeof doc.scanSchedule): string => `<div class="tbl-wrap">
     <table class="tbl">
       <thead><tr><th class="num"${n.e("scan.h.t", "वेळ")}>${disp(n.t("scan.h.t", "वेळ"))}</th><th${n.e("scan.h.l", "स्कॅन चौकी हद्द")}>${disp(n.t("scan.h.l", "स्कॅन चौकी हद्द"))}</th><th${n.e("scan.h.p", "नियुक्त अंमलदार")}>${disp(n.t("scan.h.p", "नियुक्त अंमलदार"))}</th></tr></thead>
       <tbody>
-        ${scanBody}
+        ${rows.map((s) => `<tr><th class="win num">${toMr(hhmm(s.startTime))} ते ${toMr(hhmm(s.endTime))}</th><td>${s.location ? disp(s.location.nameMr) : ""}</td><td>${s.person ? personLine(s.person) : ""}</td></tr>`).join("\n        ")}
       </tbody>
     </table>
   </div>`;
+  const scanChunks: (typeof doc.scanSchedule)[] = [];
+  for (let i = 0; i < doc.scanSchedule.length; i += 4) scanChunks.push(doc.scanSchedule.slice(i, i + 4));
 
   const officerSummarySection = `  <div class="sec"><h2${n.e("sec.officers", "पोलीस अधिकारी कर्तव्य सारांश", "section")}>${disp(n.t("sec.officers", "पोलीस अधिकारी कर्तव्य सारांश"))}</h2></div>
   <div class="two">
@@ -952,7 +1141,9 @@ ${tail.officerSummarySection}`, { kind: "notices" }, n);
   </div>`;
 
   const scanSection = `  <div class="sec" style="margin-top:10px;"><h2${n.e("sec.scan", "सुरक्षित नाशिक: गस्त व स्कॅनिंग वेळापत्रक", "section")}>${disp(n.t("sec.scan", "सुरक्षित नाशिक: गस्त व स्कॅनिंग वेळापत्रक"))}</h2></div>
-  ${sessionTable ? `<div class="two">\n    ${sessionTable}\n    ${scanTable}\n  </div>` : scanTable}`;
+  ${sessionCards ? `<div class="grid g-scan-sessions">\n    ${sessionCards}\n  </div>\n  ` : ""}<div class="grid g-scan-hours">
+    ${scanChunks.map(scanChunkTable).join("\n    ")}
+  </div>`;
 
   return { officerSummarySection, scanSection, signoff };
   }
@@ -963,6 +1154,7 @@ ${tail.officerSummarySection}`, { kind: "notices" }, n);
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>पंचवटी दैनिक कर्तव्य तक्ता — ${doc.chartDate}</title>
+<link rel="icon" href="/assets/police-logo.png">
 <link rel="stylesheet" href="__CSS_HREF__">
 <link rel="stylesheet" href="__AUTH_CSS_HREF__">
 <link rel="stylesheet" href="__PRESENTATION_CSS_HREF__">
@@ -1030,8 +1222,13 @@ ${tail.officerSummarySection}`, { kind: "notices" }, n);
   <div class="ct-title"><span><span data-lang="mr">पंचवटी दैनिक कर्तव्य तक्ता</span><span data-lang="en">Panchavati daily duty chart</span></span><strong><span data-lang="mr">${dateSlash(doc.chartDate)}, ${doc.weekdayMr}</span><span data-lang="en">${dateLatin(doc.chartDate)}, ${weekdayEn(doc.chartDate)}</span></strong></div>
   <div class="ct-actions">
     <div class="ab-datewrap">
-      <button type="button" class="ab-datebtn" id="date-btn" aria-haspopup="listbox" aria-expanded="false" title="तारीख निवडा">
-        <span class="d" data-lang="mr">${dateSlash(doc.chartDate)}</span><span class="d" data-lang="en">${dateLatin(doc.chartDate)}</span><span class="w" data-lang="mr">${doc.weekdayMr}</span><span class="w" data-lang="en">${weekdayEn(doc.chartDate)}</span><span class="cv">▾</span>
+      <button type="button" class="ab-datebtn" id="date-btn" aria-haspopup="listbox" aria-expanded="false" title="तारीख बदला">
+        <svg class="cal" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="3" y="5.5" width="18" height="15" rx="2.5"/><path d="M3 10.5h18M8 3.5v4M16 3.5v4"/></svg>
+        <span class="dl">
+          <span class="d" data-lang="mr">${dateSlash(doc.chartDate)}</span><span class="d" data-lang="en">${dateLatin(doc.chartDate)}</span>
+          <span class="w" data-lang="mr">${doc.weekdayMr}</span><span class="w" data-lang="en">${weekdayEn(doc.chartDate)}</span>
+        </span>
+        <span class="cv">▾</span>
       </button>
       <div class="ab-datemenu" id="date-menu" role="listbox" hidden></div>
     </div>
@@ -1055,6 +1252,7 @@ ${page5}
 
 ${page6}
 
+<script src="__VENDOR_JS_SRC__" defer></script>
 <script src="__AUTH_JS_SRC__" defer></script>
 </body>
 </html>`;
