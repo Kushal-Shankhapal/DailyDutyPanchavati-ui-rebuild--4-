@@ -11,6 +11,10 @@ import { makePool, DEV_DB, TEST_DB, isTestRun } from "../server/db.js";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const migrationsDir = path.join(here, "migrations");
 
+// Render's free Postgres requires TLS. Request it explicitly for every connection pool
+// (the pool config alone does not always force it on the Node 26 pg driver).
+process.env.PGSSLMODE = "require";
+
 export async function migrate(pool: pg.Pool): Promise<string[]> {
   const files = fs
     .readdirSync(migrationsDir)
