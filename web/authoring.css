@@ -15,78 +15,408 @@
    Screen-only chrome: the whole bar is `.no-print`, so the printed sheets keep their own
    head. Structure = emblem + station + product title on the left, date control + status +
    actions + signed-in clerk on the right. */
-.toolbar#appbar{
-  background:#0e1e38; border-bottom:1px solid #1b2e4f; padding:0 16px;
-  min-height:56px; gap:10px; flex-wrap:nowrap; align-items:center;
+.toolbar#appbar {
+  background: #0e1e38;
+  border-bottom: 1px solid #1b2e4f;
+  padding: 0 16px;
+  min-height: 56px;
+  gap: 10px;
+  flex-wrap: nowrap;
+  align-items: center;
 }
-#appbar .ab-l{display:flex; align-items:center; gap:12px; min-width:0;}
-#appbar .ab-logo{height:34px; width:auto; border-radius:4px; background:#fff; padding:2px; flex:none;}
-#appbar .ab-st{display:flex; flex-direction:column; line-height:1.25; min-width:0;}
-#appbar .ab-st b{font-size:14px; font-weight:700; color:#fff; white-space:nowrap;}
-#appbar .ab-st span{font-size:10.5px; color:#94a3b8; white-space:nowrap;}
-#appbar .ab-sep{width:1px; height:26px; background:rgba(255,255,255,.2);}
-#appbar .ab-r{display:flex; align-items:center; gap:8px; margin-left:auto; flex-wrap:nowrap;}
-#appbar .ab-datewrap{position:relative;}
-#appbar .ab-datebtn{
-  display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,.06);
-  border:1px solid #33456b; color:#fff; padding:6px 10px; border-radius:6px; min-height:34px;
+
+#appbar .ab-l {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
 }
-#appbar .ab-datebtn::before{content:"🗓"; font-size:13px;}
-#appbar .ab-datebtn .d{font-weight:700; font-size:13px; white-space:nowrap;}
-#appbar .ab-datebtn .w{color:#93a8c8; font-size:11.5px; white-space:nowrap;}
-#appbar .ab-datebtn .cv{color:#93a8c8; font-size:10px;}
-#appbar .ab-datebtn:hover{background:rgba(255,255,255,.12);}
-#appbar .ab-datemenu{
-  position:absolute; top:calc(100% + 6px); right:0; z-index:70; min-width:230px;
-  max-height:320px; overflow-y:auto; background:#fff; color:#0f172a;
-  border:1px solid #cbd5e1; border-radius:8px; box-shadow:0 12px 28px rgba(2,8,23,.35); padding:6px;
+
+#appbar .ab-logo {
+  height: 34px;
+  width: auto;
+  border-radius: 4px;
+  background: #fff;
+  padding: 2px;
+  flex: none;
 }
-#appbar .ab-datemenu .dm-head{font-size:10.5px; font-weight:700; color:#64748b; padding:4px 8px 6px;}
-#appbar .ab-datemenu .dm-item{
-  display:flex; justify-content:space-between; align-items:center; gap:10px;
-  padding:7px 8px; border-radius:5px; cursor:pointer; font-size:12px; font-weight:600;
+
+#appbar .ab-st {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+  min-width: 0;
 }
-#appbar .ab-datemenu .dm-item:hover, #appbar .ab-datemenu .dm-item:focus{background:#eef4fb; outline:none;}
-#appbar .ab-datemenu .dm-item.cur{background:#0e1e38; color:#fff;}
-#appbar .ab-datemenu .dm-item .st{font-size:9.5px; font-weight:700; letter-spacing:.3px; color:#64748b;}
-#appbar .ab-datemenu .dm-item.cur .st{color:#cbd5e1;}
-#appbar .ab-user{
-  background:rgba(255,255,255,.06); border:1px solid #33456b; color:#e2e8f0;
-  padding:6px 10px; border-radius:6px; font-size:11.5px; font-weight:600; max-width:38ch;
-  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+
+#appbar .ab-st b {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
 }
-#appbar .ab-user:hover{background:rgba(255,255,255,.12);}
-#appbar .ab-user.on{background:#14532d; border-color:#166534; color:#dcfce7;}
-@media screen and (max-width:1025px){
-  #appbar{flex-wrap:wrap; padding:6px 12px;}
-  #appbar .ab-st-2, #appbar .ab-sep{display:none;}
+
+#appbar .ab-st span {
+  font-size: 10.5px;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+#appbar .ab-sep {
+  width: 1px;
+  height: 26px;
+  background: rgba(255, 255, 255, .2);
+}
+
+#appbar .ab-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  margin-left: 14px;
+}
+
+#appbar .ab-nav a,
+#appbar .ab-nav .planned {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 8px;
+  color: #b9c8dd;
+  border-bottom: 2px solid transparent;
+  font-size: 11px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+#appbar .ab-nav a.active {
+  color: #fff;
+  border-bottom-color: #d2a85b;
+}
+
+#appbar .ab-nav .planned {
+  cursor: not-allowed;
+  opacity: .55;
+}
+
+#appbar .ab-nav small {
+  font-size: 8px;
+  color: #d2a85b;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+
+#appbar .ab-r {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  flex-wrap: nowrap;
+}
+
+#appbar .ab-datewrap {
+  position: relative;
+}
+
+#appbar .ab-datebtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, .06);
+  border: 1px solid #33456b;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  min-height: 34px;
+}
+
+#appbar .ab-datebtn::before {
+  content: "🗓";
+  font-size: 13px;
+}
+
+#appbar .ab-datebtn .d {
+  font-weight: 700;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+#appbar .ab-datebtn .w {
+  color: #93a8c8;
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+#appbar .ab-datebtn .cv {
+  color: #93a8c8;
+  font-size: 10px;
+}
+
+#appbar .ab-datebtn:hover {
+  background: rgba(255, 255, 255, .12);
+}
+
+#appbar .ab-datemenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 70;
+  min-width: 230px;
+  max-height: 320px;
+  overflow-y: auto;
+  background: #fff;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  box-shadow: 0 12px 28px rgba(2, 8, 23, .35);
+  padding: 6px;
+}
+
+#appbar .ab-datemenu .dm-head {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #64748b;
+  padding: 4px 8px 6px;
+}
+
+#appbar .ab-datemenu .dm-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+#appbar .ab-datemenu .dm-item:hover,
+#appbar .ab-datemenu .dm-item:focus {
+  background: #eef4fb;
+  outline: none;
+}
+
+#appbar .ab-datemenu .dm-item.cur {
+  background: #0e1e38;
+  color: #fff;
+}
+
+#appbar .ab-datemenu .dm-item .st {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .3px;
+  color: #64748b;
+}
+
+#appbar .ab-datemenu .dm-item.cur .st {
+  color: #cbd5e1;
+}
+
+#appbar .ab-user {
+  background: rgba(255, 255, 255, .06);
+  border: 1px solid #33456b;
+  color: #e2e8f0;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  max-width: 38ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#appbar .ab-user:hover {
+  background: rgba(255, 255, 255, .12);
+}
+
+#appbar .ab-user.on {
+  background: #14532d;
+  border-color: #166534;
+  color: #dcfce7;
+}
+
+.chart-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 45px;
+  padding: 7px 16px;
+  background: #f7f9fc;
+  border-bottom: 1px solid #cbd5e1;
+  color: #173b65;
+}
+
+.chart-toolbar .ct-title {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.chart-toolbar .ct-title strong {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.chart-toolbar .ct-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: none;
+}
+
+.chart-toolbar button {
+  padding: 5px 9px;
+  border: 1px solid #b6c4d4;
+  border-radius: 4px;
+  background: #fff;
+  color: #173b65;
+  font: inherit;
+  font-size: 11px;
+}
+
+.chart-toolbar button:hover {
+  background: #edf3fa;
+}
+
+.chart-toolbar button.finalize {
+  background: #176b43;
+  border-color: #176b43;
+  color: #fff;
+}
+
+.chart-toolbar .lc {
+  padding: 4px 7px;
+}
+
+/* Compact-v4 printed identity: four information groups share one horizontal line. */
+.page .head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 31px;
+  padding: 4px 8px;
+}
+
+.page .head .hc {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 18px;
+  min-width: 0;
+  flex: 1;
+  text-align: center;
+}
+
+.page .head .h1,
+.page .head .h2,
+.page .head .h3 {
+  display: inline;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.page .head .h1 {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.page .head .h2 {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.page .head .h3 {
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.page .head .hr {
+  flex: none;
+}
+
+@media screen and (max-width:1025px) {
+  #appbar {
+    flex-wrap: wrap;
+    padding: 6px 12px;
+  }
+
+  #appbar .ab-nav {
+    margin-left: 0;
+    width: 100%;
+    overflow-x: auto;
+    order: 3;
+  }
+
+  #appbar .ab-st-2,
+  #appbar .ab-sep {
+    display: none;
+  }
+
+  .chart-toolbar {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .page .head .hc {
+    gap: 10px;
+    flex-wrap: wrap;
+  }
 }
 
 /* ---- edit-mode slot affordances (hover/focus outline + pencil, real slots) --- */
-body.mode-edit .dt td.slot{
-  cursor:pointer; transition:background .15s ease, outline .15s ease;
+body.mode-edit .dt td.slot {
+  cursor: pointer;
+  transition: background .15s ease, outline .15s ease;
 }
-body.mode-edit .dt td.slot:hover{
-  outline:1px dashed var(--navy-3); background:#f0f7ff; border-radius:2px;
+
+body.mode-edit .dt td.slot:hover {
+  outline: 1px dashed var(--navy-3);
+  background: #f0f7ff;
+  border-radius: 2px;
 }
-body.mode-edit .dt td.slot:focus{
-  outline:2px solid #2563eb; background:#eff6ff;
+
+body.mode-edit .dt td.slot:focus {
+  outline: 2px solid #2563eb;
+  background: #eff6ff;
 }
+
 /* Hover must not change the geometry: injecting the ✎ glyph re-flowed the cell text and made
    the whole row jump/flicker on every hover. The affordance is now pure outline + tint. */
-body.mode-edit .dt td.slot:hover{ background-image:none; }
-body.mode-edit .dt td.slot{ outline-offset:-1px; }
+body.mode-edit .dt td.slot:hover {
+  background-image: none;
+}
+
+body.mode-edit .dt td.slot {
+  outline-offset: -1px;
+}
 
 /* ---- editable display names (section / table / column / left-row titles) ------
    Every rename-able name carries data-label + data-default from the renderer. Edit mode
    shows the SAME effect as slots: dashed outline + tint, geometry identical hovered or
    not — no content injection on hover (that is what made cells flicker/reflow before). */
-body.mode-edit [data-label]{ cursor:text; border-radius:2px; }
-body.mode-edit [data-label]:hover{
-  outline:1px dashed var(--navy-3); outline-offset:1px; background:#f0f7ff;
+body.mode-edit [data-label] {
+  cursor: text;
+  border-radius: 2px;
 }
-body.mode-edit [data-label]:focus{
-  outline:2px solid #2563eb; outline-offset:1px; background:#eff6ff;
+
+body.mode-edit [data-label]:hover {
+  outline: 1px dashed var(--navy-3);
+  outline-offset: 1px;
+  background: #f0f7ff;
+}
+
+body.mode-edit [data-label]:focus {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+  background: #eff6ff;
 }
 
 /* ---- chowki band: keep state lines whole (chart layout correction) ----------
@@ -94,106 +424,379 @@ body.mode-edit [data-label]:focus{
    wraps `.fx` mid-phrase ("चार्ज →" then an orphan word on the next line); the state words
    stay together here and only the destination phrase wraps, so nothing looks broken and
    nothing spills out of its column. */
-.fx{ text-wrap:pretty; }
-.fx .lb, .fx .st{ white-space:nowrap; }
-.fx .dst{ overflow-wrap:break-word; }
-.sub-col-title span{ text-wrap:pretty; }
-.ch-head .of{ text-wrap:pretty; }
-.dt td, .dt th{ text-wrap:pretty; }
+.fx {
+  text-wrap: pretty;
+}
+
+.fx .lb,
+.fx .st {
+  white-space: nowrap;
+}
+
+.fx .dst {
+  overflow-wrap: break-word;
+}
+
+.sub-col-title span {
+  text-wrap: pretty;
+}
+
+.ch-head .of {
+  text-wrap: pretty;
+}
+
+.dt td,
+.dt th {
+  text-wrap: pretty;
+}
 
 /* ---- contextual add-box controls (edit mode only; never printed) ------------ */
-.add-box{ display:none; }
-body.mode-edit .add-box{
-  display:block; width:100%; margin-top:8px; padding:7px 10px;
-  border:1.5px dashed var(--navy-3); border-radius:4px;
-  background:#f7fafd; color:var(--navy); font-size:11.5px; font-weight:700;
-  font-family:inherit; text-align:center; cursor:pointer;
+.add-box {
+  display: none;
 }
-body.mode-edit .add-box:hover:not(:disabled){ background:#eaf0f8; border-color:var(--navy); }
-body.mode-edit .add-box:disabled{
-  opacity:.55; cursor:not-allowed; border-color:var(--line); color:var(--ink-faint);
+
+body.mode-edit .add-box {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 7px 10px;
+  border: 1.5px dashed var(--navy-3);
+  border-radius: 4px;
+  background: #f7fafd;
+  color: var(--navy);
+  font-size: 11.5px;
+  font-weight: 700;
+  font-family: inherit;
+  text-align: center;
+  cursor: pointer;
 }
-body.mode-edit .add-box:focus-visible{ outline:2px solid #2563eb; outline-offset:1px; }
+
+body.mode-edit .add-box:hover:not(:disabled) {
+  background: #eaf0f8;
+  border-color: var(--navy);
+}
+
+body.mode-edit .add-box:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+  border-color: var(--line);
+  color: var(--ink-faint);
+}
+
+body.mode-edit .add-box:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+}
 
 /* ---- abbreviation tooltip (hover AND keyboard focus; preview only) ---------- */
-abbr.abbr{
-  font-style:normal; text-decoration:none; cursor:help;
-  border-bottom:1px dotted var(--ink-faint); position:relative;
+abbr.abbr {
+  font-style: normal;
+  text-decoration: none;
+  cursor: help;
+  border-bottom: 1px dotted var(--ink-faint);
+  position: relative;
 }
-abbr.abbr:hover, abbr.abbr:focus{ border-bottom-color:var(--navy); outline:none; }
-abbr.abbr:focus{ border-bottom-style:solid; }
-abbr.abbr::after{
-  content:attr(data-full);
-  position:absolute; left:0; top:100%; margin-top:3px; z-index:60;
-  background:var(--navy); color:#fff; font-size:10.5px; font-weight:600; font-style:normal;
-  padding:3px 7px; border-radius:4px; white-space:normal; max-width:220px;
-  opacity:0; visibility:hidden; transition:opacity .12s ease;
-  box-shadow:0 4px 10px rgba(0,0,0,.22); pointer-events:none;
+
+abbr.abbr:hover,
+abbr.abbr:focus {
+  border-bottom-color: var(--navy);
+  outline: none;
 }
-abbr.abbr:hover::after, abbr.abbr:focus::after{ opacity:1; visibility:visible; }
+
+abbr.abbr:focus {
+  border-bottom-style: solid;
+}
+
+abbr.abbr::after {
+  content: attr(data-full);
+  position: absolute;
+  left: 0;
+  top: 100%;
+  margin-top: 3px;
+  z-index: 60;
+  background: var(--navy);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 600;
+  font-style: normal;
+  padding: 3px 7px;
+  border-radius: 4px;
+  white-space: normal;
+  max-width: 220px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .12s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, .22);
+  pointer-events: none;
+}
+
+abbr.abbr:hover::after,
+abbr.abbr:focus::after {
+  opacity: 1;
+  visibility: visible;
+}
 
 /* ---- 3-option staff picker flyer (moved from compv3.css, 502-round) --------- */
-.flyer-overlay{
-  position:fixed; top:0; left:0; width:100vw; height:100vh;
-  background:rgba(15,23,42,.45); z-index:100; display:flex; justify-content:center; align-items:center;
+.flyer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, .45);
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
-.flyer-overlay[hidden]{display:none !important;}
-.flyer-card{
-  background:#fff; border-radius:8px; box-shadow:0 10px 25px -5px rgba(0,0,0,.25);
-  width:min(440px, 94vw); max-height:85vh; display:flex; flex-direction:column; overflow:hidden;
-  border:1px solid #cbd5e1;
+
+.flyer-overlay[hidden] {
+  display: none !important;
 }
-.flyer-header{
-  padding:12px 16px; background:#0b3568; color:#fff;
-  display:flex; align-items:center; justify-content:space-between;
+
+.flyer-card {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, .25);
+  width: min(440px, 94vw);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
 }
-.flyer-header h3{font-size:14px; font-weight:700;}
-.flyer-close{background:none; border:none; color:#cbd5e1; font-size:18px; cursor:pointer;}
-.flyer-close:hover{color:#fff;}
-.flyer-body{padding:14px 16px; overflow-y:auto; display:flex; flex-direction:column; gap:12px;}
-.flyer-opt{
-  border:1px solid #e2e8f0; border-radius:6px; padding:9px 11px; cursor:pointer; background:#fff;
+
+.flyer-header {
+  padding: 12px 16px;
+  background: #0b3568;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
-.flyer-opt:hover{border-color:#2c5282; background:#f0f7ff;}
-.flyer-opt.disabled{opacity:.5; cursor:not-allowed; border-color:#e2e8f0; background:#f8fafc;}
-.flyer-opt h4{font-size:12px; font-weight:700; color:#0b3568; margin-bottom:2px;}
-.flyer-opt p{font-size:11px; color:#64748b;}
-.flyer-search{width:100%; padding:6px 10px; border:1px solid #cbd5e1; border-radius:4px; font-size:12px; margin-top:8px;}
-.flyer-list{max-height:160px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:4px; margin-top:6px; background:#fff;}
-.flyer-item{padding:5px 8px; font-size:11.5px; border-bottom:1px solid #f1f5f9; cursor:pointer;}
-.flyer-item:hover{background:#e0ecf8; color:#0b3568; font-weight:600;}
-.flyer-item .sg{
-  display:inline-block; margin-left:6px; font-size:9.5px; font-weight:700;
-  color:#15803d; background:#ecfdf3; border:1px solid #bbf7d0; border-radius:8px; padding:0 5px;
-  vertical-align:1px;
+
+.flyer-header h3 {
+  font-size: 14px;
+  font-weight: 700;
 }
-.flyer-item.sg-top{background:#f0fdf4;}
-.flyer-mini-form{display:flex; flex-direction:column; gap:6px; margin-top:8px;}
-.flyer-mini-form input, .flyer-mini-form select{padding:5px 8px; font-size:11.5px; border:1px solid #cbd5e1; border-radius:4px;}
-.flyer-btn-submit{background:#0b3568; color:#fff; border:none; padding:6px 12px; border-radius:4px; font-size:11.5px; font-weight:700; cursor:pointer; align-self:flex-start; margin-top:4px;}
-.flyer-btn-submit:hover{background:#1e3a5f;}
-.flyer-btn-ghost{
-  background:#fff; color:#0b3568; border:1px solid #cbd5e1; padding:5px 10px;
-  border-radius:4px; font-size:11.5px; font-weight:600; cursor:pointer;
+
+.flyer-close {
+  background: none;
+  border: none;
+  color: #cbd5e1;
+  font-size: 18px;
+  cursor: pointer;
 }
-.flyer-btn-ghost:hover{background:#f0f7ff; border-color:#2c5282;}
-.flyer-btn-danger{background:#fff; color:#b42318; border:1px solid #fecdd3; padding:5px 10px; border-radius:4px; font-size:11.5px; font-weight:600; cursor:pointer;}
-.flyer-btn-danger:hover{background:#fff1f2;}
-.flyer-actions{display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;}
-.flyer-slot-info{font-size:12px; font-weight:700; color:#1e293b; padding-bottom:6px; border-bottom:1px solid #e2e8f0;}
+
+.flyer-close:hover {
+  color: #fff;
+}
+
+.flyer-body {
+  padding: 14px 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.flyer-opt {
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 9px 11px;
+  cursor: pointer;
+  background: #fff;
+}
+
+.flyer-opt:hover {
+  border-color: #2c5282;
+  background: #f0f7ff;
+}
+
+.flyer-opt.disabled {
+  opacity: .5;
+  cursor: not-allowed;
+  border-color: #e2e8f0;
+  background: #f8fafc;
+}
+
+.flyer-opt h4 {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0b3568;
+  margin-bottom: 2px;
+}
+
+.flyer-opt p {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.flyer-search {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.flyer-list {
+  max-height: 160px;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  margin-top: 6px;
+  background: #fff;
+}
+
+.flyer-item {
+  padding: 5px 8px;
+  font-size: 11.5px;
+  border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+}
+
+.flyer-item:hover {
+  background: #e0ecf8;
+  color: #0b3568;
+  font-weight: 600;
+}
+
+.flyer-item .sg {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #15803d;
+  background: #ecfdf3;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 0 5px;
+  vertical-align: 1px;
+}
+
+.flyer-item.sg-top {
+  background: #f0fdf4;
+}
+
+.flyer-mini-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.flyer-mini-form input,
+.flyer-mini-form select {
+  padding: 5px 8px;
+  font-size: 11.5px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+}
+
+.flyer-btn-submit {
+  background: #0b3568;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+.flyer-btn-submit:hover {
+  background: #1e3a5f;
+}
+
+.flyer-btn-ghost {
+  background: #fff;
+  color: #0b3568;
+  border: 1px solid #cbd5e1;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.flyer-btn-ghost:hover {
+  background: #f0f7ff;
+  border-color: #2c5282;
+}
+
+.flyer-btn-danger {
+  background: #fff;
+  color: #b42318;
+  border: 1px solid #fecdd3;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.flyer-btn-danger:hover {
+  background: #fff1f2;
+}
+
+.flyer-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.flyer-slot-info {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1e293b;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
 /* rename flyer: scope choice (this element only / everywhere with this default name) */
-.rn-scope{ font-size:11.5px; display:flex; gap:6px; align-items:center; color:#334155; margin:3px 0; cursor:pointer; }
-.rn-scope input{ margin:0; }
+.rn-scope {
+  font-size: 11.5px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: #334155;
+  margin: 3px 0;
+  cursor: pointer;
+}
+
+.rn-scope input {
+  margin: 0;
+}
 
 /* ---- toast (success/error feedback, no-print) ------------------------------ */
-.toast{
-  position:fixed; bottom:18px; left:50%; transform:translateX(-50%); z-index:200;
-  background:#0f172a; color:#fff; padding:9px 16px; border-radius:6px;
-  font-size:12.5px; font-weight:600; box-shadow:0 8px 24px rgba(0,0,0,.3);
-  max-width:90vw;
+.toast {
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  background: #0f172a;
+  color: #fff;
+  padding: 9px 16px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .3);
+  max-width: 90vw;
 }
-.toast.ok{background:#14532d;}
-.toast.err{background:#7f1d1d;}
+
+.toast.ok {
+  background: #14532d;
+}
+
+.toast.err {
+  background: #7f1d1d;
+}
 
 /* ---- print density: composite sheets whose real content exceeds one A4 -----
    The mock's type scale fits a page when its sample data is small; the 10/09 source
@@ -201,37 +804,167 @@ abbr.abbr:hover::after, abbr.abbr:focus::after{ opacity:1; visibility:visible; }
    two sheets get `.page.dense` from the renderer, which tightens row padding and type
    in PRINT only (screen keeps the mock's generous scale). Values are never dropped,
    truncated or reordered — only row metrics change, and no size goes below 9.5px. */
-@media print{
-  .page.dense .head{padding:0 0 2px; margin-bottom:3px;}
-  .page.dense .head .hc .h1{font-size:13px; line-height:1.2;} .page.dense .head .hc .h2{font-size:11px; line-height:1.2;}
-  .page.dense .head .hc .h3{font-size:10px;}
-  .page.dense .sec{margin:5px 0 2px;} .page.dense .sec h2{font-size:11px;}
-  .page.dense .grid{gap:4px;} .page.dense .p1-lower{gap:5px; margin-top:5px;}
-  .page.dense .sr-pi-card{margin:0 auto 4px;} .page.dense .sr-pi-body{padding:3px 10px; font-size:11px; line-height:1.2;}
-  .page.dense .blk > .bh{padding:2px 6px;} .page.dense .blk .bh .nm{font-size:11px;}
-  .page.dense .blk .body{padding:3px 6px; gap:1.5px;}
-  .page.dense .dt{font-size:9.5px;} .page.dense .dt th{font-size:9.5px; padding:1px 5px 1px 0;}
-  .page.dense .dt td{padding:1px 0;} .page.dense .core .dt th{padding-right:10px;}
-  .page.dense .p{font-size:10px; padding:1px 0;} .page.dense .p .r{font-size:9.5px;}
-  .page.dense .g-off .blk .body .dt{font-size:9.5px;}
+@media print {
+  .page.dense .head {
+    padding: 0 0 2px;
+    margin-bottom: 3px;
+  }
+
+  .page.dense .head .hc .h1 {
+    font-size: 13px;
+    line-height: 1.2;
+  }
+
+  .page.dense .head .hc .h2 {
+    font-size: 11px;
+    line-height: 1.2;
+  }
+
+  .page.dense .head .hc .h3 {
+    font-size: 10px;
+  }
+
+  .page.dense .sec {
+    margin: 5px 0 2px;
+  }
+
+  .page.dense .sec h2 {
+    font-size: 11px;
+  }
+
+  .page.dense .grid {
+    gap: 4px;
+  }
+
+  .page.dense .p1-lower {
+    gap: 5px;
+    margin-top: 5px;
+  }
+
+  .page.dense .sr-pi-card {
+    margin: 0 auto 4px;
+  }
+
+  .page.dense .sr-pi-body {
+    padding: 3px 10px;
+    font-size: 11px;
+    line-height: 1.2;
+  }
+
+  .page.dense .blk>.bh {
+    padding: 2px 6px;
+  }
+
+  .page.dense .blk .bh .nm {
+    font-size: 11px;
+  }
+
+  .page.dense .blk .body {
+    padding: 3px 6px;
+    gap: 1.5px;
+  }
+
+  .page.dense .dt {
+    font-size: 9.5px;
+  }
+
+  .page.dense .dt th {
+    font-size: 9.5px;
+    padding: 1px 5px 1px 0;
+  }
+
+  .page.dense .dt td {
+    padding: 1px 0;
+  }
+
+  .page.dense .core .dt th {
+    padding-right: 10px;
+  }
+
+  .page.dense .p {
+    font-size: 10px;
+    padding: 1px 0;
+  }
+
+  .page.dense .p .r {
+    font-size: 9.5px;
+  }
+
+  .page.dense .g-off .blk .body .dt {
+    font-size: 9.5px;
+  }
+
+  /* Page 1 has the command hierarchy plus two paired core tables. Tighten only its
+     internal block metrics; other dense sheets retain the normal readable density. */
+  .page.command .g-off,
+  .page.command .g-core {
+    gap: 3px;
+  }
+
+  .page.command .g-off .blk .body,
+  .page.command .g-core .blk .body {
+    padding: 2px 5px;
+    gap: 1px;
+  }
+
+  .page.command .g-off .dt td,
+  .page.command .g-off .dt th,
+  .page.command .g-core .dt td,
+  .page.command .g-core .dt th {
+    line-height: 1.08;
+  }
+
   /* row metrics: 20–36 source rows per block only fit a sheet when a row is ~15px.
      Values wrap, they are never truncated. */
-  .page.dense .dt td, .page.dense .p, .page.dense .dt th{line-height:1.15;}
+  .page.dense .dt td,
+  .page.dense .p,
+  .page.dense .dt th {
+    line-height: 1.15;
+  }
+
   /* leave/court lists: the mock's 4 columns leave whole grid rows half empty when one
      list (साप्ताहिक सुट्टी, 20 people) is far longer than its neighbours — six columns
      let the long lists share the sheet instead of forcing a second one. */
-  .page.dense .grid.g4{grid-template-columns:repeat(6,1fr);}
+  .page.dense .grid.g4 {
+    grid-template-columns: repeat(6, 1fr);
+  }
 }
 
 /* ---- print: authoring chrome NEVER prints --------------------------------- */
-@media print{
-  .add-box, .toast, .flyer-overlay, .flyer-card{ display:none !important; }
-  abbr.abbr{ border-bottom:0 !important; }
-  abbr.abbr::after{ display:none !important; }
-  body.mode-edit .dt td.slot{ outline:none !important; background:transparent !important; cursor:auto; }
-  body.mode-edit .dt td.slot:hover::after{ content:none !important; }
-  body.mode-edit [data-label]{ cursor:auto !important; }
-  body.mode-edit [data-label]:hover, body.mode-edit [data-label]:focus{
-    outline:none !important; background:transparent !important;
+@media print {
+
+  .add-box,
+  .toast,
+  .flyer-overlay,
+  .flyer-card {
+    display: none !important;
+  }
+
+  abbr.abbr {
+    border-bottom: 0 !important;
+  }
+
+  abbr.abbr::after {
+    display: none !important;
+  }
+
+  body.mode-edit .dt td.slot {
+    outline: none !important;
+    background: transparent !important;
+    cursor: auto;
+  }
+
+  body.mode-edit .dt td.slot:hover::after {
+    content: none !important;
+  }
+
+  body.mode-edit [data-label] {
+    cursor: auto !important;
+  }
+
+  body.mode-edit [data-label]:hover,
+  body.mode-edit [data-label]:focus {
+    outline: none !important;
+    background: transparent !important;
   }
 }

@@ -426,8 +426,8 @@ function stateFx(states: DocLocationState[], locationId: number | null, shift: "
 // ---- page sections ---------------------------------------------------------------
 function headHtml(doc: ChartDocument, n: Names): string {
   const [y, m, d] = doc.chartDate.split("-");
-  // h3 = date line: D-rule derived (weekday/date) — computed, NEVER editable.
-  const dateLine = `दिनांक: ${toMr(d)} ${MONTHS_MR[Number(m) - 1]} ${toMr(y)} · वार: ${h(doc.weekdayMr)}`;
+  // Date and weekday remain derived, but the printed identity is intentionally one compact line.
+  const dateLine = `${toMr(d)} ${MONTHS_MR[Number(m) - 1]} ${toMr(y)}, ${h(doc.weekdayMr)}`;
   const lc = doc.lifecycle.toLowerCase();
   const t1 = "नाशिक शहर पोलीस आयुक्तालय", t2 = "दैनिक कर्तव्य वाटप";
   return `<div class="head">
@@ -443,8 +443,8 @@ function headHtml(doc: ChartDocument, n: Names): string {
 // One printed A4 sheet. `dense` marks the two composite pages whose real source content
 // cannot fit the mock's screen type scale on one sheet; the print-only density rules live in
 // web/authoring.css (.page.dense) and never drop, truncate or reorder a row.
-function page(title: string, doc: ChartDocument, body: string, opts: { dense?: boolean } | undefined, n: Names): string {
-  return `<div class="page${opts?.dense ? " dense" : ""}">
+function page(title: string, doc: ChartDocument, body: string, opts: { dense?: boolean; kind?: string } | undefined, n: Names): string {
+  return `<div class="page${opts?.dense ? " dense" : ""}${opts?.kind ? ` ${opts.kind}` : ""}">
   ${headHtml(doc, n)}
 ${body}
 </div>`;
@@ -468,12 +468,11 @@ export function renderChart(doc: ChartDocument): { html: string; stats: RenderSt
   const courtRows = courtSplit ? day4.filter((r) => courtCodes.includes(r.dutyCode ?? "")) : [];
 
   // location columns walked once: chowki/marshal blocks for page 2, location-less SPECIAL POSTS
-  // (मोबाईल / सायबर सेल / काळाराम गार्ड / महिला कक्ष …) as role groups appended to the page-1
-  // कोर्ट, समन्स, वॉरंट व विशेष कक्ष desk — exactly the mock's page-2 = six-chowki matrix.
+  // (मोबाईल / सायबर सेल / काळाराम गार्ड / महिला कक्ष …) as role groups on the office/special sheet.
   const { blocks, loose, specials } = walkBlocks(doc, [2, 3]);
   const specialRows = specialDeskRows(specials);
 
-  // ---- page 1: Sr-PI + day/night/office/court band ----
+  // ---- page 1: Sr-PI + officers + paired day/night core --------------------------
   const srpi = doc.assignments.find((a) => a.shift === "DAY" && a.person?.rankCode === "SR_PI")?.person ?? null;
   const writer = doc.assignments.find((a) => a.dutyCode === "OFFICE_WRITER" && a.person)?.person ?? null;
   const srPiCard = srpi ? `<div class="sr-pi-card">
@@ -533,9 +532,9 @@ export function renderChart(doc: ChartDocument): { html: string; stats: RenderSt
   const officeDesk = officeRows.filter((r) => !claimed.has(r));
 
   const boxHead = (box: OfficerBox): DocPerson | null =>
-    (box.title ? null : day1.find((r) =>
-      r.person?.cadre === "OFFICER" && r.person.rankCode !== "SR_PI"
-      && bareToken(r.roleMr) === box.label)?.person ?? null);
+  (box.title ? null : day1.find((r) =>
+    r.person?.cadre === "OFFICER" && r.person.rankCode !== "SR_PI"
+    && bareToken(r.roleMr) === box.label)?.person ?? null);
   const officerBoxHtml = (box: OfficerBox): string => {
     const head = boxHead(box);
     const all = boxRows.get(box.writerDutyTitle) ?? [];
@@ -544,7 +543,7 @@ export function renderChart(doc: ChartDocument): { html: string; stats: RenderSt
     // value row is printed — both counted exactly once, here.
     count(all.length);
     const roleKey = `box.${box.label}.role`;
-     const th = `<th class="role"${rows.length > 1 ? ` rowspan="${rows.length}"` : ""}${n.e(roleKey, box.writerRole)}>${disp(n.t(roleKey, box.writerRole))}</th>`;
+    const th = `<th class="role"${rows.length > 1 ? ` rowspan="${rows.length}"` : ""}${n.e(roleKey, box.writerRole)}>${disp(n.t(roleKey, box.writerRole))}</th>`;
     const body = rows.length === 0
       // no verified writer row for this post — an open slot, never an invented name
       ? `<tr class="g">${th}<td><span class="blank"></span></td></tr>`
@@ -593,19 +592,16 @@ export function renderChart(doc: ChartDocument): { html: string; stats: RenderSt
       <div class="body">${dtTable(rows)}</div>
     </div>`;
 
-  const p1Lower = `<div class="p1-lower">
+  const p1Lower = `<div class="g-core">
       ${deskBlock("p1.desk.day", "दिवस पाळी कर्तव्य", "वेळ: ०९:०० ते २१:००", dayDesk)}
       ${deskBlock("p1.desk.night", "रात्र पाळी कर्तव्य", "वेळ: २१:०० ते ०९:००", col("NIGHT", 1))}
-      ${deskBlock("p1.desk.office", "कार्यालयीन शाखा व कारकून", undefined, officeDesk)}
-      ${courtSplit || specialRows.length > 0
-        ? deskBlock("p1.desk.court", "कोर्ट, समन्स, वॉरंट व विशेष कक्ष", undefined, [...courtRows, ...specialRows]) : ""}
   </div>`;
 
   const officerAddBox = `<button type="button" class="add-box" data-add="officer">+ अधिकारी बॉक्स जोडा</button>`;
   const page1 = page("", doc, `  ${srPiCard}
 ${officerGrid}
 ${officerAddBox}
-${p1Lower}`, { dense: true }, n);
+${p1Lower}`, { dense: true, kind: "command" }, n);
 
   // ---- page 2: location blocks (chowkis + folded marshal posts) ------------------
   const blockHtml = (b: Block): string => {
@@ -669,7 +665,15 @@ ${p1Lower}`, { dense: true }, n);
     <button type="button" class="add-box" data-add="chowki">+ चौकी जोडा</button>
    </div>`, undefined, n);
 
-  // ---- page 3: availability (leave section + court/bandobast section) + notices ----
+  // ---- page 3: office, court and special duties ---------------------------------
+  const page3 = page("", doc, `  <div class="grid g-desk">
+    ${deskBlock("p1.desk.office", "कार्यालयीन शाखा व कारकून", undefined, officeDesk)}
+    ${courtSplit || specialRows.length > 0
+      ? deskBlock("p1.desk.court", "कोर्ट, समन्स, वॉरंट व विशेष कक्ष", undefined, [...courtRows, ...specialRows])
+      : ""}
+  </div>`, { dense: true }, n);
+
+  // ---- page 4: availability (leave section + other duties) ---------------------
   // One block per SOURCE sub-group (category); the source's own column groups decide which
   // section a block lands in (template layout config — display grouping only).
   interface AvailSection { title: string; groupKeys: string[] }
@@ -716,7 +720,7 @@ ${p1Lower}`, { dense: true }, n);
       <div class="body">
         ${lines.map((t) => `<div class="p"><span class="n">${raw(t)}</span></div>`).join("\n        ")}
       </div>
-    </div>`).join("\n    ");  const availSectionsHtml = buckets.map((blocks, i) => blocks.length === 0 ? "" : `  <div class="sec"${i === 0 ? "" : ` style="margin-top:10px;"`}><h2${n.e(`sec.avail.${i}`, availSections[i].title, "section")}>${disp(n.t(`sec.avail.${i}`, availSections[i].title))}</h2></div>
+    </div>`).join("\n    "); const availSectionsHtml = buckets.map((blocks, i) => blocks.length === 0 ? "" : `  <div class="sec"${i === 0 ? "" : ` style="margin-top:10px;"`}><h2${n.e(`sec.avail.${i}`, availSections[i].title, "section")}>${disp(n.t(`sec.avail.${i}`, availSections[i].title))}</h2></div>
   <div class="grid g4">
     ${blocks.map(([k, v]) => availBlock(k, v)).join("\n    ")}
   </div>`).join("\n\n");
@@ -724,9 +728,9 @@ ${p1Lower}`, { dense: true }, n);
   // Page 3 splits into the leave/court sheet (dense — real leave lists are long) and a notices
   // sheet. The mock omits the source's notice rows entirely, so nothing in the mock is violated;
   // keeping them here gives every printed sheet a coherent section instead of raw spill-over.
-  const page3 = page("", doc, availSectionsHtml, { dense: true }, n);
+  const page4 = page("", doc, availSectionsHtml, { dense: true }, n);
 
-  const page4 = page("", doc, `  <div class="sec"><h2${n.e("sec.notices", "सूचना व निर्देश", "section")}>${disp(n.t("sec.notices", "सूचना व निर्देश"))}</h2></div>
+  const page5 = page("", doc, `  <div class="sec"><h2${n.e("sec.notices", "सूचना व निर्देश", "section")}>${disp(n.t("sec.notices", "सूचना व निर्देश"))}</h2></div>
   <div class="grid g4">
     ${noticeBlocks}
    </div>`, undefined, n);
@@ -765,7 +769,7 @@ ${p1Lower}`, { dense: true }, n);
     `<tr><td class="num">${toMr(String(c.seq))}</td><td>${disp(c.detailMr)}</td><td>${disp(c.noteMr ?? "")}</td></tr>`)
     .join("\n      ") || `<tr><td class="num">—</td><td class="nil">नोंद नाही</td><td></td></tr>`;
 
-  const page5 = page("", doc, `  <div class="sec"><h2${n.e("sec.matrix", "मनुष्यबळ स्थिती दर्शक मॅट्रिक्स", "section")}>${disp(n.t("sec.matrix", "मनुष्यबळ स्थिती दर्शक मॅट्रिक्स"))}</h2></div>
+  const page6 = page("", doc, `  <div class="sec"><h2${n.e("sec.matrix", "मनुष्यबळ स्थिती दर्शक मॅट्रिक्स", "section")}>${disp(n.t("sec.matrix", "मनुष्यबळ स्थिती दर्शक मॅट्रिक्स"))}</h2></div>
   <div class="tbl-wrap">
   <table class="tbl">
     <thead>
@@ -843,7 +847,7 @@ ${p1Lower}`, { dense: true }, n);
     </table>
   </div>`;
 
-  const page6 = page("", doc, `  <div class="sec"><h2${n.e("sec.officers", "पोलीस अधिकारी कर्तव्य सारांश", "section")}>${disp(n.t("sec.officers", "पोलीस अधिकारी कर्तव्य सारांश"))}</h2></div>
+  const page7 = page("", doc, `  <div class="sec"><h2${n.e("sec.officers", "पोलीस अधिकारी कर्तव्य सारांश", "section")}>${disp(n.t("sec.officers", "पोलीस अधिकारी कर्तव्य सारांश"))}</h2></div>
   <div class="two">
     ${officerTable(doc.officerSummary.slice(0, offHalf))}
     ${officerTable(doc.officerSummary.slice(offHalf))}
@@ -870,8 +874,12 @@ ${p1Lower}`, { dense: true }, n);
   <div class="ab-l">
     <img class="ab-logo" src="/assets/police-logo.png" alt="महाराष्ट्र पोलीस" width="34" height="34">
     <div class="ab-st"><b>पंचवटी पोलीस ठाणे</b><span>नाशिक शहर | Panchavati Police Station</span></div>
-    <span class="ab-sep" aria-hidden="true"></span>
-    <div class="ab-st ab-st-2"><b>Daily Duty Chart</b><span>दैनिक कर्तव्य तक्ता</span></div>
+    <nav class="ab-nav" aria-label="मुख्य नेव्हिगेशन">
+      <a class="active" href="/charts/${doc.chartDate}">दैनिक कर्तव्य तक्ते</a>
+      <span class="planned">कार्यवाही <small>Coming Soon</small></span>
+      <span class="planned">मास्टर डेटा <small>WIP</small></span>
+      <span class="planned">ऐतिहासिक शोध <small>Coming Soon</small></span>
+    </nav>
   </div>
   <div class="ab-r">
     <div class="ab-datewrap">
@@ -880,13 +888,18 @@ ${p1Lower}`, { dense: true }, n);
       </button>
       <div class="ab-datemenu" id="date-menu" role="listbox" hidden></div>
     </div>
+    <button type="button" class="ab-user" id="ab-user" title="तक्ता तयार करणारे हजेरी लेखनिक">लॉगिन</button>
+  </div>
+</div>
+
+<div class="chart-toolbar no-print">
+  <div class="ct-title"><span>पंचवटी दैनिक कर्तव्य तक्ता</span><strong>${dateSlash(doc.chartDate)} · ${doc.weekdayMr}</strong></div>
+  <div class="ct-actions">
     <span class="lc lc-${doc.lifecycle.toLowerCase()}">${doc.lifecycle}</span>
     ${doc.lifecycle === "FINALIZED"
-      ? `<button id="amend-btn">🔓 सुधारणा साठी उघडा</button>`
-      : `<button id="mode-btn">✏️ संपादन (Edit Mode)</button>
-    <button id="finalize-btn" class="print" style="background:#15803d; border-color:#15803d;">✅ अंतिम करा (Finalize)</button>`}
-    <button class="print" onclick="window.print()">🖨 प्रिंट / PDF (A4)</button>
-    <button type="button" class="ab-user" id="ab-user" title="तक्ता तयार करणारे हजेरी लेखनिक">लॉगिन</button>
+      ? `<button id="amend-btn">सुधारणा सुरू करा</button>`
+      : `<button id="mode-btn">संपादन</button><button id="finalize-btn" class="finalize">अंतिम करा</button>`}
+    <button class="print" onclick="window.print()">प्रिंट</button>
   </div>
 </div>
 
@@ -901,6 +914,8 @@ ${page4}
 ${page5}
 
 ${page6}
+
+${page7}
 
 <script src="__AUTH_JS_SRC__" defer></script>
 </body>

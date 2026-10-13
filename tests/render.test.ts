@@ -27,9 +27,8 @@ describe("renderChart (10/09)", () => {
     expect(rowsRendered).toBe(doc.assignments.length); // 212
   });
 
-  it("renders derived date line with Devanagari digits and computed weekday", () => {
-    expect(html).toContain("दिनांक: १० सप्टेंबर २०२६");
-    expect(html).toContain("वार: गुरुवार");
+  it("renders the compact derived date line with Devanagari digits and computed weekday", () => {
+    expect(html).toContain("१० सप्टेंबर २०२६, गुरुवार");
     expect(html).toContain("DRAFT"); // lifecycle badge from document
   });
 
@@ -59,12 +58,12 @@ describe("renderChart (10/09)", () => {
       "रात्रगस्त सुचना", "पो.नि.सुनिल पवार (गुन्हे)", "मेरी पोलीस चौकी",
       "तयार करणारे हजेरी लेखनिक", "अधिकारी कर्तव्य सारांश",
     ]) expect(html, `missing: ${needle}`).toContain(needle);
-    // one printed A4 sheet per .page box: the mock's five sections, plus the notices sheet
-    // (the mock draws no notice section at all, the source keeps them on the night page).
-    expect((html.match(/<div class="page( dense)?">/g) ?? []).length).toBe(6);
-    // print-density sheets: the two composite pages whose real source volume exceeds one
+    // The full 10/09 source volume needs a dedicated office/special sheet after Page 1 is
+    // kept command-focused; this is seven readable sheets rather than an overflowing relocation.
+    expect((html.match(/<div class="page(?: dense)?(?: command)?">/g) ?? []).length).toBe(7);
+    // print-density sheets: the composite pages whose real source volume exceeds one
     // A4 at the mock's screen type scale (allowed to tighten in print, never to drop rows)
-    expect((html.match(/<div class="page dense">/g) ?? []).length).toBe(2);
+    expect((html.match(/<div class="page dense(?: command)?">/g) ?? []).length).toBe(3);
     // (`.h2` may carry data-label/data-default — editable names; markup text is the contract)
     expect(html).toMatch(/<div class="sec"><h2[^>]*>सूचना व निर्देश<\/h2><\/div>/);
     for (const o of doc.officerSummary) {

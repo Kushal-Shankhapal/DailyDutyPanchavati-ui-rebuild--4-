@@ -1,17 +1,19 @@
 <!--
 Purpose: Current implementation truth for the clean-rebuild repo.
 Current role: First-read state file; updated at the end of every working session.
-Last meaningful change: 2026-10-13 — chart presentation controls: per-element alignment/visibility/compact overrides persisted in existing JSONB, server-rendered hooks, narrow PATCH route, and focused lifecycle/safety tests; 83 tests green (`npm run check`).
+Last meaningful change: 2026-10-13 — active chart route unified with the verified server-rendered ChartDocument; compact-v4 chrome/header corrections applied; 83 tests and print audit green.
 Constraint/dependency: Must reflect verified facts only; speculation belongs in OPEN_QUESTIONS.md.
 -->
 
 # CURRENT_STATE
 
-> Updated: 2026-10-13 · Phase: **P1 — renderer fidelity + authoring + presentation controls done** (`npm run check` green: typecheck + **83** tests + doctor; 8 migrations).
+> Updated: 2026-10-13 · Phase: **P1 — renderer fidelity + authoring + presentation controls + React demo shell done** (`npm run check` green: typecheck + **83** tests + doctor; 8 migrations).
+
+> **Active demo route (2026-10-13):** `/app/charts/2026-09-10` redirects to `/charts/2026-09-10`; there is one active chart implementation, the verified server-rendered ChartDocument surface. Its persistent header and chart toolbar now follow the consolidated decisions in `docs/COMPACT_V4_DECISIONS.md`. React source remains dormant until it can match the ChartDocument without loss. No migration or database reset was performed.
 >
 > **Live routes:** `npm run dev` (default `PORT=3100`; **IMPORTANT — other checkouts on this machine also listen on 3100/3000 (old `Desktop\DailyDutyPanchavati`, nested `DailyDutyPanchavati-ui-rebuild`); confirm the PID before judging a URL**). `GET /charts/:date` renders the chart, `GET /design/panchavati-compv3.html` serves the frozen visual baseline for side-by-side review, `npm run render:chart` writes `.tmp-preview/chart-<date>.html`.
 >
-> **Print pagination (2026-10-12):** one `.page` box = one A4 landscape sheet. Verified with `npm run print:audit` (headless Chrome, print media via CDP): 6 sheets, extents 750/518/680/551/608/705px vs 775px printable height — all fit. Cross-checked with `chrome --print-to-pdf`: 6 PDF pages for 6 boxes (was 8: two sheets spilled). Pages 1 and 3 carry `.page.dense` so `web/authoring.css` tightens row metrics **in print only** (screen keeps the mock's scale); the notices section prints on its own sheet. The 10/09 source chart itself is 6 sheets (`reference/ORIGINAL_VISUAL/10.pdf`), the mock is 5 with sample data. No row, name or value is dropped or truncated — no-loss stays 212/212.
+> **Print pagination (2026-10-13):** one `.page` box = one A4 landscape sheet. The measured 10/09 compact-v4 output is 7 sheets, extents 768/485/580/663/518/575/673px vs 775px printable height — all fit. Page 1 is command-focused; office/court/special content has its own dense sheet rather than overflowing the chowki matrix. No row, name or value is dropped or truncated — no-loss stays 212/212.
 >
 > **Renderer fidelity (2026-10-11/12):** page 1 (Sr-PI card with `.rk` + रायटर/चालक/RTPC groups, 4 officer boxes `.g-off`, 4-column day/night/office/court band — the same 8 blocks the mock has, in the same grids), page 2 (the mock's 6 chowki blocks; each beat-marshal post folds into its paired chowki as a `मार्शल:` `.fx` line + merged staff rows; desk posts — पंचवटी १ मोबाईल / सायबर सेल / महिला कक्ष / वायरलेस महिला अंमलदार / काळाराम मंदीर गार्ड ड्युटी — render as role groups inside page 1's court/special desk), page 3 (leave section + court/bandobast section + notices), page 4 (matrix + summary + ledger — unchanged), page 5 (officer summary + sessions beside hourly scan + sign-off). Compact chart names (rank + buckle + surname) everywhere; source role column (`role_mr`) drives row labels. A4-landscape geometry 1122×794; page 2 exactly one sheet like the mock — pages 1 and 3 grow past one sheet with the full source volume (measured, OPEN_QUESTIONS T18).
 >

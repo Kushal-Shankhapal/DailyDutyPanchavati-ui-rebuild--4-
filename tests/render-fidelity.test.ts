@@ -80,7 +80,9 @@ describe("renderer fidelity vs design/panchavati-compv3.html", () => {
   });
 
   it("office desk keeps the clerk rows; the branch writers render in the officer boxes", () => {
-    const grid = html.slice(html.indexOf('class="grid g-off fit"'), html.indexOf('class="p1-lower"'));
+    const gridStart = html.indexOf('class="grid g-off fit"');
+    const gridEnd = html.indexOf('class="g-core"', gridStart);
+    const grid = html.slice(gridStart, gridEnd === -1 ? undefined : gridEnd);
     expect((grid.match(/>रायटर<\/th>/g) ?? []).length).toBe(4);   // one writer row per box
     const desk = html.slice(html.indexOf("कार्यालयीन शाखा व कारकून"), html.indexOf("कोर्ट, समन्स"));
     expect(desk).toContain("नगदी कारकुन");

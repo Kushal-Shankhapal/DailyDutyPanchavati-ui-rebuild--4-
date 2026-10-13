@@ -11,7 +11,7 @@ Constraint/dependency: verified facts only; plans are labelled as plans; OPEN_QU
 ## 0. TL;DR for the next session
 
 Repo works, `npm run check` is green (typecheck + 83 tests + doctor on both DBs) and the chart prints
-as **6 A4 sheets, one `.page` box per sheet** (`npm run print:audit`). The renderer reproduces the
+as **7 A4 sheets, one `.page` box per sheet** (`npm run print:audit`). The renderer reproduces the
 approved mock's grammar, folds marshal posts into chowkis and desk posts into page 1's special desk,
 and carries the authoritative काळाराम spelling. **Built this pass (everything from the 10/12 user
  message):** per-chart editable names on 185 elements (§5.1), the अधिकारी box add (§5.2), the
@@ -22,6 +22,17 @@ and carries the authoritative काळाराम spelling. **Built this pass 
  remains immutable. Nothing from the current ask is still open.
 
 ## 1. Where everything is
+
+### Active chart surface (2026-10-13)
+
+- `/app/charts/2026-09-10` redirects to `/charts/2026-09-10`; the server-rendered ChartDocument is the
+  single active chart implementation. The iframe/duplicate React chart path was removed.
+- The real chart now has persistent identity/navigation above a separate chart toolbar with lifecycle and
+  chart actions. Printed identity is one compact Marathi-first line without `दिनांक`/`वार` labels.
+- Consolidated design decisions are recorded in `docs/COMPACT_V4_DECISIONS.md` so future sessions do not
+  rely on rereading the entire `mega.txt` before every UI change.
+- React source remains dormant until it can project the same ChartDocument without data loss; `design/`
+  remains a historical visual reference, not the authoritative 10/09 data source.
 
 | Thing | Path |
 |---|---|
@@ -68,17 +79,14 @@ Traps that cost time before — do not rediscover them:
 
 - 212 assignments · 10 बिमा · 2 रिक्त · 69 availability · 7 location states · 28 notices ·
   240 matrix cells (verbatim) · 15 officer rows · 12 scan rows. No-loss accounting: 212/212.
-- **Print pagination = 6 sheets**, all inside the printable height (audit: 750 / 518 / 680 / 551 / 608 /
-  705 px vs 775 px) — `chrome --print-to-pdf` emits 6 pages for 6 `.page` boxes.
-  The mock is 5 pages (sample data) and the **source chart itself is 6** (`reference/ORIGINAL_VISUAL/10.pdf`).
-- Sheet map: 1 command band (Sr-PI card + 4 officer boxes + 4 desk columns) · 2 six-chowki band ·
-  3 leave + court/bandobast · 4 notices · 5 manpower matrix + shift summary/ledger · 6 officer summary +
+ **Print pagination = 7 sheets**, all inside the printable height (audit: 768 / 485 / 580 / 663 / 518 /
+  575 / 673px vs 775px printable height). Sheet map: 1 command/core · 2 six-chowki band ·
+  3 office/court/special · 4 availability · 5 notices · 6 manpower matrix · 7 officer summary +
   scan schedule + sign-off.
 - Page 1 = the mock's same 8 blocks in the same grids; page 2 = the mock's 6 chowki blocks; pages 4–5
   match; page 3 matches structurally (data volume differs).
-- **Print density**: sheets 1 and 3 carry `.page.dense`; `web/authoring.css` relaxes row metrics
-  (10/9.5 px, line-height 1.15, tighter padding, 6 columns for the dense leave/court grids) **in print
- only**. Screen keeps the mock's type scale. Row values are never dropped, truncated or reordered.
+- **Print density**: sheets 1, 3 and 4 carry `.page.dense`; Page 1 has an additional command-only
+  metric adjustment. Screen remains more spacious. Row values are never dropped, truncated or reordered.
 
 ## 3b. Database baseline after Astra transition audit (2026-10-12)
 

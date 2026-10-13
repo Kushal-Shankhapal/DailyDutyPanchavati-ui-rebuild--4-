@@ -50,6 +50,14 @@ app.get("/assets/police-logo.png", async (_req, reply) => {
   return reply.header("Content-Type", "image/png").header("Cache-Control", "no-cache").send(fs.readFileSync(abs));
 });
 
+// The verified server-rendered chart is the single active chart surface for now.
+// React remains a future refactor surface, but must not create a second lossy projection.
+app.get("/app", async (_req, reply) => reply.redirect("/charts/2026-09-10"));
+app.get("/app/charts/:date", async (req, reply) => {
+  const { date } = req.params as { date: string };
+  return reply.redirect(`/charts/${date}`);
+});
+
 // Chart dates available for the header's date selector (the month grid the clerk jumps between).
 app.get("/api/charts", async () => {
   // chart_date::text — pg maps a DATE column to a JS Date, and String(Date) is "Thu Sep 10 …",
@@ -91,6 +99,7 @@ app.get("/charts/:date", async (req, reply) => {
       .replace("__AUTH_JS_SRC__", "/chart-authoring.js")
   );
 });
+
 
 // Resolve a chart by date (today's view)
 app.get("/api/charts/:date", async (req, reply) => {

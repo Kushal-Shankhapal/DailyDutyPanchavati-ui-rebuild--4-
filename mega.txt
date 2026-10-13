@@ -1,0 +1,3475 @@
+pasting output from my last omnirush.ai gpt 6 astra model, I gave him this prompt (he also edited corrected this on own): docs\ASTRA_TRANSITION_PACKET.md.
+Pasting my outputs and my chats till we reach the point where he interrupted and exhausted, will also paste the todos and what were done till now, pls continue after understanding everything, pls ask if anything is confusing.
+His output: I’ve confirmed that the DB setup and verification already completed: both project databases have the 10 September DRAFT baseline, the last check passed all 77 tests, and the print audit passed all six sheets. I won’t repeat the reset or reseeding.
+
+What remains is finishing the transition audit, correcting the handoff notes, and separating verified facts from pending source checks. The React migration and Kushal-style navigation have not started.
+
+Resumed safely. I inspected the current workspace and verified the completed actions before continuing. I did **not** repeat the database reset/reseed.
+
+## Actions completed and verified
+
+- Initialized the previously empty `panchavati3_test`.
+- Seeded both project databases with:
+  - reference/master data;
+  - the deterministic 10 September 2026 DRAFT chart.
+- Older databases were not touched.
+- Current state of both `panchavati3_dev` and `panchavati3_test`:
+  - 8 migrations;
+  - 1 chart: `2026-09-10:DRAFT`;
+  - 179 staff master rows;
+  - 212 assignment rows;
+  - 10 `बिमा`;
+  - 2 `रिक्त`;
+  - 69 availability rows;
+  - 7 location states;
+  - 28 notices;
+  - 240 manpower cells;
+  - 15 officer-summary rows;
+  - 12 scan rows;
+  - `presentation_overrides = {}`.
+- `npm run check`: **passed — 77/77 tests**, typecheck, doctor.
+- `npm run print:audit`: **passed — all 6/6 A4 sheets fit**.
+- No local development server remains running.
+
+I also updated:
+
+- `docs/SESSION_HANDOFF.md`
+- `docs/ASTRA_TRANSITION_PACKET.md`
+
+The ASTRA packet now reflects the actual DB state and the decisions you just made.
+
+---
+
+# 1. What this project is
+
+This is a Marathi-first digital daily-duty-chart system for:
+
+> **Panchavati Police Station, Nashik City**
+
+The station currently prepares duty charts manually using DOCX, legacy Kruti Dev Marathi fonts, printed pages, photographs and WhatsApp sharing. Staff commonly copy the previous chart and make same-day changes.
+
+The intended system should:
+
+- prepare the next day's chart;
+- allow same-day clerk editing;
+- preserve staff, duty, leave, closure and charge information;
+- eliminate repetitive manual formatting;
+- keep finalized charts immutable;
+- support amendments as new versions;
+- print a clean, compact duty chart;
+- retain historical charts for search and reprinting;
+- eventually support events, OCR-assisted legacy import, and operational history.
+
+The core rule is:
+
+> **The clerk decides. The software calculates, validates, flags conflicts, preserves history and renders.**
+
+The software must never autonomously select, replace or schedule personnel.
+
+---
+
+# 2. Exact repository locations
+
+## Current clean-rebuild repo — primary workspace
+
+```text
+C:\Users\kusha\Desktop\DailyDutyPanchavati-ui-rebuild (4)
+```
+
+This is the repo Astra should work in.
+
+## Arjish's repo
+
+```text
+C:\Users\kusha\Desktop\DailyDutyPanchavati-ui-rebuild (4)\DailyDutyPanchavati-ui-rebuild
+```
+
+Important files:
+
+```text
+Panchavati_PROJECT_FILE_MAP (1).md
+Panchavati_SETUP (1).md
+SETUP.md
+AGENTS.md
+src\web\components\AppNav.tsx
+src\web\index.css
+src\server\
+src\web\
+tests\
+reference\
+NEW DATA\
+```
+
+The two files you identified are present here, not directly under the clean-rebuild root.
+
+Arjish's repo is a much larger React/Vite/Fastify/Kysely application lineage. It contains:
+
+- React UI;
+- AppNav/header;
+- six-page renderers;
+- operational workspace;
+- master data;
+- historical search;
+- OCR/import infrastructure;
+- event/bandobast workflows;
+- optional WhatsApp/GOWA integration;
+- multiple rendering profiles;
+- a much larger test suite.
+
+It is a **reference and selective-reuse repository**, not the repo to merge wholesale.
+
+Its docs and setup guide are partly stale relative to the current clean rebuild. Trust its current code only when specifically auditing that repo.
+
+## Kushal's archived repo
+
+```text
+C:\Users\kusha\Desktop\DailyDutyPanchavati-ui-rebuild (4)\DailyDutyPanchavati-ui-rebuild\NEW DATA\kushals repo\archive
+```
+
+Important files:
+
+```text
+Manual_North_Star_By_Kushal.md
+POLICE_DUTY_REGISTER_PRODUCT_MVP_and_NORTH_STAR.md
+PANCHAVATI_REFERENCE_DATA.v2.md
+Standardized_Chart_Kushal.html
+docs\CROSS_STATION_TARGET_ARCHITECTURE_PROPOSAL_2026-09.md
+docs\FORENSIC_VISUAL_ANALYSIS_10PDF_2026-09.md
+src\web\components\AppNav.tsx
+reference\
+ORIGINAL_VISUAL\
+ORIGINAL_DOCX\
+EXCEL_RECONSTRUCTION\
+SEMANTIC\
+Chart_mock_html\
+```
+
+Kushal's North Star is broader than the current MVP:
+
+- generate tomorrow's chart;
+- edit today's chart;
+- preserve historical versions;
+- search by date/person/duty/location;
+- maintain staff and duty masters;
+- manage leave and availability;
+- support sudden changes;
+- eventually support events, notifications and imports.
+
+Kushal's earlier standardized chart was useful for studying:
+
+- information grouping;
+- rank/category grouping;
+- reusable office and field-duty concepts;
+- chart density;
+- distinction between configuration and daily assignment data.
+
+However, SPI rejected that chart because it became too long and scrolling-heavy. It should not be rebuilt as the main chart.
+
+Also important: `Standardized_Chart_Kushal.html` directly references Google Fonts and Tailwind CDN resources. Do **not** copy that external-runtime behavior into the new system because police data and runtime behavior must remain local.
+
+## Durvesh's implementation
+
+```text
+C:\Users\kusha\Desktop\DailyDutyPanchavati-ui-rebuild (4)\DailyDutyPanchavati-ui-rebuild\NEW DATA\kushals repo\archive\Durvesh_Work
+```
+
+It is a Python/Flask/SQLite duty-register application with:
+
+- staff CRUD;
+- daily duty assignment;
+- standing charges;
+- leave and attachments;
+- attendance;
+- strength settings;
+- reports;
+- backups;
+- Telegram/Twilio-related notification support;
+- English→Marathi translation/transliteration.
+
+The useful part for this project is the **guided English-to-Marathi suggestion flow**:
+
+1. user enters English or phonetic text;
+2. system proposes Marathi;
+3. user edits/corrects it;
+4. only the user's final value becomes operational truth.
+
+Do not copy the Flask schema, SQLite database, default credentials, Telegram/Twilio paths or outbound-network behavior. The new system must remain local-only.
+
+## OCR report
+
+```text
+C:\Users\kusha\Desktop\DailyDutyPanchavati-ui-rebuild (4)\DailyDutyPanchavati-ui-rebuild\NEW DATA\REPORT\README.md
+```
+
+Important findings:
+
+- PaddleOCR plain recognition produced the best Marathi text.
+- PP-StructureV3 produced the best layout/table geometry but poor Devanagari recognition.
+- Tesseract was much faster but has no table/layout understanding.
+- The useful future design is a fusion:
+  - StructureV3 for table/cell geometry;
+  - Devanagari recognizer for cell text;
+  - confidence scores and human review;
+  - never automatic DB commit.
+- OCR should be asynchronous and local/on-premises, not in the daily authoring request path.
+- The source DOCX files use Kruti Dev encoding. Direct text extraction produces Latin-looking gibberish. DOCX needs a Kruti Dev→Unicode transcoder; OCR is more appropriate for rendered PDFs/PNGs.
+
+## Screenshots
+
+```text
+C:\Users\kusha\Desktop\DailyDutyPanchavati-ui-rebuild (4)\Current_Screenshots_before_astra
+```
+
+Contains:
+
+```text
+Screenshot_panchavati-compv3_html.png
+Screenshot_Current_root_127.0.0.1_3100_charts_2026-09-10.png
+Screenshot_Kushal_127.0.0.1_3100__date=2026-09-10.png
+screenshot_arjish_localhost_3000_.png
+```
+
+Visual conclusions:
+
+- `panchavati-compv3.html` is the clean compact-v3 visual baseline.
+- Current clean-rebuild output is now data-backed and six physical sheets for 10/09.
+- Kushal's navigation structure is the preferred navigation direction.
+- Arjish's header/date selector is useful, but the generic dashboard/card patterns should not define the chart itself.
+- The chart should remain document-like, dense, calm and operational — not a dashboard made of unnecessary cards.
+
+---
+
+# 3. Current clean-rebuild structure
+
+```text
+AGENTS.md
+README.md
+
+docs/
+  CURRENT_STATE.md
+  SESSION_HANDOFF.md
+  ASTRA_TRANSITION_PACKET.md
+  DOMAIN.md
+  ARCHITECTURE.md
+  PRODUCT_UI_ARCHITECTURE.md
+  OPEN_QUESTIONS.md
+  TRACEABILITY.md
+  UI_SPEC.md
+  A_TO_Z_PLAN.md
+
+db/
+  migrations/
+  seed/
+  seed-reference.ts
+  seed-chart-1009.ts
+  migrate.ts
+
+server/
+  db.ts
+  chart-document.ts
+  assignments.ts
+  finalize.ts
+  index.ts
+  render/
+    chart-html.ts
+
+web/
+  chart-authoring.js
+  authoring.css
+  assets/
+    Police_Logo.png
+
+design/
+  compv3.css
+  panchavati-compv3.html
+
+reference/
+  ORIGINAL_VISUAL/
+  ORIGINAL_DOCX/
+  EXCEL_RECONSTRUCTION/
+  SEMANTIC/
+  CONVERTED_PDF/
+  Mumbai/
+  Sakarwada/
+  Gangapur/
+
+tests/
+  assignments.test.ts
+  authoring.test.ts
+  chart-document.test.ts
+  invariants.test.ts
+  render-fidelity.test.ts
+  render.test.ts
+
+tools/
+  print-audit.mjs
+
+changes/
+skills/
+scripts/
+```
+
+---
+
+# 4. What is actually implemented now
+
+The current root is **not React yet**.
+
+Its actual current stack is:
+
+- Fastify 5;
+- TypeScript;
+- PostgreSQL;
+- `pg`;
+- server-rendered HTML;
+- vanilla browser JavaScript;
+- CSS;
+- Vitest.
+
+The package does not currently contain React or Vite dependencies.
+
+## Implemented
+
+- PostgreSQL schema and migrations 0001–0008.
+- Reference/master seeds.
+- 10/09 DRAFT chart seed.
+- Typed `ChartDocument` projection.
+- Finalization and immutable snapshot logic.
+- Server-side chart renderer.
+- Compact-v3 renderer matching the approved chart grammar.
+- Six-sheet print output for the real 10/09 data.
+- Explicit separation of:
+  - `रिक्त`;
+  - `बंद`;
+  - `बिमा`.
+- Marshal-post folding into the paired chowki.
+- Special desk folding for location-less/fixed-point desk posts.
+- Per-chart editable labels on 185 elements.
+- Per-chart officer-box creation.
+- Real staff picker persistence through PostgreSQL.
+- Quick-create staff flow.
+- Master staff editing.
+- Assignment clearing to `रिक्त`.
+- Explicit BIMA editing.
+- Arjish-style app header and date selector.
+- Local pseudo-login for the हजेरी लेखनिक.
+- Finalize/reopen routes.
+- Staff master GET/POST/PATCH routes.
+- Chart-local label override API.
+- Chowki and अधिकारी-box add APIs.
+- 77 tests.
+- Six-sheet print audit.
+
+## Not yet implemented in the clean rebuild
+
+- React migration.
+- Kushal grouped navigation.
+- 11/09 chart seed.
+- Ganpati event-annex authoring.
+- Full CRUD for every chart section.
+- Copy-previous workflow.
+- Historical search.
+- Full master CRUD for ranks, locations and duties.
+- Full availability/manpower/notice/event authoring.
+- Real `app_users` authentication/session/audit identity.
+- OCR import UI.
+- Guided English→Marathi conversion UI.
+- Read-only legacy six-page viewer.
+
+---
+
+# 5. Source-authority correction
+
+The current 10/09 seed is still implemented from:
+
+```text
+reference/SEMANTIC/10.md
+```
+
+That is acceptable as a provisional implementation fixture, but it is **not yet source-authoritative under your new decision**.
+
+For final data fidelity:
+
+1. Original visual PDF/PNG/DOCX is authoritative.
+2. Human-verified XLSX/HTML may support exact cell/layout verification.
+3. Semantic Markdown and OCR are candidate aids only.
+4. Any disagreement must be recorded, not guessed away.
+
+The original DOCX files use Kruti Dev encoding, so Astra must not assume that ordinary DOCX text extraction is trustworthy Unicode Marathi.
+
+---
+
+# 6. Current staff-count evidence
+
+Verified current clean-rebuild fixture:
+
+- 179 staff master rows.
+- 212 stored assignment rows.
+- 125 staffed assignment appearances:
+  - 82 DAY;
+  - 43 NIGHT.
+- 111 distinct staff IDs appearing in the assignment rows.
+- 65 availability appearances / 65 distinct staff IDs.
+- 176 distinct staff IDs across assignment, availability and scan tables in the current fixture.
+- 0 finalized chart versions currently exist.
+
+These are **database fixture counts**, not yet authoritative counts from the original 10/11 September PDFs.
+
+Context-only Arjish DB observation:
+
+- 169 staff master rows;
+- 2 historical charts;
+- 10/09 and 16/09 fixtures.
+
+The exact original `Staff_Info` count still needs a source-first audit. The PDF has nine pages and no usable text layer, while the semantic files contain contradictory manpower totals such as 150, 151 and 140. Astra should report:
+
+- source roster count;
+- distinct personnel appearing on 10/09;
+- distinct personnel appearing on 11/09;
+- assignment/slot appearances on each date;
+- overlap between dates;
+- current master count;
+- missing/unmatched identities;
+- source and confidence for every number.
+
+---
+
+# 7. Improved copy-paste prompt for Astra
+
+```text
+You are Astra, continuing the Panchavati Daily Duty project.
+
+PRIMARY WORKSPACE
+C:\Users\kusha\Desktop\DailyDutyPanchavati-ui-rebuild (4)
+
+Do not silently switch to another checkout.
+
+OTHER REPOSITORIES / REFERENCES
+Arjish repo:
+C:\Users\kusha\Desktop\DailyDutyPanchavati-ui-rebuild (4)\DailyDutyPanchavati-ui-rebuild
+
+Important Arjish files:
+- Panchavati_PROJECT_FILE_MAP (1).md
+- Panchavati_SETUP (1).md
+- src\web\components\AppNav.tsx
+- src\web\index.css
+
+Kushal archive:
+C:\Users\kusha\Desktop\DailyDutyPanchavati-ui-rebuild (4)\DailyDutyPanchavati-ui-rebuild\NEW DATA\kushals repo\archive
+
+Important Kushal files:
+- Manual_North_Star_By_Kushal.md
+- POLICE_DUTY_REGISTER_PRODUCT_MVP_and_NORTH_STAR.md
+- PANCHAVATI_REFERENCE_DATA.v2.md
+- Standardized_Chart_Kushal.html
+- docs\FORENSIC_VISUAL_ANALYSIS_10PDF_2026-09.md
+- docs\CROSS_STATION_TARGET_ARCHITECTURE_PROPOSAL_2026-09.md
+
+Durvesh:
+...\NEW DATA\kushals repo\archive\Durvesh_Work
+
+OCR report:
+...\NEW DATA\REPORT\README.md
+
+Current screenshots:
+C:\Users\kusha\Desktop\DailyDutyPanchavati-ui-rebuild (4)\Current_Screenshots_before_astra
+
+READING ORDER
+Read:
+1. AGENTS.md
+2. docs\CURRENT_STATE.md
+3. docs\SESSION_HANDOFF.md
+4. docs\DOMAIN.md
+5. docs\ARCHITECTURE.md
+6. docs\OPEN_QUESTIONS.md
+7. docs\ASTRA_TRANSITION_PACKET.md
+8. relevant code only
+9. original references only when auditing chart content or print
+
+DO NOT TRUST STALE PLANS BLINDLY
+Some old docs describe a future React/Vite system. The current clean-rebuild code is actually Fastify + server-rendered HTML + vanilla browser JavaScript. Current code and passing checks are implementation truth.
+
+CURRENT VERIFIED DATABASE BASELINE
+Both project databases currently contain:
+- 8 migrations;
+- 1 DRAFT chart: 2026-09-10;
+- 179 staff masters;
+- 212 assignment rows;
+- 10 बिमा;
+- 2 रिक्त;
+- 69 availability rows;
+- 7 location states;
+- 28 notices;
+- 240 manpower cells;
+- 15 officer rows;
+- 12 scan rows;
+- presentation_overrides = {}.
+
+Older databases were not touched.
+
+Already verified:
+- npm run check → 77/77 tests passed, typecheck passed, doctor passed;
+- npm run print:audit → all 6/6 A4 sheets fit.
+
+Do not repeat DB reset/reseed unless there is a specific reason and I explicitly approve the target and operation.
+
+PRODUCT
+The product digitizes Panchavati Police Station's Marathi daily duty chart workflow:
+- prepare tomorrow's chart;
+- edit the same day;
+- preserve immutable finalized history;
+- print/export;
+- search previous charts;
+- reduce repetitive DOCX/manual formatting;
+- eventually support events and legacy imports.
+
+PRIMARY CHART
+The main target is the approved compact-v3 chart:
+- design\panchavati-compv3.html
+- design\compv3.css
+
+The old six-page chart is a read-only/reference comparison later. Do not rebuild it as the first implementation target.
+
+SOURCE AUTHORITY
+Use this hierarchy:
+1. Original visual PDFs/PNGs/DOCX;
+2. human-verified XLSX/HTML reconstruction;
+3. semantic Markdown/OCR only as candidate aids;
+4. docs for product decisions;
+5. current code/tests for implementation truth.
+
+The current 10/09 seed uses reference\SEMANTIC\10.md and is therefore provisional until an originals-first reconciliation is completed.
+
+Never:
+- infer BIMA, closure or charge from note text;
+- merge रिक्त, बंद and बिमा;
+- auto-select or auto-replace staff;
+- invent names, duties, ranks or procedure;
+- translate protected tokens such as CCTNS, Dial 112 MERS, DB, MERS, rank codes, TOTAL, Office and ME;
+- use विमा instead of बिमा;
+- use पोषि instead of पोशि;
+- truncate Marathi;
+- send police data to external AI/APIs/cloud services;
+- copy CDN Google Fonts/Tailwind behavior from the old HTML files;
+- edit reference files;
+- edit applied migrations.
+
+CURRENT IMPLEMENTATION TO PRESERVE
+The clean repo already has:
+- ChartDocument projection;
+- server renderer;
+- finalization/snapshot logic;
+- real PostgreSQL assignment persistence;
+- staff picker and quick-create;
+- per-chart editable labels;
+- अधिकारी-box add;
+- Arjish-style header/date selector;
+- local pseudo-login;
+- six-sheet 10/09 print output;
+- renderer no-loss accounting.
+
+Do not reimplement these before inspecting their current code.
+
+USER DECISIONS
+- Source audit must be originals-first.
+- Old six-page packet is read-only/reference later.
+- Migrate the screen preview and authoring UI to React.
+- Keep ChartDocument/domain logic and the existing server renderer as the print/PDF authority for the first React milestone.
+- Use Kushal's grouped navigation without the chart-type/profile dropdown:
+  Dashboard;
+  Daily Duty Charts → Panchavati pages;
+  Operations;
+  Data.
+- Unfinished leaves must be disabled and labelled Coming Soon/WIP/Planned.
+- Guided English→Marathi conversion is desired for staff names and free text:
+  show a suggestion, allow correction, never silently overwrite.
+- Plan a real app_users/session/audit identity path, but do not add/apply its migration until the schema and flow are separately reviewed.
+- Staff audit must report both distinct-person counts and assignment/appearance counts.
+
+FIRST DELIVERABLE — NO CODE YET
+Before planning implementation:
+1. Reconcile 10/09 and 11/09 against original visual PDFs/PNGs/DOCX.
+2. Count the original Staff_Info roster from original evidence.
+3. Count distinct people and appearance/assignment counts for 10/09 and 11/09.
+4. Compare those counts with the current 179-row master and current chart fixture.
+5. Identify missing, unmatched, duplicated or questionable identities.
+6. Inspect Standardized_Chart_Kushal.html for useful grouping ideas only.
+7. Inspect Durvesh's conversion code and OCR report for reusable local patterns only.
+8. Return an evidence table with source, count, confidence and discrepancy notes.
+9. Ask me about any ambiguous source meaning before writing code.
+
+Before every consequential UI, schema, migration, seed, script or architecture change:
+- state the proposed scope;
+- identify the evidence;
+- say whether schema changes;
+- state the acceptance test;
+- ask for confirmation if the decision is not already settled.
+
+FIRST IMPLEMENTATION PHASE AFTER APPROVAL
+1. Finish source reconciliation.
+2. Plan the React screen/authoring boundary around the existing ChartDocument API.
+3. Port Kushal's grouped navigation without chart-type switching.
+4. Preserve the existing server print renderer.
+5. Implement only real CRUD paths that persist through PostgreSQL and survive reload.
+6. Add 11/09/event-annex work only after 10/09 fidelity is accepted.
+
+Always report:
+- changed files;
+- exact commands run;
+- actual pass/fail results;
+- browser/print verification;
+- unresolved evidence questions;
+- whether any database or migration was changed.
+```
+
+---
+
+## Current remaining work
+
+The cleanest next step is **not coding yet**:
+
+1. Originals-first audit of 10/09, 11/09 and Staff_Info.
+2. Produce the distinct-person and appearance-count report.
+3. Identify discrepancies in the current provisional 10/09 seed.
+4. Then plan the React screen/authoring migration around the existing `ChartDocument`.
+5. Port the grouped Kushal navigation without the chart-type dropdown.
+6. Preserve the existing server renderer for print/PDF.
+
+No implementation of React migration, navigation or real authentication has started.
+
+Current Git state is uncommitted:
+
+```text
+M  docs/SESSION_HANDOFF.md
+?? docs/ASTRA_TRANSITION_PACKET.md
+?? Current_Screenshots_before_astra/
+?? .opencode/
+```
+
+No code changes were made in this continuation.
+My response: Cool, do those all in token saving manner or fast or efficient . We have to focus on designing and implementation and get at least the chart working for demo, that's priority, nothing else. Half of your tokens are gone, I hope other half will do all these, or I have to reduce from max to lower (currently xhigh, last was on max). More effort on designing and implementation pls (give me design brief in text before implementing)
+His output: Agreed. I’ll be token-efficient and prioritize a working demo over broad research.
+
+# Design brief — chart-first demo v0.1
+
+## Goal
+
+Deliver one convincing demo:
+
+> Open 10 September 2026 → see the real Panchavati compact chart → edit a staff assignment → save to PostgreSQL → reload → see the change persisted → print the same six-sheet chart.
+
+Everything else is secondary.
+
+## Demo route
+
+To avoid breaking the already-working print renderer:
+
+```text
+React demo screen:
+  /app/charts/2026-09-10
+
+Existing server-rendered/print path:
+  /charts/2026-09-10
+```
+
+Once React matches the current renderer, we can make React the default screen route. The existing server renderer remains the print/PDF authority during this milestone.
+
+## UI structure
+
+### Top navigation
+
+Use Kushal's grouped navigation style, without the chart-type/profile dropdown:
+
+```text
+Dashboard
+दैनिक कर्तव्य तक्ते
+  └── पंचवटी तक्ता
+      ├── पृष्ठ १: दैनिक कर्तव्य तक्ता
+      ├── पृष्ठ २: रात्रपाळी कर्तव्य
+      ├── पृष्ठ ३: रजा व विशेष कर्तव्य
+      ├── पृष्ठ ४: मनुष्यबळ तक्ता
+      ├── पृष्ठ ५: पोलीस अधिकारी
+      └── पृष्ठ ६: गस्त व स्कॅनिंग
+
+कार्यवाही
+  ├── कार्यकारी डॅशबोर्ड
+  ├── कर्तव्य फलक
+  ├── बंदोबस्त व विशेष मोहीम
+  └── ऐतिहासिक शोध
+
+डेटा
+  ├── मास्टर डेटा
+  └── दस्तऐवज आयात / OCR
+```
+
+Only the real demo route is enabled initially. Other unfinished routes are disabled and labelled `Coming Soon`.
+
+### Chart screen
+
+The chart itself must not become a dashboard.
+
+Use:
+
+- compact-v3 page grammar;
+- same navy/white/blue/red/yellow semantics;
+- same six logical sections;
+- same low-noise table layout;
+- no decorative cards around chart content;
+- no unnecessary KPI blocks;
+- no chart-type selector;
+- no horizontal page overflow;
+- Marathi wraps instead of truncating.
+
+React components should reuse the existing class vocabulary and visual baseline from:
+
+```text
+design/compv3.css
+design/panchavati-compv3.html
+```
+
+## React architecture
+
+```text
+PostgreSQL
+  ↓
+Fastify API
+  ↓
+ChartDocument
+  ↓
+React screen + authoring
+  ↓
+existing server renderer → print/PDF
+```
+
+React must not query PostgreSQL directly and must not reimplement domain rules.
+
+The React client will initially consume:
+
+```text
+GET  /api/charts/:date
+PATCH /api/charts/:date/assignments/:id
+GET  /api/masters
+```
+
+Existing label, chowki, officer-box, finalize and reopen APIs remain available and are not redesigned during this first slice.
+
+## First editing interactions
+
+Only implement the smallest real authoring flow first:
+
+1. Click a person or vacant slot.
+2. Open staff picker.
+3. Search by Marathi name, English name, buckle number or rank.
+4. Select a staff member.
+5. Persist through PostgreSQL.
+6. Reload and verify the assignment remains.
+7. Clear the slot back to `रिक्त`.
+8. Toggle explicit `बिमा` where applicable.
+9. Show save/error state honestly.
+
+The clerk remains the only decision-maker. No auto-fill, replacement suggestion or smart scheduling.
+
+## Database
+
+No new migration is needed for this first React slice.
+
+Use the already-clean baseline:
+
+- `panchavati3_dev`;
+- `panchavati3_test`;
+- 10/09 DRAFT chart;
+- 179 staff;
+- 212 assignment rows;
+- 77 tests currently green.
+
+Do not reset or reseed again unless a concrete problem requires it.
+
+## Source work
+
+Do not spend the next pass on a complete OCR/staff-count research project.
+
+Before implementation, perform only a narrow source sanity check for the demo:
+
+- title/date;
+- 10/09 page count;
+- `बिमा`, `रिक्त`, `बंद`;
+- major chowki names;
+- protected English tokens;
+- obvious name/spelling risks;
+- no-loss count.
+
+The full 10/09/11/Staff_Info comparison can happen after the demo is functional.
+
+## Explicitly deferred
+
+Not part of this implementation slice:
+
+- 11/09 event annex;
+- legacy six-page viewer;
+- OCR import;
+- full historical search;
+- real authentication migration;
+- full master-data CRUD;
+- complete leave/manpower/notice/event authoring;
+- multi-station support;
+- WhatsApp/Telegram/cloud integrations;
+- full template builder.
+
+Real auth is only planned for later. The current local pseudo-login remains active.
+
+## Demo acceptance criteria
+
+The slice is successful when:
+
+- React screen opens with the real 10/09 chart;
+- compact-v3 chart content is visible and readable;
+- no major page-level horizontal overflow exists;
+- the chart has no missing assignment rows;
+- a staff assignment can be changed through the UI;
+- the change survives reload;
+- clearing creates `रिक्त`;
+- BIMA remains an explicit per-assignment field;
+- existing `npm run check` remains green;
+- existing `npm run print:audit` remains 6/6;
+- print output is unchanged by the React migration.
+
+I will not begin implementation until you approve this brief. Reply **“GO with this design”** and I’ll implement the smallest vertical slice first.
+My response: Feels like you are just trying to recreate the current old panchavati 6 page chart that they are currently using, which we dont want, we have already tried implementing the same design 1 to 1, we dont want to work on that anymore, we will just keep (whatever state it is in) that in our site for reference and comparison just like arjish's sites does (dont copy his comparison tho, seems kinda goofy, two big charts side by side, eh bad), this and this: 11/09 event annex;
+legacy six-page viewer;
+OCR import;
+full historical search;
+real authentication migration;
+full master-data CRUD;
+complete leave/manpower/notice/event authoring;
+multi-station support;
+WhatsApp/Telegram/cloud integrations;
+full template builder, we will show in site as coming soon or wip or something, not completely omit. But current priority should be brainstorming over that design\compv3.css
+design\panchavati-compv3.html (screenshot: "C:\Users\kusha\Desktop\DailyDutyPanchavati-ui-rebuild (4)\Current_Screenshots_before_astra\Screenshot_panchavati-compv3_html.png") is good or not? cuz current layout cant properly show all the data that a day needs in efficient or proper space effiecent matter e.g. 10 sept we tried to implement currently in current root repo npm run dev (screenshot: "C:\Users\kusha\Desktop\DailyDutyPanchavati-ui-rebuild (4)\Current_Screenshots_before_astra\Screenshot_Current_root_127.0.0.1_3100_charts_2026-09-10.png")
+
+So yeah brainstorm improvements and strategies to nicely show for e.g. 10th sept data in this, so that we can show any days data. This was included in my original prompt, idk how you lost that. Visually clean, stress or clutter free, ai artifacts free, should look like a chart made for efficeincy, not fancy UI. I kinda hate the cards for every chart or box, makes double borders. Just divide the page in clean 3 or 4 parts if possible without wasting too much whitespace, just like now in current implemented stuff from mock. So design, theoritacly verify, show me brief, now you just gave me generic output plan, but no detailed of how should we keep each row, table, page etc. what to improve, every CRUD interaction (we already have kinda solid CRUD, maybe improve, verify or expand and test on that). Brainstorm for every little section on that chartm what will look good, clutter, small big fonts, page pverflow, etc. Is this reeally improvement over original or less efficient, ugly? I want honest upgrade on original 6 page stuff, our mock is a clear start as first few (atleast 3) pages were kinda suggested by a SPI, but design and everything else is entirely on us. We can even use exteranl stuff, tools, ais for help.
+His output: #attachment:You’re right — I over-focused on the current implementation path and accidentally framed the goal as “make the existing six-page-style output work in React.” That is not the product direction.
+
+The legacy six-page chart should remain a **reference/comparison artifact**. The real design target is an honest upgrade over it, starting from `compv3`.
+
+# Design brief: Compact-v4 direction
+
+## 1. Honest verdict on the current mock
+
+### What the mock gets right
+
+`design/panchavati-compv3.html` is a strong starting point because it already has:
+
+- a chart-like document grammar instead of a dashboard;
+- low-noise navy/white/slate palette;
+- compact row-based staff display;
+- a useful command header;
+- a reasonable page-1 hierarchy;
+- a good six-chowki matrix direction;
+- separate leave, manpower, officer and scan information;
+- explicit visual distinctions for `रिक्त`, `बंद` and `बिमा`;
+- no dependency on the old six-page visual structure.
+
+### What is not yet good enough
+
+The mock was designed with representative/sample data, so it looks more efficient than it is under the full 10/09 data volume.
+
+Main issues:
+
+1. **Page 1 is overloaded**
+   - Sr-PI;
+   - officer boxes;
+   - day deployment;
+   - night deployment;
+   - office;
+   - court/special desk;
+   - several long role groups.
+
+   It becomes vertically excessive once real source rows are inserted.
+
+2. **The officer boxes consume too much vertical space**
+   - They are useful as a concept.
+   - Their current box treatment creates repeated borders and empty padding.
+   - They should become a compact command strip or a tight officer matrix, not dashboard-like cards.
+
+3. **Every block feels boxed**
+   - The outer table border;
+   - block border;
+   - sub-table border;
+   - row border;
+   - chip border.
+
+   That produces the “double border / clutter / AI-generated admin UI” feeling you dislike.
+
+4. **Page 3 has uneven density**
+   - One long leave list can force neighbouring columns to leave large empty areas.
+   - The current card/grid approach wastes space when categories have very different lengths.
+
+5. **The mock has a dangerous page-fit illusion**
+   - Sample data fits.
+   - Real 10/09 data does not fit at the same comfortable scale.
+   - We must optimize against maximum realistic source density, not against the sample screenshot.
+
+6. **Page count should not be the optimization target**
+   - Four tiny unreadable pages are worse than six well-packed pages.
+   - The goal is maximum usable information per area without making Marathi difficult to read.
+
+## 2. Core visual principle
+
+The new chart should be:
+
+> **A clean command document composed of horizontal bands and disciplined columns — not a collection of cards.**
+
+### Remove from the chart itself
+
+- rounded cards;
+- shadows;
+- decorative pills;
+- unnecessary nested borders;
+- large empty card padding;
+- dashboard KPI tiles;
+- oversized section headers;
+- repeated page headers taking excessive height;
+- labels repeated in every staff row;
+- full names repeated everywhere.
+
+### Keep
+
+- one page frame;
+- thin section rules;
+- restrained table gridlines;
+- clear section bands;
+- compact source-faithful grouping;
+- text-based state labels;
+- small color accents;
+- full data available through hover/detail editing.
+
+---
+
+# 3. Proposed chart grammar
+
+## Outer page
+
+Each printed sheet should have:
+
+1. a compact 1-line identity header;
+2. a thin date/status line;
+3. two to four horizontal content bands;
+4. no card shadow;
+5. one consistent page border or no border, not several nested frames.
+
+### Header target
+
+```text
+पंचवटी पोलीस ठाणे, नाशिक शहर       दैनिक कर्तव्य तक्ता       दिनांक १०/०९/२०२६ · गुरुवार
+```
+
+- 10–12px print title;
+- 8–9px metadata;
+- lifecycle shown as a small text label, not a large pill;
+- header height reduced substantially;
+- repeated on each print sheet only because it is operationally useful.
+
+## Section band
+
+Use a narrow section band:
+
+```text
+01  दिवसपाळी — ०९:०० ते २१:००                         ८२ कर्मचारी
+```
+
+- number optional and very small;
+- title left aligned;
+- time right aligned;
+- one 1px rule below;
+- no rounded container;
+- count is informational and subtle.
+
+## Row grammar
+
+Every staff row should have a predictable form:
+
+```text
+role / duty label        staff display name          time / state
+```
+
+Example:
+
+```text
+रायटर                    पोहवा ६९२ गुंबाडे             —
+                         पोशि ५६९ पवार
+बिमा                     पोशि १२४४ महाले              बिमा
+                         पोशि २१५७ गुंजाळ
+```
+
+Rules:
+
+- role labels use `rowspan`;
+- role labels are not repeated for every person;
+- staff display name uses compact source form;
+- full master name remains available in editor/detail view;
+- time is a small right-side value;
+- role, name and state remain separate fields;
+- no inline explanatory prose unless it is source content;
+- no value is truncated;
+- two-line wrap is allowed;
+- avoid one-word orphan lines.
+
+## Staff display
+
+For dense chart display:
+
+```text
+rank + buckle + surname
+```
+
+Examples:
+
+```text
+पोशि ५४२ आहेर
+पोहवा ६९२ गुंबाडे
+पोनि सुनिल पवार
+```
+
+In the editor/detail panel:
+
+```text
+Full name: पोहवा ६९२ अनिल बाळु गुंबाडे
+Rank: HC
+Buckle: 692
+Source/status/history...
+```
+
+This gives density without losing identity.
+
+## State display
+
+Use text first, color second.
+
+### `रिक्त`
+
+```text
+रिक्त
+```
+
+- dashed underline or dashed empty-seat rule;
+- amber text;
+- no filled pill.
+
+### `बंद`
+
+```text
+बंद · चार्ज → मालेगाव स्टँड
+```
+
+- one compact state row;
+- muted hatch or pale yellow background;
+- `बंद` never confused with a vacant assignment.
+
+### `बिमा`
+
+```text
+पोशि १२४४ महाले   बिमा
+```
+
+- small red text marker;
+- no large red pill;
+- remains assignment-level only.
+
+---
+
+# 4. Proposed page/section strategy
+
+This is **not a recreation of the old six-page format**. It is a new logical grouping that may still print to five or six adaptive sheets when the real data requires it.
+
+## Sheet 1 — Command + daytime deployment
+
+### Top band: command strip
+
+Replace large officer cards with a compact command strip:
+
+```text
+वरिष्ठ पोलीस निरीक्षक: गजेंद्र पाटील
+रायटर: ...
+चालक दिवस: ...
+चालक रात्र: ...
+```
+
+Then a compact officer matrix:
+
+```text
+अधिकारी        शाखा/भूमिका       आजची नेमणूक
+पोनि ...       क्राईम             उपस्थित
+सपोनि ...      तपास              ०९–१४
+...
+```
+
+This preserves the officer information but avoids four large boxes.
+
+### Main body: three lanes
+
+```text
+दिवसपाळी मुख्य ठिकाणे | मोबाईल / DB / लॉकअप | कार्यालयीन / विशेष
+```
+
+Why three lanes:
+
+- the existing four equal columns make day/night columns too narrow;
+- office/special roles have different density from station deployment;
+- the chart should not force unrelated rows into equal-height cards.
+
+Use a continuous table within each lane, not a card.
+
+### Daytime content
+
+Include:
+
+- station leadership;
+- station amaldar;
+- hazari;
+- CCTNS;
+- wireless;
+- Peter/CR/Delta/DB;
+- lockup;
+- special desk/office roles that actually belong to daytime.
+
+Do not place all chowki people here if they are shown in the dedicated chowki sheet. Avoid duplicate rendering.
+
+## Sheet 2 — Night deployment + instructions
+
+Night data is structurally different from day data.
+
+Do not force night instructions into fake staff rows.
+
+Use:
+
+```text
+रात्रपाळी कर्मचारी lanes        रात्रपाळी सूचना
+```
+
+Left side:
+
+- checking officer;
+- PSO;
+- hazari;
+- CCTNS;
+- wireless;
+- mobile teams;
+- DB;
+- lockup;
+- night special posts.
+
+Right side:
+
+- Good Morning Squad;
+- Ramkund patrol;
+- statue visits;
+- chowki rounds;
+- DB instructions;
+- app scanning;
+- establishment closure instructions.
+
+Instructions should be compact numbered text blocks, not huge bordered cards.
+
+## Sheet 3 — Chowki command matrix
+
+This is the strongest part of the current mock and should remain its own focused sheet.
+
+Use a 3×2 grid:
+
+```text
+काटया मारूती | पंचवटी कारंजा | मालेगाव स्टँड
+सरदार        | फुलेनगर        | मेरी
+```
+
+Each chowki block:
+
+```text
+चौकी नाव
+प्रभारी / वेळ
+दिवसपाळी              रात्रपाळी
+staff rows             staff rows
+बिमा rows              बिमा rows
+मार्शल line            बंद / चार्ज line
+```
+
+### Important improvement
+
+Do not put thick borders around each chowki.
+
+Instead:
+
+- use a thin vertical rule between columns;
+- use a slightly darker heading underline;
+- use a very light background only for the heading row;
+- use whitespace between groups;
+- use one shared outer grid.
+
+A chowki block should feel like a newspaper column, not a dashboard card.
+
+### Marshal handling
+
+Keep the current data model:
+
+- marshal remains a separate operational post;
+- display position may fold into its paired chowki;
+- its own closure/charge state remains explicit;
+- no BIMA inference.
+
+## Sheet 4 — Leave, other duties, events and notices
+
+This should be a flowing multi-column register, not four independent cards.
+
+Suggested structure:
+
+```text
+साप्ताहिक सुट्टी | रजा / सिक | तपास / प्रशिक्षण / प्रतिनियुक्ती | इतर सूचना
+```
+
+Use:
+
+- category heading once;
+- people beneath it;
+- date/time annotations in a narrow secondary column;
+- no blank card height matching;
+- columns should flow downward independently;
+- if one category is longer, it continues naturally beneath the next compatible section rather than leaving empty white space.
+
+For notices:
+
+- use a full-width notice strip below the lists;
+- numbered lines;
+- no card per notice;
+- group by day/night/source scope;
+- keep source wording.
+
+For 11/09:
+
+- event/bandobast should appear as an optional annex band or additional adaptive sheet;
+- not force Ganpati fields into the ordinary daily chart.
+
+## Sheet 5 — Manpower + change ledger
+
+### Manpower matrix
+
+The matrix should remain table-like because it is genuinely tabular.
+
+Improvements:
+
+- compact two-line column headers;
+- freeze/shorten only display labels, never data;
+- use hairline grid;
+- avoid a large surrounding card;
+- show source-entered values exactly;
+- clearly mark derived values separately;
+- do not “repair” contradictory ME/03 values.
+
+### Change ledger
+
+Put it directly below the matrix with only the required columns:
+
+```text
+क्रमांक | बदल / कारण | नोंद
+```
+
+Do not leave a giant empty table area if there are no entries. Show:
+
+```text
+अचानक बदल नोंद: आज कोणतीही नोंद नाही.
+```
+
+and preserve an editor action to add one.
+
+## Sheet 6 — Officer summary + scan schedule + sign-off
+
+### Officer summary
+
+Use a two-column table:
+
+```text
+क्र. | अधिकारी | कर्तव्य
+```
+
+The current 15-row summary is inherently compact and should not be turned into individual officer boxes.
+
+### Scan schedule
+
+The current hourly scan list should become a time grid:
+
+```text
+वेळ       चौकी             कर्मचारी
+०९–१०     मेरी             ...
+१०–११     मालेगाव         ...
+...
+```
+
+For screen:
+
+- allow a compact horizontal time grid if wide enough;
+- for print, use two side-by-side 6-row tables rather than one tall 12-row table.
+
+Example:
+
+```text
+०९–१४                              १५–२१
+०९–१० ...                          १५–१६ ...
+...
+१४–१५ ...                          २०–२१ ...
+```
+
+This preserves all 12 rows while reducing vertical waste.
+
+### Sign-off
+
+Keep sign-off as a simple bottom rule and three aligned fields. No card.
+
+---
+
+# 5. Adaptive pagination strategy
+
+Do not hardcode “one logical section equals one physical page.”
+
+Use:
+
+- logical sections in `ChartDocument`;
+- content-aware print flow;
+- continuation only when necessary;
+- repeated compact section headers when a section continues;
+- no orphan continuation pages.
+
+### Page-fit rules
+
+For every representative real chart:
+
+- no page-level horizontal overflow;
+- no content truncation;
+- no row loss;
+- no font below the agreed minimum;
+- no orphaned section title at page bottom;
+- no section forced into a tiny unreadable area;
+- no huge empty region when following content can flow into it.
+
+The target is not “fewest pages.” The target is:
+
+> **Fewest readable sheets that preserve every source fact.**
+
+The old six-page packet may remain six or seven sheets in some cases. That is acceptable if the new grammar is visibly cleaner, more compact and easier to scan.
+
+---
+
+# 6. CRUD interaction design
+
+The chart should remain visually clean in preview mode. Editing chrome appears only in edit mode.
+
+## Assignment edit
+
+Click a staff row → open a right-side inspector/flyout.
+
+Inspector:
+
+```text
+कर्तव्य: काटया मारूती
+पाळी: दिवसपाळी
+सध्याची नेमणूक: पोशि ५४२ आहेर
+
+[कर्मचारी बदला]
+[रिक्त करा]
+[बिमा लागू करा]
+[वेळ संपादित करा]
+[नोंद पहा]
+```
+
+Staff picker:
+
+- search by name/buckle/rank;
+- current person pinned at top;
+- list uses compact rank + buckle + surname;
+- availability warning is informational;
+- no automatic replacement;
+- user explicitly selects.
+
+## BIMA
+
+Only in the assignment inspector:
+
+```text
+बिमा: [ ] फक्त या नेमणुकीसाठी
+```
+
+Never infer it from duty title, location or notes.
+
+## Location state
+
+Click the chowki heading or state line:
+
+```text
+चौकी: पंचवटी कारंजा
+पाळी: दिवसपाळी
+
+स्थिती:
+( ) कार्यरत
+( ) बंद
+
+चार्ज:
+[ destination ]
+```
+
+Do not expose closure as a person-row status.
+
+## Add row
+
+Use contextual `+` only at the end of a logical group:
+
+```text
++ कर्मचारी
++ ड्युटी
++ सूचना
+```
+
+The `+` should not appear on every row.
+
+## Add chowki/officer block
+
+Keep the existing real persistence behavior, but visually present it as:
+
+- a new column/group in the chart;
+- no fake empty card;
+- one real vacant slot;
+- explicit label;
+- no invented person or timing.
+
+## Label editing
+
+Keep the existing per-chart label functionality, but visually:
+
+- pencil appears only on hover/focus in edit mode;
+- no layout reflow;
+- popover offers:
+  - `फक्त हे`;
+  - `सर्वत्र`;
+- finalized chart remains immutable.
+
+## Names and free text conversion
+
+Future guided conversion:
+
+```text
+English input
+↓
+Marathi suggestion
+↓
+user reviews/edits
+↓
+explicit Save
+```
+
+This must apply only to approved fields and never silently overwrite names or operational text.
+
+---
+
+# 7. Design verification before implementation
+
+We should not implement blindly. First create a design fixture matrix using real 10/09 data:
+
+### Compare three versions
+
+1. Legacy/reference six-page output.
+2. Current compv3 mock with real data.
+3. Proposed compact-v4 layout.
+
+Measure:
+
+- physical sheet count;
+- printable height used per sheet;
+- unused whitespace;
+- nested border count;
+- repeated labels;
+- wrapped rows;
+- longest row height;
+- page-level overflow;
+- source rows rendered;
+- readability at normal zoom;
+- grayscale distinguishability;
+- edit-mode layout stability.
+
+### Minimum acceptance targets
+
+- 212/212 assignment rows represented;
+- no page-level horizontal overflow;
+- no Marathi truncation;
+- no nested card borders in chart content;
+- no section title stranded alone at a page bottom;
+- no large avoidable blank gaps;
+- no print text smaller than the agreed readability floor;
+- BIMA/रिक्त/बंद distinguishable without color alone;
+- screen preview and print use the same document semantics;
+- edit hover does not move rows or alter geometry.
+
+---
+
+# 8. My honest recommendation
+
+Do **not** migrate to React or redesign the navbar yet.
+
+First, build a **static Compact-v4 design prototype** from the existing 10/09 data using the current renderer data shape, then compare it visually against:
+
+- the compv3 mock;
+- the current root screenshot;
+- the original 10/09 visual pages.
+
+The key redesign is:
+
+1. keep the mock’s logical grouping;
+2. remove card treatment;
+3. convert officer boxes into a compact command strip;
+4. give day, night and chowki content dedicated dense lanes;
+5. make leave/notice sections flow independently;
+6. convert scan schedule to two compact time grids;
+7. use adaptive content-driven pagination;
+8. test the layout against full real data before React authoring work.
+
+That will answer the most important question first:
+
+> Is Compact-v4 genuinely more efficient and readable than the original six-page chart, or merely a prettier mock?
+
+I will not implement the React slice until this design direction is approved.You’re right. I over-focused on “making the current implementation work” instead of challenging whether the current design is actually a better chart.
+
+The correct priority is:
+
+> **Design and prove a genuinely better compact chart first. Then implement it.**
+
+The old six-page Panchavati chart remains a **read-only reference/comparison artifact**. The following can appear in the site as disabled `Coming Soon`, `WIP` or `Planned` surfaces, but they are not omitted from the product vision:
+
+- 11/09 event annex;
+- legacy six-page viewer;
+- OCR import;
+- historical search;
+- real authentication;
+- master-data CRUD;
+- leave/manpower/notice/event authoring;
+- multi-station support;
+- WhatsApp/Telegram/cloud integrations;
+- full template builder.
+
+# Compact-v4 design brief
+
+## 1. Honest assessment of the current mock
+
+### The mock is directionally correct
+
+`design/panchavati-compv3.html` is a good starting point because it:
+
+- looks like a chart, not a dashboard;
+- has useful compact grouping;
+- avoids the old six-page layout;
+- keeps day/night/chowki/leave/manpower/scan information conceptually separate;
+- has a calmer visual language;
+- uses a reasonable dense table grammar;
+- keeps `रिक्त`, `बंद` and `बिमा` visually distinct.
+
+### But it is not yet proven to be more efficient
+
+The screenshot:
+
+```text
+Current_Screenshots_before_astra\Screenshot_panchavati-compv3_html.png
+```
+
+uses sample-sized data. It therefore gives a false impression of how well the layout handles a real day.
+
+The screenshot of the current data-backed implementation:
+
+```text
+Current_Screenshots_before_astra\Screenshot_Current_root_127.0.0.1_3100_charts_2026-09-10.png
+```
+
+shows the opposite problem:
+
+- too many cards;
+- excessive repeated borders;
+- large vertical expansion;
+- too much dashboard-like framing;
+- weak grouping of dense real data;
+- page sections that do not use available horizontal space well.
+
+So the honest verdict is:
+
+> **Compv3 is a good information-architecture start, but not a finished high-density chart design.**
+
+We should preserve its grouping ideas while redesigning its geometry and visual grammar.
+
+---
+
+# 2. Core visual strategy
+
+The new chart should feel like:
+
+> **A compact operational command document made from bands, lanes and disciplined tables — not a dashboard made from cards.**
+
+## Remove from the chart
+
+- rounded cards;
+- shadows;
+- nested boxes;
+- double borders;
+- large empty padding;
+- decorative KPI tiles;
+- oversized colored pills;
+- repeated labels;
+- full names repeated in every row;
+- unnecessary icons;
+- excessive explanatory text;
+- page-level whitespace created only to make cards equal height.
+
+## Keep
+
+- one outer page frame;
+- thin section rules;
+- small section headers;
+- readable dense rows;
+- subtle color semantics;
+- compact source-faithful groupings;
+- explicit operational states;
+- full data available in the editor/detail panel.
+
+## Border rule
+
+Inside the printed chart:
+
+- one outer page rule;
+- one section divider;
+- hairline internal table rules only where they improve scanning;
+- no independently bordered card for every office, chowki or officer.
+
+A chowki should look like a newspaper/table column, not a UI card.
+
+---
+
+# 3. Typography and density
+
+The chart needs a deliberately declared scale.
+
+## Print target
+
+Approximate starting range:
+
+- page title: 12–14px;
+- section heading: 9.5–11px;
+- staff row: 8.8–10px;
+- secondary annotation: 8–8.8px;
+- table header: 8.5–9.5px.
+
+Do not keep shrinking indefinitely. The chart must remain readable when printed and photographed.
+
+## Name strategy
+
+In the chart:
+
+```text
+rank + buckle + surname
+```
+
+Examples:
+
+```text
+पोशि ५४२ आहेर
+पोहवा ६९२ गुंबाडे
+पोनि सुनिल पवार
+```
+
+In the editor/detail panel:
+
+```text
+पूर्ण नाव: पोहवा ६९२ अनिल बाळु गुंबाडे
+हुद्दा: HC
+बकल: ६९२
+```
+
+This preserves identity without wasting chart width.
+
+## Row rules
+
+- Group labels use `rowspan`.
+- A label appears once per logical group.
+- Staff names continue below it without repeating the label.
+- Times use a narrow right-aligned column.
+- Roles such as `रायटर`, `चालक`, `बिमा` remain separate fields.
+- Long names may wrap to two lines.
+- Nothing is truncated.
+- No isolated one-word line should be produced accidentally.
+
+---
+
+# 4. Page and section strategy
+
+This is not a recreation of the old six-page chart. It is a new logical arrangement that may still require five or six adaptive print sheets for a large real day.
+
+The goal is not the smallest page count.
+
+> **The goal is the fewest readable sheets that preserve every fact.**
+
+## Sheet 1 — Command strip and daytime core
+
+### Replace the large officer boxes
+
+The current four officer boxes consume too much height and create repeated borders.
+
+Use a compact command strip:
+
+```text
+वरिष्ठ पोलीस निरीक्षक: गजेंद्र पाटील
+रायटर: ...
+चालक दिवस: ...
+चालक रात्र: ...
+```
+
+Below that, use a compact officer table only when required:
+
+```text
+अधिकारी             भूमिका/शाखा        आजची स्थिती
+पोनि ...             क्राईम              उपस्थित
+सपोनि ...            तपास               ०९–१४
+सपोनि ...            प्रशासन            उपस्थित
+```
+
+No four large cards.
+
+### Main daytime lanes
+
+Use three unequal horizontal lanes:
+
+```text
+दिवसपाळी मुख्य ठिकाणे | मोबाईल / DB / लॉकअप | कार्यालयीन / विशेष
+```
+
+They should not be equal width if their content density differs.
+
+Likely widths:
+
+- main station deployment: 42%;
+- mobile/DB/lockup: 28%;
+- office/special: 30%.
+
+The important improvement is not just shrinking text. It is allocating width according to content.
+
+### Avoid duplicate chowki data
+
+If chowki staff appears in the dedicated chowki sheet, do not repeat all chowki personnel on Sheet 1.
+
+Sheet 1 should focus on:
+
+- station leadership;
+- station amaldar;
+- hazari;
+- CCTNS;
+- wireless;
+- mobile units;
+- DB;
+- lockup;
+- office/special posts.
+
+## Sheet 2 — Night core and instructions
+
+Night content is not just a second staff list. It contains directive prose.
+
+Use two broad lanes:
+
+```text
+रात्रपाळी कर्मचारी              रात्रपाळी सूचना
+```
+
+### Left lane
+
+- checking officer;
+- night PSO;
+- hazari;
+- CCTNS;
+- wireless;
+- mobile;
+- DB;
+- lockup;
+- night special posts.
+
+### Right lane
+
+- Good Morning Squad;
+- Ramkund patrol;
+- statue visits;
+- chowki rounds;
+- DB instructions;
+- app scanning;
+- establishment closure instructions.
+
+Instructions should be:
+
+```text
+१. गुडमॉर्निंग स्कॉड...
+२. रामकुंड परिसरात...
+३. सर्व बीट मार्शल...
+```
+
+Do not render them as fake assignment rows or tall cards.
+
+## Sheet 3 — Chowki command matrix
+
+This is the best part of the current mock and should remain focused.
+
+Use a 3×2 arrangement:
+
+```text
+काटया मारूती       पंचवटी कारंजा       मालेगाव स्टँड
+सरदार              फुलेनगर             मेरी
+```
+
+Each block should contain:
+
+```text
+चौकी नाव
+प्रभारी + वेळ
+दिवसपाळी | रात्रपाळी
+staff rows
+बिमा rows
+मार्शल/state line
+```
+
+### Visual treatment
+
+Remove the heavy individual card look.
+
+Use:
+
+- one shared outer matrix;
+- thin internal separators;
+- lightly tinted heading row;
+- no shadows;
+- no rounded corners;
+- no full border around every sub-column;
+- whitespace between groups instead of extra boxes.
+
+### Marshal handling
+
+Keep the current semantic model:
+
+- marshal is a separate operational post;
+- its display may be folded into the paired chowki;
+- its `बंद` and `चार्ज` state remains explicit;
+- BIMA is never inferred.
+
+### Example
+
+```text
+काटया मारूती चौकी
+प्रभारी: सपोनि हेमंत मोहिते · ०९–१४
+
+दिवसपाळी                         रात्रपाळी
+पोशि ५४२ आहेर                    पोशि ...
+पोशि १९९८ वाकचैरे  बिमा           पोशि ...
+
+मार्शल: बंद · चार्ज → मालेगाव
+```
+
+The state line should be one compact line that wraps only the destination if necessary.
+
+## Sheet 4 — Leave, other duties, notices
+
+Do not use equal-height cards.
+
+Use an independently flowing column layout:
+
+```text
+साप्ताहिक सुट्टी | रजा / सिक | तपास / प्रशिक्षण | इतर ड्युटी
+```
+
+Each column flows naturally according to its own row count.
+
+### Row form
+
+```text
+पोशि ५४२ आहेर                 ०८ ते १०
+पोनि ...                       २८/०८ ते ११/०९
+```
+
+- name on the left;
+- date/time annotation on the right;
+- category header once;
+- no repeated category pill on every row.
+
+### Notices
+
+Place notices in a full-width lower band:
+
+```text
+सूचना व निर्देश
+१. ...
+२. ...
+३. ...
+```
+
+Do not create one card per notice.
+
+### 11/09 event
+
+The Ganpati event should become:
+
+- a clearly labelled event annex;
+- an additional adaptive sheet when present;
+- not a forced section inside the ordinary daily chart.
+
+## Sheet 5 — Manpower and change ledger
+
+### Manpower matrix
+
+Keep it as a real matrix, not a card.
+
+Improvements:
+
+- compact two-line headers;
+- hairline grid;
+- values not bolded unnecessarily;
+- clear distinction between source-entered and derived values;
+- no automatic reconciliation of `ME`, `03` or contradictory totals;
+- preserve `..`, blanks and source artifacts exactly where required.
+
+### Change ledger
+
+When empty, do not print a huge empty table.
+
+Use:
+
+```text
+अचानक ड्युटी बदल — आज कोणतीही नोंद नाही.
+```
+
+When populated, expand into:
+
+```text
+क्रमांक | बदल / कारण | नोंद
+```
+
+## Sheet 6 — Officer summary, scans and sign-off
+
+### Officer summary
+
+The 15-row officer summary should be one compact table:
+
+```text
+क्र. | अधिकारी | कर्तव्य
+```
+
+Do not turn officers into cards here. The command strip already gives the high-level view.
+
+### Scan schedule
+
+Use two side-by-side six-row tables:
+
+```text
+०९–१५                              १५–२१
+वेळ | चौकी | कर्मचारी              वेळ | चौकी | कर्मचारी
+०९–१० ...                          १५–१६ ...
+१०–११ ...                          १६–१७ ...
+...
+१४–१५ ...                          २०–२१ ...
+```
+
+This uses horizontal space instead of producing one tall 12-row block.
+
+### Sign-off
+
+Use simple aligned footer fields:
+
+```text
+तयार करणारे        तपासणी अधिकारी        मान्यता
+```
+
+No footer card.
+
+---
+
+# 5. Adaptive pagination
+
+The renderer should not assume:
+
+```text
+one logical section = one physical page
+```
+
+Instead:
+
+- sections are logical;
+- physical sheets are content-driven;
+- a long section may continue;
+- continuation gets a compact repeated heading;
+- no orphaned heading;
+- no blank page created just because a section has a fixed card height.
+
+For example:
+
+- normal day may render 5 sheets;
+- a dense day may render 6;
+- 11/09 with event annex may render 7;
+- a sparse day should not have huge empty regions just to preserve fixed boxes.
+
+This is more honest than promising that every chart always fits the sample mock's page count.
+
+---
+
+# 6. CRUD interaction design
+
+The chart remains clean in Preview mode. Edit mode adds affordances without changing geometry.
+
+## Assignment editing
+
+Click a staff row → open a right-side inspector.
+
+```text
+कर्तव्य: काटया मारूती
+पाळी: दिवसपाळी
+सध्याची नेमणूक: पोशि ५४२ आहेर
+
+[कर्मचारी बदला]
+[रिक्त करा]
+[बिमा लागू करा]
+[वेळ संपादित करा]
+[नोंद पहा]
+```
+
+The picker:
+
+- searches Marathi name;
+- searches English name;
+- searches buckle;
+- searches rank;
+- shows current person first;
+- shows availability as a warning only;
+- never auto-replaces anyone.
+
+## BIMA
+
+Only an explicit assignment field:
+
+```text
+बिमा: [ ] फक्त या नेमणुकीसाठी
+```
+
+Never infer it from:
+
+- location;
+- role;
+- text;
+- marshal status;
+- notes.
+
+## Chowki state
+
+Click the chowki header or state line:
+
+```text
+चौकी: पंचवटी कारंजा
+पाळी: दिवसपाळी
+
+स्थिती:
+( ) कार्यरत
+( ) बंद
+
+चार्ज:
+[ destination ]
+```
+
+`बंद` is a location-state editor, not a staff-row status.
+
+## Adding rows
+
+Contextual actions should appear only at meaningful group boundaries:
+
+```text
++ कर्मचारी
++ ड्युटी
++ सूचना
++ घटना
+```
+
+Do not put `+` on every row.
+
+## Label edits
+
+Keep the existing real per-chart label behavior:
+
+- `फक्त हे`;
+- `सर्वत्र`;
+- no geometry shift;
+- no editing of people or source values through the label editor;
+- finalized charts remain immutable.
+
+---
+
+# 7. How we prove this is an improvement
+
+Before React migration, build a data-backed Compact-v4 prototype using the actual 10/09 `ChartDocument`.
+
+Compare:
+
+1. original six-page reference;
+2. current compv3 mock with real data;
+3. proposed Compact-v4.
+
+Measure:
+
+- sheet count;
+- printable height used;
+- avoidable whitespace;
+- nested-border count;
+- repeated labels;
+- wrapped rows;
+- maximum row height;
+- horizontal overflow;
+- no-loss assignment count;
+- grayscale clarity;
+- edit-mode layout stability.
+
+Acceptance targets:
+
+- 212/212 assignments represented;
+- no page-level horizontal overflow;
+- no Marathi truncation;
+- no unnecessary nested card borders;
+- no orphan section headings;
+- no large avoidable blank gaps;
+- no unreadably small text;
+- BIMA/रिक्त/बंद distinguishable without color alone;
+- edit hover does not move content;
+- print output remains content-driven.
+
+---
+
+# 8. Recommended implementation order
+
+1. **Do not begin React yet.**
+2. Refactor/create the Compact-v4 visual prototype around the existing `ChartDocument`.
+3. Render the real 10/09 data into it.
+4. Compare it against the two screenshots and the original PDF.
+5. Iterate on geometry and density.
+6. Only after the visual direction is accepted:
+   - build the React screen;
+   - port the grouped Kushal navigation;
+   - connect the existing assignment CRUD;
+   - keep the server renderer for print/PDF.
+7. Add WIP/Coming Soon navigation entries for the deferred product areas.
+
+No code has been changed for this design discussion. The next implementation should begin with the **static Compact-v4 chart prototype**, not generic React scaffolding.
+My response: Great. Few feedbacks: Here you mentioned: 1. Honest verdict on the current mock, What the mock gets right: a useful command header: nah, I find current one kinda meh, a persistant navbar or header should be there, we dont have to change it for every page, consistancy will help navigating easier as this will be used daily. I love the current logo, then महाराष्ट्र पोलीस
+पंचवटी पोलीस ठाणे
+नाशिक शहर | Panchavati Police Station
+Daily Duty Chart
+दैनिक कर्तव्य तक्ता (hate the english and marathi both present here, juts keep anyone, keep and eng to mar and vice versa toggle for such UI elements. Love the date selector element but its not as feature rich as kushal's or arjish's branch lets say. The DRAFT tag doesn't belong in this main header I think, keep the main header for navigation only, keep page specific things maybe in a different bar or stripe below, I thought you will know and see and suggest such changes? See standardized chart format from kushal's repo for this. Same with ✏️ संपादन (Edit Mode)
+✅ अंतिम करा (Finalize)
+🖨 प्रिंट / PDF (A4), there are page specific, also remove these goofy icons and pls do better. Also hate the double english marathi thing, use the eng to marathi toggle in the navbar for such elements. Make it so that we can switch the state from draft to finalise and vice versa, this will also change the DRAFT tag in the top right of every page start (if you decide to keep those), thus if clerk feels like all changes and editing is done, he can toggle the draft state and print, if something comes up mid day, he can change from finalized to draft again for editing. Import all (only those we find useful, nothing old legacy that we scrapped) the pages or features from kushal's and arjish's repo, at whatever state they are in, shoudln't be functional, we can slap WIP or coming soon on them, just to show what's coming, planned future work and what we did till now, see their navbar groupings, structures, decide better one for us. 
+Page 1 is overloaded, I agree. I recently brought these 2 tables: कार्यालयीन शाखा व कारकून and कोर्ट, समन्स, वॉरंट व विशेष कक्ष, to front page, thinking they can fit, I was in wrong assumption that this mock data is all mapped to show complete 10th sept original chart data, but we need way more as we are seeing in our implemented actual chart try. Maybe move them back again to page 2 or something. The officer boxes consume too much vertical space, I kind of disagree, SPI sir specifically suggested such layout, main officer above centered, then below officers, then below day and night columns. If we change that and go back to below columns and everyone in same table, sir might be angry saying that why are we going back to same old format or similar, defeating the purpose. They just contain officer name, their branch, then writer, then officer, rtpc and operator if exists for both day and night (currently we dont have any such data or mappings in all available charts we have of panchavati for now right?) so yeah not that bad. I like this stuff you proposed: पंचवटी पोलीस ठाणे, नाशिक शहर       दैनिक कर्तव्य तक्ता       दिनांक १०/०९/२०२६ · गुरुवार Just avoid the dot . and em dashes while you can, looks ugly and gives AI vibes. See here I kinda disagree: Replace large officer cards with a compact command strip:
+
+Copy code block
+वरिष्ठ पोलीस निरीक्षक: गजेंद्र पाटील
+रायटर: ...
+चालक दिवस: ...
+चालक रात्र: ...
+Then a compact officer matrix:
+
+Copy code block
+अधिकारी        शाखा/भूमिका       आजची नेमणूक
+पोनि ...       क्राईम             उपस्थित
+सपोनि ...      तपास              ०९–१४
+...:
+I think keep the main officer and below 4 (we can add more using CRUD) officer horizontal layout. Looks good and gives emphasis on important people, they dont get lost in rows. to maximize efficiency, as we have plenty of space horizontally but shoudlnt use too much space vertically for these officers, show something like वपोनि गजेंद्र पाटील ठाणे प्रमुख (also those hover on rank abbr should open on top right kinda and in one line, fix or do better maybe) then below
+रायटर:
+पोहवा १३४७ जाधव then besides चालक: below two columns
+दिवस:
+रात्र:
+RTPC:
+दिवस:
+रात्र:
+etc. 
+below 4 officers will also take 2 rows only, 1st title and branch, below writers and stuff if we found any officer specific.
+Here: Night data is structurally different from day data. Hard disagree, see the original first 2 pages of the 6 page panchavati daily duty charts of like 10 sept lets say. Almost first 3 columns and the duty groupings in their rows is same, except the last 4th column, it contains some notices or something. Seems like you forgot our original data, all those semantic MDs, OCRs, reports, analysis, forensic reports. These 1 staff per one row stuff will be so long vertically, not efficient at all, this will lead back us to our standardized chart format from Kushal's repo all over again ("C:\Users\kusha\Desktop\DailyDutyPanchavati-ui-rebuild (4)\DailyDutyPanchavati-ui-rebuild\NEW DATA\kushals repo\archive\Standardized_Chart_Kushal.html"). So please, brainstorm hard about these things, 6 or 7 pages is acceptable if not less. But we shouldnt do more than original cuz that is just not an upgrade at all. Brainstorm, theoritically verify without implementation or mock first. I think we can get away first page having main officer and 4 officer below horizontally just like we have rn (improve design and layout your way), then day and night dividations left and right, cuz they are almost same. Also here: 
+6. CRUD interaction design
+The chart should remain visually clean in preview mode. Editing chrome appears only in edit mode.
+
+Assignment edit
+Click a staff row → open a right-side inspector/flyout.
+
+Inspector:
+
+Copy code block
+कर्तव्य: काटया मारूती
+पाळी: दिवसपाळी
+सध्याची नेमणूक: पोशि ५४२ आहेर
+
+[कर्मचारी बदला]
+[रिक्त करा]
+[बिमा लागू करा]
+[वेळ संपादित करा]
+[नोंद पहा]
+
+dont forget our cuurent messy kinda meh looking implementation of like: edit current staff data or details, then select staff from dropdown (from already present staff in master data or db, then create new staff entirely. These options save the user or clerk from opening special master data pages to do such stuff. Thus create these popup or edit assignment element or window nicely, should be open good in veiwport, dont have to click or scroll unnecessarily to many times. Should be easy, logical and efficient and symmetric looking for daily workflow.
+My prompt again: you are consuming tokens but I cant see any output?
+his response: #You’re right. I was still reasoning internally instead of giving you the actual revised design output. No implementation has started. Here is the corrected design brief based on your feedback.
+
+# Compact-v4 design brief, revised
+
+## Core correction
+
+We are **not** trying to recreate the old six-page chart.
+
+We are designing a new compact chart that:
+
+- preserves the useful first-page structure suggested by SPI sir;
+- keeps the main officer hierarchy visually prominent;
+- shows day and night side by side where their structures genuinely match;
+- uses six or seven sheets maximum;
+- carries all real 10/09 information;
+- is more space-efficient than the original;
+- avoids the long horizontal standardized chart problem;
+- avoids dashboard cards and decorative UI;
+- remains editable through efficient contextual CRUD.
+
+The old six-page chart will exist inside the application as:
+
+```text
+Legacy Panchavati Chart
+Reference only
+Coming Soon / WIP
+```
+
+It will not be the active design target.
+
+---
+
+# 1. Persistent application header
+
+The header should be persistent across the application and not change from page to page.
+
+## Main header contains navigation only
+
+It should not contain:
+
+- DRAFT;
+- FINALIZED;
+- Edit;
+- Finalize;
+- Print;
+- page-specific chart actions.
+
+Those belong in a second, page-specific toolbar.
+
+## Proposed persistent header
+
+### Left side
+
+```text
+[Police logo]
+
+महाराष्ट्र पोलीस
+पंचवटी पोलीस ठाणे
+नाशिक शहर | Panchavati Police Station
+```
+
+Then:
+
+```text
+Daily Duty Chart
+```
+
+or Marathi equivalent, controlled by the language toggle.
+
+Do not display both English and Marathi versions simultaneously.
+
+### Language behavior
+
+A navbar language toggle changes interface labels:
+
+```text
+मराठी | English
+```
+
+When Marathi is selected:
+
+```text
+दैनिक कर्तव्य तक्ता
+कार्यवाही
+मास्टर डेटा
+ऐतिहासिक शोध
+```
+
+When English is selected:
+
+```text
+Daily Duty Chart
+Operations
+Master Data
+Historical Search
+```
+
+Identity values and source operational wording remain source-preserved unless specifically designed for translation.
+
+The chart's official Marathi output remains Marathi-first. The UI language toggle should not silently translate police names, source notes, rank codes or protected terms.
+
+## Right side
+
+Use a richer date selector inspired by Kushal and Arjish:
+
+- current selected date;
+- Marathi weekday in Marathi mode;
+- Today;
+- Tomorrow;
+- Previous/next available chart;
+- chart availability indicator;
+- calendar picker;
+- search existing dates;
+- amendment/version indicator where relevant.
+
+No chart-format/profile dropdown.
+
+## Navigation structure
+
+Use the useful grouped structure from Kushal's AppNav, but simplify the labels and remove scrapped legacy items.
+
+```text
+डॅशबोर्ड
+
+दैनिक कर्तव्य तक्ते
+  पंचवटी तक्ता
+    मुख्य तक्ता
+    रात्रपाळी व सूचना
+    रजा व विशेष कर्तव्य
+    मनुष्यबळ
+    अधिकारी सारांश
+    गस्त व स्कॅनिंग
+
+कार्यवाही
+  कार्यकारी आढावा
+  कर्तव्य फलक
+  बंदोबस्त व विशेष मोहीम
+  ऐतिहासिक शोध
+
+डेटा
+  मास्टर डेटा
+  दस्तऐवज आयात
+  जुना पंचवटी तक्ता
+```
+
+The following can be visible but disabled:
+
+```text
+बंदोबस्त व विशेष मोहीम     Coming Soon
+ऐतिहासिक शोध               Coming Soon
+दस्तऐवज आयात               Coming Soon
+जुना पंचवटी तक्ता           Reference / WIP
+Master Data                 Partial / WIP
+```
+
+This lets the user see what the product is becoming without pretending those features work.
+
+---
+
+# 2. Page-specific chart toolbar
+
+Below the persistent header, the chart route gets its own compact toolbar.
+
+Example:
+
+```text
+पंचवटी दैनिक कर्तव्य तक्ता
+१०/०९/२०२६ · गुरुवार
+
+DRAFT
+संपादन
+अंतिम करा
+प्रिंट
+```
+
+The toolbar should not use goofy emoji icons.
+
+Use text buttons with restrained symbols only where useful:
+
+```text
+संपादन
+अंतिम करा
+प्रिंट
+अधिक
+```
+
+Possible minimal icons:
+
+- calendar icon for date;
+- pencil icon only if it is visually consistent;
+- printer icon only if it improves recognition.
+
+Do not write:
+
+```text
+✏️ संपादन (Edit Mode)
+✅ अंतिम करा (Finalize)
+🖨 प्रिंट / PDF (A4)
+```
+
+That is visually noisy and duplicates the language.
+
+## Lifecycle behavior
+
+The hard historical rule must remain:
+
+```text
+DRAFT → VALIDATED → FINALIZED
+```
+
+A finalized version must remain immutable.
+
+For the clerk, the experience can still feel reversible:
+
+```text
+DRAFT
+  → अंतिम करा
+FINALIZED
+  → सुधारणा सुरू करा
+नवीन सुधारणा मसुदा
+```
+
+“सुधारणा सुरू करा” creates a new amendment draft. It does not mutate the old finalized chart.
+
+The visible status may show:
+
+```text
+FINALIZED · आवृत्ती १
+सुधारणा मसुदा · आवृत्ती २
+```
+
+If the clerk wants to change something after finalization:
+
+1. click `सुधारणा सुरू करा`;
+2. system creates a new draft version;
+3. original finalized version remains available;
+4. clerk edits the amendment;
+5. clerk finalizes the new version.
+
+This is safer and follows the existing domain contract.
+
+---
+
+# 3. Page 1 design
+
+Your correction is right. The main officer arrangement should remain.
+
+SPI sir specifically suggested:
+
+1. senior officer above;
+2. four subordinate officer areas below;
+3. day/night duty areas below them.
+
+That is not the old standardized chart. It is a distinct command-oriented hierarchy and should remain.
+
+## Page 1 structure
+
+```text
+Persistent app header
+Page toolbar
+
+Panchavati Police Station, Nashik City
+Daily Duty Chart
+Date · weekday
+
+Senior officer command block
+
+Four subordinate officer blocks
+
+Day shift                  Night shift
+```
+
+## Senior officer block
+
+Centered, but compact.
+
+```text
+वपोनि गजेंद्र पाटील
+ठाणे प्रमुख
+```
+
+Below it:
+
+```text
+रायटर
+पोहवा १३४७ जाधव
+
+चालक
+दिवस       ...
+रात्र       ...
+```
+
+If no data exists for a field, show a clean empty state rather than a fake placeholder.
+
+## Four officer blocks
+
+Keep four horizontally aligned officer blocks.
+
+They should be shorter and more structured than the current mock.
+
+### Example
+
+```text
+पोनि सुनिल पवार
+क्राईम
+
+रायटर
+...
+
+RTPC
+दिवस    ...
+रात्र    ...
+
+ऑपरेटर
+दिवस    ...
+रात्र    ...
+```
+
+The four blocks can use a shared compact grid:
+
+```text
+[Officer 1] [Officer 2] [Officer 3] [Officer 4]
+```
+
+Do not make them tall dashboard cards.
+
+### Important data honesty
+
+At present, the available Panchavati data does not establish complete officer-to-writer, RTPC and operator mappings for every officer.
+
+Therefore:
+
+- show only source-backed relationships;
+- leave unsupported fields blank or explicitly unavailable;
+- do not invent RTPC/operator assignments;
+- keep the CRUD model ready for future additions;
+- add an officer box through a real blank slot, as the current implementation already does.
+
+## Rank tooltip
+
+The rank abbreviation tooltip should not appear below the text or cause reflow.
+
+Better behavior:
+
+- on hover or keyboard focus;
+- position in a fixed top-right tooltip layer;
+- single line where possible;
+- no layout movement;
+- disappears on mouse exit;
+- hidden in print.
+
+Example:
+
+```text
+पोनि
+```
+
+Tooltip:
+
+```text
+पोलीस निरीक्षक
+```
+
+No inline `abbr` expansion that shifts the row.
+
+---
+
+# 4. Day and night structure
+
+Your correction is important.
+
+Night is **not** a completely different data model.
+
+For the first three columns, day and night follow nearly the same broad grouping:
+
+```text
+Station and internal units
+Chowkis
+Marshal and special posts
+```
+
+The major difference is the fourth column:
+
+- day includes office/clerical/special duty groupings;
+- night includes instructions/notices and night-specific directives.
+
+Therefore Page 1 should preserve the side-by-side visual comparison:
+
+```text
+दिवसपाळी                         रात्रपाळी
+०९:०० ते २१:००                   २१:०० ते ०९:००
+```
+
+The shared group ordering should remain aligned as much as possible:
+
+```text
+ठाणे / वरिष्ठ अधिकारी       ठाणे / वरिष्ठ अधिकारी
+ठाणे अंमलदार                ठाणे अंमलदार
+हजरपाळी                     हजरपाळी
+CCTNS                        CCTNS
+वायरलेस                     वायरलेस
+पिटर मोबाईल                 पिटर मोबाईल
+सी.आर. मोबाईल               सी.आर. मोबाईल
+DB                           DB
+लॉकअप                       लॉकअप
+```
+
+This makes comparison fast for a daily clerk.
+
+## Row compression
+
+Do not show every staff member as a large isolated table row with repeated labels.
+
+Use grouped row spans:
+
+```text
+ठाणे अंमलदार
+  पोहवा १४५२ लांडे
+
+हजरपाळी
+  पोशि २५७१ देशमुख
+  पोशि २०८९ कदम
+```
+
+The role label occupies one narrow left column. People occupy the larger right column.
+
+Where day and night are side by side, use equivalent widths:
+
+```text
+role | staff                         role | staff
+```
+
+Do not use four oversized cards around these tables.
+
+---
+
+# 5. What moves away from Page 1
+
+You were right that putting both:
+
+```text
+कार्यालयीन शाखा व कारकून
+कोर्ट, समन्स, वॉरंट व विशेष कक्ष
+```
+
+on Page 1 creates overload.
+
+They should move to the next logical sheet with the office/special content.
+
+## Proposed distribution
+
+### Page 1
+
+- senior officer;
+- four officer blocks;
+- day shift core;
+- night shift core;
+- only the high-priority shared station/chowki command information.
+
+### Page 2
+
+- office/clerical branches;
+- court;
+- summons;
+- warrants;
+- special desks;
+- marshal/special posts;
+- night instructions;
+- notices where necessary.
+
+### Page 3
+
+- six chowkis in the compact 3×2 matrix;
+- day/night paired chowki rows;
+- marshal lines;
+- `बंद` and `चार्ज`;
+- BIMA assignments.
+
+This lets Page 1 remain visually strong without dropping content.
+
+It also avoids returning to the old standardized format because we are not placing everything in one long horizontal mega-table. We are using multiple deliberate sheets with better grouping.
+
+---
+
+# 6. Target physical sheet count
+
+The target should be:
+
+```text
+Normal day: 5 or 6 sheets
+Dense/event day: 6 or 7 sheets
+Never more than the original packet without a clear reason
+```
+
+The first acceptance target is:
+
+- 10/09: no more than 6 sheets if readable;
+- 11/09: no more than 7 sheets because of the event annex;
+- no information loss;
+- no tiny unreadable text;
+- no massive empty spaces.
+
+If a real 10/09 chart needs six sheets, that is acceptable. The improvement must come from:
+
+- better grouping;
+- less border noise;
+- more useful horizontal allocation;
+- fewer repeated labels;
+- reduced whitespace;
+- faster scanning;
+- cleaner editing.
+
+Not merely from forcing it into fewer pages.
+
+---
+
+# 7. Office and special content sheet
+
+The office and court content should be represented as dense branch tables, not cards.
+
+Example:
+
+```text
+कार्यालयीन शाखा व कारकून
+
+शाखा                         कर्मचारी
+कार्यालयीन अंमलदार           ...
+प्रशासन रायटर                ...
+तपास रायटर                  ...
+नगदी कारकून                  रिक्त
+मुद्देमाल कारकून             ...
+गोपनीय ड्युटी                ...
+हजेरी मास्तर                 ...
+क्राईम कारकून                ...
+बारनिशी                      ...
+MOB / मिसिंग                 ...
+वॉरंट                        ...
+```
+
+Then:
+
+```text
+कोर्ट, समन्स, वॉरंट व विशेष कक्ष
+
+कर्तव्य                       दिवसपाळी              रात्रपाळी
+कोर्ट पैरवी                   ...                    ...
+समन्स                         ...                    ...
+वॉरंट                         ...                    ...
+सायबर सेल                    ...                    ...
+महिला कक्ष                   ...                    ...
+काळाराम मंदीर गार्ड          ...                    ...
+```
+
+This is more efficient than one card for each office role.
+
+Use:
+
+- a single section heading;
+- thin horizontal rules;
+- role grouping;
+- no nested rounded boxes.
+
+---
+
+# 8. CRUD design
+
+The existing three-option workflow should remain and be improved rather than replaced.
+
+When a clerk clicks an assignment, open a centered viewport-safe editor.
+
+## Popup layout
+
+The popup should be:
+
+- centered;
+- maximum height around 80–85vh;
+- internally scrollable only when necessary;
+- wide enough for search and details;
+- symmetric;
+- keyboard accessible;
+- closable with Escape and outside click;
+- not require repeated navigation to Master Data.
+
+### Header
+
+```text
+कर्मचारी नेमणूक
+काटया मारूती · दिवसपाळी
+```
+
+### Current assignment panel
+
+```text
+सध्याचा कर्मचारी
+पोशि ५४२ आहेर
+```
+
+Actions:
+
+```text
+कर्मचारी माहिती बदला
+रिक्त करा
+बिमा
+```
+
+### Main three options
+
+#### 1. Current master details
+
+```text
+कर्मचारी माहिती बदला
+```
+
+Opens an inline edit section:
+
+```text
+नाव मराठीत
+नाव इंग्रजीत
+हुद्दा
+बकल नंबर
+फोन
+
+[जतन करा] [रद्द]
+```
+
+This edits the master record and clearly warns:
+
+```text
+ही माहिती मास्टर रोस्टरमध्ये बदलेल
+```
+
+It should not require opening a separate page.
+
+#### 2. Select existing staff
+
+Search field:
+
+```text
+नाव, बकल नंबर किंवा हुद्दा शोधा
+```
+
+Results should show:
+
+```text
+पोशि ५४२ आहेर
+पोशि १९९८ वाकचैरे
+पोहवा ६९२ गुंबाडे
+```
+
+Each result can include a small secondary availability warning:
+
+```text
+रजेची नोंद आहे
+```
+
+But the system must not block or auto-replace unless a separately approved rule exists.
+
+#### 3. Add new staff
+
+Inline compact form:
+
+```text
+नाव मराठीत
+नाव इंग्रजीत
+हुद्दा
+बकल नंबर
+फोन
+```
+
+Action:
+
+```text
+जतन करून येथे नेमा
+```
+
+This creates the master staff record and assigns it to the exact clicked slot.
+
+## Popup footer
+
+```text
+बंद करा
+```
+
+After a successful save:
+
+```text
+जतन झाले
+```
+
+Then reload the relevant ChartDocument.
+
+No fake visual-only changes.
+
+## Assignment-specific fields
+
+Keep these in the same popup under a compact “या नेमणुकीसाठी” area:
+
+```text
+वेळ
+बिमा
+नोंद
+```
+
+Do not mix master fields with assignment fields.
+
+That distinction is important:
+
+- name/rank/buckle belongs to the staff master;
+- BIMA/time/role/notes belongs to this chart assignment.
+
+---
+
+# 9. Lifecycle and finalization
+
+The UI can make the workflow simple:
+
+```text
+DRAFT
+  संपादन
+  अंतिम करा
+```
+
+After finalization:
+
+```text
+FINALIZED
+  सुधारणा सुरू करा
+  प्रिंट
+```
+
+But technically:
+
+- finalization creates an immutable snapshot;
+- “सुधारणा सुरू करा” creates a new amendment draft;
+- the original final version stays unchanged;
+- the new draft can be edited and finalized separately.
+
+The status label at the top of each chart sheet can remain:
+
+```text
+DRAFT
+FINALIZED · आवृत्ती १
+सुधारणा मसुदा · आवृत्ती २
+```
+
+The persistent application header itself should not carry this chart-specific state.
+
+---
+
+# 10. What we should theoretically verify before implementation
+
+No code or mock should be changed yet.
+
+We should compare three models using actual 10/09 data:
+
+1. Original six-page reference;
+2. current compv3 with full 10/09 data;
+3. Compact-v4 proposal above.
+
+Measure:
+
+- number of sheets;
+- height used per sheet;
+- unused whitespace;
+- repeated labels;
+- nested borders;
+- longest wrapped row;
+- number of lines per staff group;
+- number of duplicated values;
+- page-level horizontal overflow;
+- assignment no-loss count;
+- visual scan time by group;
+- grayscale distinction of `बिमा`, `रिक्त`, `बंद`;
+- edit hover geometry stability.
+
+Acceptance:
+
+- 212/212 assignments represented;
+- no Marathi truncation;
+- no page-level horizontal overflow;
+- no unnecessary chart cards;
+- no fake officer/operator/RTPC data;
+- no more than six sheets for 10/09 if readability remains acceptable;
+- no more than seven for 11/09 with the event annex;
+- first page retains the senior officer plus four-officer hierarchy;
+- day/night shared structure remains visually comparable;
+- office/court content no longer overloads Page 1;
+- CRUD popup handles edit master, select existing and create new without navigating away.
+
+## Important correction to my previous recommendation
+
+I previously said not to start React yet. That remains correct, but for a sharper reason:
+
+> We must first freeze the Compact-v4 visual grammar against the full 10/09 data. React should implement the approved grammar, not become another place where we discover the design.
+
+No implementation has happened yet. The next step should be a focused **theoretical density/layout audit and design decision**, not generic React scaffolding.
+My prompt: Great. Some feedback: नाशिक शहर पोलीस आयुक्तालय then दैनिक कर्तव्य वाटप the  date and week day, all in one line for space saving, centered and spaced symmetrically above top of the page. For the Senior officer block: in one line: वपोनि गजेंद्र पाटील ठाणे प्रमुख in one line pls, why waste vertical space when we have horizontal?? then 3 or 4 columns depending upon writer, driver (below day and night divide column), rtpc (below day and night divide column), operator (below day and night divide column).  Not that whatever vertical slop you are suggesting like this: पोनि सुनिल पवार
+क्राईम
+
+रायटर
+...
+
+RTPC
+दिवस    ...
+रात्र    ...
+
+ऑपरेटर
+दिवस    ...
+रात्र    ...
+
+Other than that everything looks great. continue, also show me rough structure maybe in md table to see how it exactly looks like, so there are no confusions.
+His response: Understood. The top of each printed sheet should be much more space-efficient.
+
+# Revised Page 1 structure
+
+```text
+┌────────────────────────────────────────────────────────────────────────────────────────────┐
+│        नाशिक शहर पोलीस आयुक्तालय      दैनिक कर्तव्य वाटप      दिनांक १० सप्टेंबर २०२६      │
+│                                                        वार गुरुवार                         │
+└────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+Actually, to keep it truly one line:
+
+```text
+नाशिक शहर पोलीस आयुक्तालय      दैनिक कर्तव्य वाटप      दिनांक १० सप्टेंबर २०२६      वार गुरुवार
+```
+
+Centered with equal spacing between the four information groups.
+
+No:
+
+- separate large title rows;
+- `·`;
+- em dash;
+- duplicated English and Marathi;
+- large empty header height.
+
+The screen UI can show the language-selected version. The printed chart remains Marathi-first.
+
+---
+
+# Page 1 rough structure
+
+```text
+Persistent application navbar
+────────────────────────────────────────────────────────────────────────────
+
+Chart-specific toolbar
+पंचवटी दैनिक कर्तव्य तक्ता     १०/०९/२०२६     गुरुवार       DRAFT  संपादन  अंतिम करा  प्रिंट
+
+Printed chart page
+────────────────────────────────────────────────────────────────────────────
+
+नाशिक शहर पोलीस आयुक्तालय      दैनिक कर्तव्य वाटप      दिनांक १० सप्टेंबर २०२६      वार गुरुवार
+
+
+वपोनि गजेंद्र पाटील ठाणे प्रमुख
+
+
+┌────────────────┬────────────────────┬────────────────────┬────────────────────┐
+│ रायटर          │ चालक               │ RTPC               │ ऑपरेटर             │
+│                │                    │                    │                    │
+│ पोहवा १३४७     │ दिवस              │ दिवस               │ दिवस               │
+│ जाधव           │ रिक्त              │ रिक्त              │ रिक्त              │
+│                │                    │                    │                    │
+│                │ रात्र              │ रात्र              │ रात्र              │
+│                │ रिक्त              │ रिक्त              │ रिक्त              │
+└────────────────┴────────────────────┴────────────────────┴────────────────────┘
+
+
+┌──────────────────────────────────────┬──────────────────────────────────────┐
+│ अधिकारी १                            │ अधिकारी २                            │
+│ पोनि सुनिल पवार  क्राईम              │ पोनि नितीन आंधळे  प्रशासन             │
+│ रायटर ...                            │ रायटर ...                            │
+│ RTPC दिवस ...  रात्र ...             │ RTPC दिवस ...  रात्र ...              │
+└──────────────────────────────────────┴──────────────────────────────────────┘
+
+┌──────────────────────────────────────┬──────────────────────────────────────┐
+│ अधिकारी ३                            │ अधिकारी ४                            │
+│ पोनि सुधीर पाटील  तपास               │ सपोनि ...  शाखा                      │
+│ रायटर ...                            │ रायटर ...                            │
+│ RTPC दिवस ...  रात्र ...             │ RTPC दिवस ...  रात्र ...              │
+└──────────────────────────────────────┴──────────────────────────────────────┘
+
+
+┌──────────────────────────────────────┬──────────────────────────────────────┐
+│ दिवसपाळी                            │ रात्रपाळी                            │
+│ ०९:०० ते २१:००                      │ २१:०० ते ०९:००                      │
+│                                      │                                      │
+│ ठाणे अंमलदार                        │ ठाणे अंमलदार                        │
+│ हजरपाळी                             │ हजरपाळी                             │
+│ CCTNS                                │ CCTNS                                │
+│ वायरलेस                             │ वायरलेस                             │
+│ पिटर मोबाईल                         │ पिटर मोबाईल                         │
+│ सी आर मोबाईल                        │ सी आर मोबाईल                        │
+│ डेल्टा मोबाईल                       │ DB                                   │
+│ DB                                   │ लॉकअप                                │
+│ लॉकअप                                │ विशेष कर्तव्य                        │
+└──────────────────────────────────────┴──────────────────────────────────────┘
+```
+
+The actual implementation should not literally use heavy boxes like the rough diagram. The diagram shows hierarchy only. Visually, the final chart should use:
+
+- one thin outer structure;
+- thin internal rules;
+- very light heading bands;
+- no card shadows;
+- no nested rounded cards.
+
+---
+
+# Exact top section table
+
+## Senior officer block
+
+The senior officer identity is one line:
+
+| Main command line |
+|---|
+| **वपोनि गजेंद्र पाटील ठाणे प्रमुख** |
+
+The words should be on one horizontal line whenever the viewport permits.
+
+## Senior officer support columns
+
+The number of columns is dynamic.
+
+### If writer, driver, RTPC and operator all exist
+
+| रायटर | चालक | RTPC | ऑपरेटर |
+|---|---|---|---|
+| पोहवा १३४७ जाधव | दिवस  रिक्त | दिवस  रिक्त | दिवस  रिक्त |
+|  | रात्र  रिक्त | रात्र  रिक्त | रात्र  रिक्त |
+
+### If only writer, driver and RTPC exist
+
+| रायटर | चालक | RTPC |
+|---|---|---|
+| पोहवा १३४७ जाधव | दिवस  रिक्त | दिवस  रिक्त |
+|  | रात्र  रिक्त | रात्र  रिक्त |
+
+### If only writer and driver exist
+
+| रायटर | चालक |
+|---|---|
+| पोहवा १३४७ जाधव | दिवस  रिक्त |
+|  | रात्र  रिक्त |
+
+Rules:
+
+- writer does not need a day/night split unless the source explicitly has one;
+- driver, RTPC and operator each use a compact internal day/night split;
+- empty fields remain visibly empty but compact;
+- no invented assignments;
+- additional support columns can be added through CRUD;
+- column widths are distributed evenly;
+- long names wrap only inside their own cell.
+
+---
+
+# Exact subordinate officer structure
+
+The four officer blocks remain horizontally arranged because this is part of the SPI-approved visual direction.
+
+## Two-row officer grid
+
+| अधिकारी १ | अधिकारी २ |
+|---|---|
+| **पोनि सुनिल पवार**<br>क्राईम<br><br>रायटर  रिक्त<br>RTPC दिवस  रिक्त<br>RTPC रात्र  रिक्त | **पोनि नितीन आंधळे**<br>प्रशासन<br><br>रायटर  रिक्त<br>RTPC दिवस  रिक्त<br>RTPC रात्र  रिक्त |
+
+| अधिकारी ३ | अधिकारी ४ |
+|---|---|
+| **पोनि सुधीर पाटील**<br>तपास<br><br>रायटर  रिक्त<br>RTPC दिवस  रिक्त<br>RTPC रात्र  रिक्त | **सपोनि शाखा अधिकारी**<br>शाखा<br><br>रायटर  रिक्त<br>RTPC दिवस  रिक्त<br>RTPC रात्र  रिक्त |
+
+But the final visual should be more compact than this Markdown representation.
+
+Better rendered version:
+
+```text
+┌────────────────────────────┬────────────────────────────┐
+│ पोनि सुनिल पवार             │ पोनि नितीन आंधळे            │
+│ क्राईम                      │ प्रशासन                    │
+│ रायटर रिक्त                 │ रायटर रिक्त                │
+│ RTPC  दिवस रिक्त  रात्र रिक्त │ RTPC  दिवस रिक्त  रात्र रिक्त │
+└────────────────────────────┴────────────────────────────┘
+```
+
+The officer name and branch stay on the first two lines. Writer and RTPC information stay compact below them.
+
+If an officer has operator data, it is added on the same lower line or a second compact line. We should not allocate a large fixed-height area for an operator field that does not exist.
+
+---
+
+# Main day and night table
+
+The first three logical column families should remain comparable between day and night.
+
+| दिवसपाळी | रात्रपाळी |
+|---|---|
+| ०९:०० ते २१:०० | २१:०० ते ०९:०० |
+| ठाणे / वरिष्ठ अधिकारी | ठाणे / वरिष्ठ अधिकारी |
+| ठाणे अंमलदार | ठाणे अंमलदार |
+| हजरपाळी | हजरपाळी |
+| CCTNS | CCTNS |
+| वायरलेस | वायरलेस |
+| पिटर मोबाईल | पिटर मोबाईल |
+| सी आर मोबाईल | सी आर मोबाईल |
+| डेल्टा मोबाईल | DB |
+| DB | लॉकअप |
+| लॉकअप | विशेष कर्तव्य |
+
+The fourth-column difference should not be forced into this same table.
+
+Instead:
+
+- daytime office/clerical content moves to the office and special sheet;
+- night instructions remain in a dedicated instruction area;
+- shared first-three-column groupings stay visually comparable.
+
+---
+
+# Revised sheet plan
+
+| Sheet | Main purpose | Key content |
+|---|---|---|
+| 1 | Command and core deployment | Senior officer, four subordinate officers, compact day/night station core |
+| 2 | Office and special duties | कार्यालयीन शाखा व कारकून, court, summons, warrant, special desks, marshal/special posts |
+| 3 | Chowki matrix | Six chowkis, day/night staff, BIMA, marshal lines, बंद and चार्ज |
+| 4 | Night instructions and notices | Good Morning Squad, patrol instructions, app scan instructions, establishment closure notices |
+| 5 | Leave and other duties | Weekly off, casual leave, earned leave, sick, training, deputation, other duties |
+| 6 | Manpower and summaries | Manpower matrix, source values, shift summaries, sudden-change ledger |
+| 7 | Officer summary and scanning | 15-officer summary, two six-row scan tables, sign-off |
+
+For a normal low-density date, Sheets 4 and 5 may be combined. For 10/09, the target is six or seven sheets depending on measured density.
+
+The key point is that Page 1 is not forced to contain:
+
+```text
+कार्यालयीन शाखा व कारकून
+कोर्ट, समन्स, वॉरंट व विशेष कक्ष
+```
+
+Those sections can move to Sheet 2 without making the chart resemble Kushal's old long standardized table.
+
+---
+
+# CRUD popup design
+
+The existing current workflow is worth preserving and improving.
+
+When a clerk clicks an assignment, the popup should have three clear sections.
+
+## Popup header
+
+```text
+कर्मचारी नेमणूक
+
+काटया मारूती
+दिवसपाळी
+```
+
+## Current person section
+
+```text
+सध्याचा कर्मचारी
+
+पोशि ५४२ आहेर
+
+[कर्मचारी माहिती बदला]    [रिक्त करा]
+```
+
+If the current slot is vacant:
+
+```text
+सध्याची जागा रिक्त आहे
+```
+
+## Existing staff section
+
+```text
+हजर कर्मचारी निवडा
+
+[ नाव, बकल नंबर किंवा हुद्दा शोधा ]
+
+पोशि ५४२ आहेर
+पोशि १९९८ वाकचैरे
+पोहवा ६९२ गुंबाडे
+```
+
+Clicking a result assigns it to the exact slot.
+
+## New staff section
+
+```text
+नवीन कर्मचारी जोडा
+
+नाव मराठीत
+नाव इंग्रजीत
+हुद्दा
+बकल नंबर
+फोन
+
+[जतन करून येथे नेमा]
+```
+
+## Assignment-specific section
+
+```text
+या नेमणुकीसाठी
+
+वेळ       [ ०९:०० ] ते [ १४:०० ]
+बिमा      [ ]
+नोंद      [ __________________ ]
+```
+
+Master fields and assignment fields remain visually separate.
+
+## Master edit section
+
+When selecting `कर्मचारी माहिती बदला`:
+
+```text
+मास्टर रोस्टरमधील माहिती बदला
+
+नाव मराठीत
+नाव इंग्रजीत
+हुद्दा
+बकल नंबर
+फोन
+
+ही माहिती मास्टर रोस्टरमध्ये बदलेल
+
+[जतन करा] [रद्द]
+```
+
+The popup should:
+
+- open centered in the viewport;
+- avoid unnecessary page scrolling;
+- use a maximum height;
+- scroll internally only when needed;
+- preserve the clicked chart context;
+- return to the same slot after save;
+- show success or failure clearly;
+- support Escape and outside click;
+- avoid causing chart reflow behind it.
+
+---
+
+# Final interpretation
+
+The agreed design direction is now:
+
+1. Persistent navigation/header across the application.
+2. Main header for identity/navigation only.
+3. Page-specific chart toolbar below it.
+4. No duplicated English and Marathi labels.
+5. Language toggle controls UI labels.
+6. Senior officer remains one horizontal line.
+7. Senior support roles become dynamic horizontal columns.
+8. Four subordinate officer blocks remain horizontally arranged.
+9. Day and night retain comparable shared grouping.
+10. Office/court/special content moves away from Page 1.
+11. No one-staff-per-large-row treatment.
+12. Six or seven adaptive sheets are acceptable.
+13. CRUD popup keeps:
+   - edit current master;
+   - select existing staff;
+   - create new staff;
+   - assignment-specific fields.
+14. No implementation or mock has been changed yet.
+
+This is the corrected design structure I would use as the basis for the next theoretical density audit before implementation.
+My prompt: BRUH, this is more line consuming than we already have, why are you worsening things, ugh.
+1. नाशिक शहर पोलीस आयुक्तालय      दैनिक कर्तव्य वाटप      १० सप्टेंबर २०२६, गुरुवार (no need to write दिनांक and वार, they know what this is, hence I remove column headings or explanatory texts.
+2. Here: ┌──────────────────────────────────────┬──────────────────────────────────────┐
+│ अधिकारी १                            │ अधिकारी २                            │
+│ पोनि सुनिल पवार  क्राईम              │ पोनि नितीन आंधळे  प्रशासन             │
+│ रायटर ...                            │ रायटर ...                            │
+│ RTPC दिवस ...  रात्र ...             │ RTPC दिवस ...  रात्र ...              │
+└──────────────────────────────────────┴──────────────────────────────────────┘, no need for that अधिकारी १                            │ अधिकारी २  heading, takes 1 row, just start with the officer name and branch row.
+Also add the ability to move or float elements left, right, centered, top, down, vertically centered, etc. For every editable stuff, even for headings, tags, etc. Also the option if something is rikt or empty or no data, the ability to hide that row to compact stuff, e.g. rtpc or operator, etc. too many emptys will look ugly and can waste space, thus an option to individualy hide those would be cool. Everything else seems cool. Apply similar design and layout space saving styles everywhere. Approved, move ahead and implement this stuff. (idk you will do it in react or html, I think react will be helpful for reusability, all the community templates and stuff, but your call)
+His response: Reasoning trace**Planning subagent delegation for implementation**
+
+**Planning two independent subagents for tasks**
+
+Load skill omnirush-feature
+
+Reasoning trace**Planning renderer enhancements without React**
+
+**Planning dual-agent implementation for renderer and UI popups**
+
+**Designing server-client layout override integration**
+
+**Planning presentation controls implementation**
+
+**Designing generic override API and UX split**
+
+Implement chart layout controls · General agentCompleted · GPT 6.1 Sol (I’m using `presentation_overrides.elements[key]` with a narrow `PATCH /api/charts/:date/presentation` payload: `{ key, horizontalAlign?, verticalAlign?, hidden?, compact? }`. Each property can be cleared with `null`; the renderer will expose matching `data-presentation` keys, including explicit empty support-group controls.
+
+Implemented the server-rendered chart presentation controls using the existing `daily_charts.presentation_overrides` JSONB.
+
+### What changed
+
+- Added safe per-element presentation contract under `presentation_overrides.elements`:
+  - `horizontalAlign`: `left | center | right`
+  - `verticalAlign`: `top | middle | bottom`
+  - `hidden`: boolean
+  - `compact`: boolean
+  - `null` clears an individual property
+- Added `PATCH /api/charts/:date/presentation`
+  - Validates fields and values
+  - Accepts only element keys emitted by the renderer
+  - Locks the chart row during updates
+  - Rejects `FINALIZED` charts with `409`
+  - Preserves labels, assignments, and other chart overrides
+  - Does not persist arbitrary HTML/CSS/JS values
+- Extended `server/render/chart-html.ts`
+  - Emits stable `data-presentation` and `data-presentation-kind` attributes
+  - Resolves chart overrides during rendering
+  - Supports explicit presentation controls for empty support groups, including RTPC/operator hooks
+  - Keeps source rows rendered and unchanged
+- Added `web/chart-presentation.css` for alignment, hidden, and compact hooks.
+- Added focused persistence, resolution, validation, HTTP error, finalized rejection, and snapshot tests.
+- Updated implementation state, traceability, and handoff documentation.
+
+### Changed files
+
+- `server/chart-presentation.ts`
+- `server/presentation.ts`
+- `server/index.ts`
+- `server/render/chart-html.ts`
+- `scripts/render-chart.ts`
+- `web/chart-presentation.css`
+- `tests/presentation.test.ts`
+- `docs/CURRENT_STATE.md`
+- `docs/SESSION_HANDOFF.md`
+- `docs/TRACEABILITY.md`
+- `changes/1011-presentation-controls/proposal.md`
+
+No migration or reference file was modified. `web/chart-authoring.js` and `web/authoring.css` were left untouched.
+
+### Verification
+
+- `npm run check`
+  - Typecheck passed
+  - **83 tests passed**
+  - Doctor passed for both `panchavati3_dev` and `panchavati3_test`
+- `npm run print:audit`
+  - All **6/6 A4 sheets fit**
+  - Extents: `750 / 518 / 680 / 551 / 608 / 705px`
+- `npm run render:chart`
+  - Lossless render: `212/212` assignment rows
+- Live invalid PATCH request returned HTTP `400`
+- `git diff --check` passed)
+
+Task interrupted·Resume
+
+stuck here, heres the todo till now:
+Progress
+1.Finalize a chart-first React/demo design brief for user approval (done he says)
+2.Implement the approved React screen/authoring vertical slice without changing the print renderer
+3.Verify demo flow, persistence, print output, and existing checks
+4.Update current-state and transition handoff after implementation

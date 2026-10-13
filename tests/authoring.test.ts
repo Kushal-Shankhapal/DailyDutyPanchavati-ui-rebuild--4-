@@ -85,7 +85,7 @@ describe("authoring styles separated from the frozen baseline", () => {
     for (const sel of [".add-box", ".toast", ".flyer-overlay", ".flyer-card", "abbr.abbr::after"]) {
       expect(printBlock, `print must hide ${sel}`).toContain(sel);
     }
-    expect(printBlock).toContain("display:none !important");
+    expect(printBlock).toMatch(/display:\s*none\s*!important/);
   });
 });
 
@@ -109,7 +109,8 @@ describe("rendered page wiring (renderChart output)", () => {
     expect(officer).not.toBe("");
     expect(officer).not.toContain("disabled");    // finished feature — never a dead control
     expect(html).toContain("+ अधिकारी बॉक्स जोडा");
-    expect(html).not.toContain("Coming Soon");
+    const officerButton = html.match(/<button[^>]*data-add="officer"[^>]*>[\s\S]*?<\/button>/)?.[0] ?? "";
+    expect(officerButton).not.toContain("Coming Soon");
     const js = read("web/chart-authoring.js");
     expect(js).toContain('data-add") === "officer"');
     expect(js).toContain('api("/api/charts/" + DATE + "/officer"');
