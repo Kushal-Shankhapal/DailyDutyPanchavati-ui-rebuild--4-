@@ -26,7 +26,8 @@ services:
     runtime: node
     plan: free
     region: oregon
-    buildCommand: npm ci --include=dev && npm run db:migrate && npm run db:seed
+    buildCommand: npm ci --include=dev
+    preDeployCommand: npm run db:migrate && npm run db:seed
     startCommand: npm start
     healthCheckPath: /health
     envVars:
