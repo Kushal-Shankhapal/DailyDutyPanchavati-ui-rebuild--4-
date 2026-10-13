@@ -22,10 +22,10 @@
 # dead link to a laptop's localhost.
 services:
   - type: web
-    name: panchavati-daily-duty
+    name: daily-duty-panchavati
     runtime: node
     plan: free
-    region: singapore
+    region: oregon
     buildCommand: npm ci --include=dev && npm run db:migrate && npm run db:seed
     startCommand: npm start
     healthCheckPath: /health
@@ -36,6 +36,8 @@ services:
         value: 0.0.0.0
       - key: LOG_LEVEL
         value: info
+      - key: PGSSLMODE
+        value: require
       # never wipe a populated demo chart on redeploy (db/seed-chart-1009.ts)
       - key: PANCHAVATI_KEEP_EXISTING
         value: "1"
@@ -48,3 +50,10 @@ databases:
   - name: panchavati-demo-db
     plan: free
     postgresMajorVersion: "17"
+
+github:
+  - repo: Kushal-Shankhapal/DailyDutyPanchavati-ui-rebuild--4-
+    branch: main
+    deploy:
+      - .render.yaml
+
