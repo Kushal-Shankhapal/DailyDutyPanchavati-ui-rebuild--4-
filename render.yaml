@@ -6,9 +6,9 @@
 #                    on Render the platform proxies in from outside the container.
 #   · DATABASE_URL   supplied by the database below; server/db.ts uses the URL's own database
 #                    instead of the local panchavati3_dev/panchavati3_test names.
-#   · migrations     run in the pre-deploy phase so Render's free build container
-#                    (which times out the DB connection) is not blocked by schema/seed work.
-#   · data           seeded by the pre-deploy — WITH THE USER'S EXPLICIT AUTHORIZATION (2026-10-13):
+#   · migrations     chained into the runtime start phase so Render's free build container
+#                    (which times out the DB connection) is completely bypassed.
+#   · data           seeded by the runtime — WITH THE USER'S EXPLICIT AUTHORIZATION (2026-10-13):
 #                    the 10/09 chart is the station's real allocation and the user authorised it on
 #                    the demo deployment. PANCHAVATI_KEEP_EXISTING=1 makes the seed skip a chart that
 #                    is already populated, so a redeploy can never wipe the clerk's edits.
@@ -28,8 +28,7 @@ services:
     plan: free
     region: oregon
     buildCommand: npm ci --include=dev
-    preDeployCommand: npm run db:migrate && npm run db:seed
-    startCommand: npm start
+    startCommand: npm run db:migrate && npm run db:seed && npm start
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
@@ -52,9 +51,3 @@ databases:
   - name: panchavati-demo-db
     plan: free
     postgresMajorVersion: "17"
-
-github:
-  - repo: Kushal-Shankhapal/DailyDutyPanchavati-ui-rebuild--4-
-    branch: main
-    deploy:
-      - .render.yaml
