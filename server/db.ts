@@ -9,7 +9,7 @@ export const TEST_DB = process.env.PANCHAVATI_TEST_DB ?? "panchavati3_test";
 function baseConfig(): pg.ClientConfig {
   // DATABASE_URL wins if provided; otherwise local defaults (trust auth as postgres).
   if (process.env.DATABASE_URL) {
-    return { connectionString: process.env.DATABASE_URL, ssl: true, ...(process.env.PGSSLMODE === "require" ? { sslmode: "require" } : {}) };
+    return { connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } };
   }
   const host = process.env.PGHOST ?? "127.0.0.1";
   const port = Number(process.env.PGPORT ?? 5432);
