@@ -1,13 +1,13 @@
 <!--
 Purpose: Current implementation truth for the clean-rebuild repo.
 Current role: First-read state file; updated at the end of every working session.
-Last meaningful change: 2026-10-12 (later pass) — user-facing authoring round: Arjish-style app header + date selector, local pseudo-login for the हजेरी लेखनिक, chowki-band text-overflow + edit-hover-flicker fixes, per-chart editable names (185 elements), and the अधिकारी box add; 77 tests green (`npm run check`), print:audit 6/6.
+Last meaningful change: 2026-10-13 — chart presentation controls: per-element alignment/visibility/compact overrides persisted in existing JSONB, server-rendered hooks, narrow PATCH route, and focused lifecycle/safety tests; 83 tests green (`npm run check`).
 Constraint/dependency: Must reflect verified facts only; speculation belongs in OPEN_QUESTIONS.md.
 -->
 
 # CURRENT_STATE
 
-> Updated: 2026-10-12 · Phase: **P1 — renderer fidelity + authoring round done** (`npm run check` green: typecheck + **77** tests + doctor; 8 migrations).
+> Updated: 2026-10-13 · Phase: **P1 — renderer fidelity + authoring + presentation controls done** (`npm run check` green: typecheck + **83** tests + doctor; 8 migrations).
 >
 > **Live routes:** `npm run dev` (default `PORT=3100`; **IMPORTANT — other checkouts on this machine also listen on 3100/3000 (old `Desktop\DailyDutyPanchavati`, nested `DailyDutyPanchavati-ui-rebuild`); confirm the PID before judging a URL**). `GET /charts/:date` renders the chart, `GET /design/panchavati-compv3.html` serves the frozen visual baseline for side-by-side review, `npm run render:chart` writes `.tmp-preview/chart-<date>.html`.
 >
@@ -150,6 +150,27 @@ Verification status: `npm run check` green (typecheck + 77 tests + doctor ×2 DB
 `presentation_overrides = {}`) after testing. Known limitation: the FINALIZED 409 path of the two
 new routes is enforced in code but not exercised by a test (no finalized chart exists to try it on);
 curl-argv on Windows mangles Devanagari — use the browser or file-based payloads for manual API tests.
+
+## Chart presentation controls (2026-10-13)
+
+Built without a migration and without changing `web/chart-authoring.js` or `web/authoring.css`:
+
+1. `server/chart-presentation.ts` defines the safe `presentation_overrides.elements` contract: horizontal
+   `left|center|right`, vertical `top|middle|bottom`, optional `hidden`, and `compact`; null clears one
+   property. Unknown fields/unsafe stored values are stripped from this namespace before persistence.
+2. `server/presentation.ts` exposes `PATCH /api/charts/:date/presentation`, accepts only a known rendered
+   element key, locks the chart row, rejects FINALIZED with 409, and merges into the existing JSONB without
+   changing assignments, labels, or source data. Finalize projection already carries the JSONB into the
+   immutable snapshot.
+3. `server/render/chart-html.ts` emits stable `data-presentation` hooks and resolves overrides for editable
+   labels/sections, including explicit empty support hooks for Sr-PI चालक/RTPC/ऑपरेटर groups. No support
+   group is auto-hidden; only an explicit chart override hides it. `web/chart-presentation.css` contains the
+   whitelisted display hooks and is loaded separately from the frozen and authoring stylesheets.
+
+Verification: `npm run check` (typecheck + **83 tests** + doctor on both DBs); focused presentation,
+authoring, render and fidelity tests all pass; `npm run print:audit` remains **6/6 sheets fitting one A4**
+(750/518/680/551/608/705px), and a live invalid-value PATCH returned 400. Persistence is also asserted
+in the finalized snapshot. No migration or reference file changed.
 
 ## Next step (user-driven)
 

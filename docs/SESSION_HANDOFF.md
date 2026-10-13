@@ -1,23 +1,25 @@
 <!--
 Purpose: Complete working handoff — everything a fresh session needs to continue without re-analysis.
 Current role: second-read state file (after docs/CURRENT_STATE.md) for anyone picking this up.
-Last meaningful change: 2026-10-12 (same day, final pass) — ALL FOUR user asks are now BUILT and
-  verified: editable names (§5.1), अधिकारी box add (§5.2), header + date selector (§5.3),
-  pseudo-login (§5.4); plus the chowki-band and hover fixes (§6b). 77 tests green.
+Last meaningful change: 2026-10-13 — chart presentation controls added on the existing JSONB path:
+  safe per-element alignment/visibility/compact resolution, renderer hooks, PATCH route and 83 tests green.
 Constraint/dependency: verified facts only; plans are labelled as plans; OPEN_QUESTIONS owns ambiguity.
 -->
 
-# SESSION_HANDOFF — Panchavati Daily Duty (as of 2026-10-12)
+# SESSION_HANDOFF — Panchavati Daily Duty (as of 2026-10-13)
 
 ## 0. TL;DR for the next session
 
-Repo works, `npm run check` is green (typecheck + 74 tests + doctor on both DBs) and the chart prints
+Repo works, `npm run check` is green (typecheck + 83 tests + doctor on both DBs) and the chart prints
 as **6 A4 sheets, one `.page` box per sheet** (`npm run print:audit`). The renderer reproduces the
 approved mock's grammar, folds marshal posts into chowkis and desk posts into page 1's special desk,
 and carries the authoritative काळाराम spelling. **Built this pass (everything from the 10/12 user
-message):** per-chart editable names on 185 elements (§5.1), the अधिकारी box add (§5.2), the
-Arjish-style app header + date selector (§5.3), a local-only pseudo-login (§5.4), and the
-chowki-band text + edit-hover fixes (§6b). Nothing from that message is still open.
+ message):** per-chart editable names on 185 elements (§5.1), the अधिकारी box add (§5.2), the
+ Arjish-style app header + date selector (§5.3), a local-only pseudo-login (§5.4), and the
+ chowki-band text + edit-hover fixes (§6b). The 2026-10-13 presentation-controls slice is also complete:
+ `PATCH /api/charts/:date/presentation` persists only enumerated properties under
+ `presentation_overrides.elements`; renderer hooks resolve them in DRAFT/VALIDATED views and FINALIZED
+ remains immutable. Nothing from the current ask is still open.
 
 ## 1. Where everything is
 
@@ -76,7 +78,29 @@ Traps that cost time before — do not rediscover them:
   match; page 3 matches structurally (data volume differs).
 - **Print density**: sheets 1 and 3 carry `.page.dense`; `web/authoring.css` relaxes row metrics
   (10/9.5 px, line-height 1.15, tighter padding, 6 columns for the dense leave/court grids) **in print
-  only**. Screen keeps the mock's type scale. Row values are never dropped, truncated or reordered.
+ only**. Screen keeps the mock's type scale. Row values are never dropped, truncated or reordered.
+
+## 3b. Database baseline after Astra transition audit (2026-10-12)
+
+- Both project databases now contain the agreed clean baseline: reference masters/templates plus the
+  deterministic 10/09 DRAFT chart. Older databases (`panchavati_dev`, `panchavati2_dev`,
+  `panchavati_combined`, etc.) were not touched.
+- Commands actually run: `NODE_ENV=test npm run db:setup`, then `npm run db:seed` from the workspace root.
+- Verified in both `panchavati3_dev` and `panchavati3_test`: 8 migrations, one `2026-09-10:DRAFT` chart,
+  212 assignments, 179 staff masters, and `presentation_overrides = {}`.
+- `npm run check`: **77/77 tests passed**, typecheck passed, doctor passed for both databases.
+- `npm run print:audit` with a live local server: all **6/6 A4 sheets fit** (750/518/680/551/608/705px).
+- The chart seed is still mechanically sourced from `reference/SEMANTIC/10.md`; the user has explicitly
+  required an originals-first re-verification pass before treating that seed as authoritative.
+
+## 3c. Transition decisions confirmed with the user
+
+- Migrate the screen preview/authoring experience to React; keep the existing ChartDocument and server renderer as
+  the print/PDF authority for the first React milestone.
+- Use Kushal's grouped navigation tree without the chart-type/profile dropdown: Dashboard; Daily Duty Charts →
+  Panchavati pages; Operations; Data. Unfinished leaves stay disabled/Coming Soon.
+- Plan a real `app_users`/session/audit identity path, but do not add or apply that migration until its schema and
+  user flow are separately reviewed. The current local pseudo-login remains the working behavior meanwhile.
 
 ## 4. Decisions made (and the evidence)
 

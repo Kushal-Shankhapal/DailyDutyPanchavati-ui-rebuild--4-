@@ -1,6 +1,6 @@
 // Purpose: Fastify 5 server entry point — REST API over the existing Kysely/pg layer.
 // Current role: P1 server layer — exposes chart CRUD, lifecycle, copy-previous, masters CRUD.
-// Last meaningful change: 2026-10-09 — created at P1 start.
+// Last meaningful change: 2026-10-13 — narrow chart presentation route and stylesheet.
 // Constraint/dependency: AGENTS.md hard rules; all mutations go through domain functions
 //   that enforce invariants; no police data leaves the machine.
 import Fastify from "fastify";
@@ -12,6 +12,7 @@ import { projectChart, getSnapshot, weekdayMr, type ChartDocument } from "./char
 import { finalizeChart, reopenForAmendment } from "./finalize.js";
 import { reassignSlot, addChowkiBlock, addOfficerBox } from "./assignments.js";
 import { renderChart } from "./render/chart-html.js";
+import { registerChartPresentationRoute } from "./presentation.js";
 
 // PORT may be present-but-empty in some shells (Number("")===0 → random port);
 // fall back to the documented 3100 unless a real port number is provided.
@@ -39,6 +40,7 @@ app.get("/design/compv3.css", serveFile(path.join("design", "compv3.css"), "text
 // against the mock it must match (same origin → the mock's relative compv3.css link resolves).
 app.get("/design/panchavati-compv3.html", serveFile(path.join("design", "panchavati-compv3.html"), "text/html; charset=utf-8"));
 app.get("/authoring.css", serveFile(path.join("web", "authoring.css"), "text/css; charset=utf-8"));
+app.get("/chart-presentation.css", serveFile(path.join("web", "chart-presentation.css"), "text/css; charset=utf-8"));
 app.get("/chart-authoring.js", serveFile(path.join("web", "chart-authoring.js"), "text/javascript; charset=utf-8"));
 // Maharashtra Police emblem for the app header — binary, so it cannot go through serveFile
 // (which reads text). Local file only; nothing is fetched from the network.
@@ -85,6 +87,7 @@ app.get("/charts/:date", async (req, reply) => {
     html
       .replace("__CSS_HREF__", "/design/compv3.css")
       .replace("__AUTH_CSS_HREF__", "/authoring.css")
+      .replace("__PRESENTATION_CSS_HREF__", "/chart-presentation.css")
       .replace("__AUTH_JS_SRC__", "/chart-authoring.js")
   );
 });
@@ -234,6 +237,9 @@ app.patch("/api/charts/:date/labels", async (req, reply) => {
     client.release();
   }
 });
+
+// Enumerated per-element display controls only; source rows and labels are untouched.
+registerChartPresentationRoute(app, pool);
 
 // Add an अधिकारी box (edit-mode `+ अधिकारी बॉक्स जोडा`) — display entry in
 // presentation_overrides.officerBoxes + a real रिक्त रायटर seat in the office column.

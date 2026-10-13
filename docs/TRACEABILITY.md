@@ -1,7 +1,7 @@
 <!--
 Purpose: Traceability map: source evidence → requirement → implementation → verification.
 Current role: Coverage ledger; grows with each implemented slice.
-Last meaningful change: 2026-10-12 — authoring/chrome round added (editable names, अधिकारी box, header/date, pseudo-login); R-18 officer button now enabled (feature finished).
+Last meaningful change: 2026-10-13 — per-element presentation controls added on the existing chart JSONB path, with safety/lifecycle tests.
 Constraint/dependency: Implementation/Test columns stay honest — "—" until code exists; never pre-ticked.
 -->
 
@@ -85,3 +85,4 @@ The 12 old INV rules (old repo `docs/decisions/INVARIANTS.md`) are carried into 
 | R-20d | pseudo-login: choose name/rank/buckle (buckle only where applicable); top-right shows "लॉगिन: …" | user; sign-off line तक्ता तयार करणारे हजेरी लेखनिक; `ranks.cadre` | `localStorage['pd_clerk']` + `#ab-user` chip + `openLogin()` (chart candidates + form; buckle only for CONSTABULARY) | 🔨 browser: chip renders/persists, buckle hidden for OFFICER ranks; no server call, no schema change |
 | R-20e | "make every table, chart or column name, left rows name editable … for that version of the chart" (both scopes) | user | `makeNames()` → `data-label`/`data-default`/`data-override` on 185 elements; `presentation_overrides.labels`/`labelsAll`; `PATCH /api/charts/:date/labels` (409 FINALIZED); rename flyer | 🔨 `authoring.test.ts` (key coverage + `override resolution: element > text > default` + no-loss unchanged) + browser E2E both scopes + blank revert |
 | R-20f | "add the ability to add adhikari box, just like the chowki box" | user; officer-box grammar in `design/panchavati-compv3.html` + seed writer rows | `addOfficerBox()` (override entry + ONE रिक्त writer seat = the label row, DAY col 4) + `POST /api/charts/:date/officer` + enabled button/flyer + office-walk fill fix | 🔨 `authoring.test.ts` (`addOfficerBox domain`, rollback, dup/blank refused) + browser E2E: add → fill → person renders in ITS box; dev DB restored to 212/`{}` |
+| R-20g | Per-element chart labels/sections may be aligned, compacted or explicitly hidden; FINALIZED remains immutable | user; existing `daily_charts.presentation_overrides` JSONB | `server/chart-presentation.ts` safe enum contract + `server/presentation.ts` `PATCH /api/charts/:date/presentation` + renderer `data-presentation` hooks + `web/chart-presentation.css`; no migration, source rows untouched | ✅ `tests/presentation.test.ts` (validation, safe resolution/merge, JSONB persistence, no source-row change, HTTP validation/lookup, FINALIZED 409) + `npm run check` (83 tests) |

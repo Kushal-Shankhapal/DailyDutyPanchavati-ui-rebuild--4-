@@ -1,7 +1,7 @@
 // Purpose: render a chart (default 2026-09-10) from its ChartDocument projection to a
 //   static HTML file under .tmp-preview/ for browser + print verification.
 // Current role: P1 render entry point (`npm run render:chart`).
-// Last meaningful change: 2026-10-08 — created at P1 (renderer slice).
+// Last meaningful change: 2026-10-13 — resolves presentation stylesheet for static preview.
 // Constraint/dependency: renders from projection (DRAFT) or pass --snapshot to render a
 //   FINALIZED chart_versions snapshot (reprint path — finalized charts render THIS only).
 import fs from "node:fs";
@@ -40,6 +40,7 @@ try {
   fs.writeFileSync(outFile, html
     .replace("__CSS_HREF__", "../design/compv3.css")
     .replace("__AUTH_CSS_HREF__", "../web/authoring.css")
+    .replace("__PRESENTATION_CSS_HREF__", "../web/chart-presentation.css")
     .replace("__AUTH_JS_SRC__", "../web/chart-authoring.js"), "utf8");
   console.log(`✔ rendered ${dateArg} (${useSnapshot ? "snapshot" : "projection"}): rows ${stats.rowsRendered}/${stats.rowsTotal} → ${path.relative(root, outFile)}`);
 } finally {

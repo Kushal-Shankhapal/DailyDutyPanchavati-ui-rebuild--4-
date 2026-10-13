@@ -3,13 +3,14 @@
 //   compact-v3 mock's class vocabulary; data = the document only (never re-derived).
 // Current role: P1 renderer v1 — full data coverage, 5-page skeleton; visual polish
 //   iterates on user screenshots (user owns the visual pass).
-// Last meaningful change: 2026-10-08 — created at P1 (renderer slice).
+// Last meaningful change: 2026-10-13 — stable presentation hooks and resolved controls.
 // Constraint/dependency: AGENTS.md hard rules — no notes parsing (notes only echoed
 //   as text), protected tokens (Dial 112, CCTNS, MERS…) never digit-transformed,
 //   Marathi wraps never truncates (CSS handles), derived weekday computed once here.
 import type {
   ChartDocument, DocAssignment, DocPerson, DocLocationState, MatrixColumn,
 } from "../chart-document.js";
+import { resolvePresentation, type PresentationElement } from "../chart-presentation.js";
 
 // ---- display helpers -------------------------------------------------------------
 const DEV_DIGITS = "०१२३४५६७८९";
@@ -119,24 +120,41 @@ export interface Names {
   t(key: string, def: string): string;
   /** `data-label` + `data-default` attributes (empty string when the element has no name) */
   a(key: string, def: string): string;
+  /** Presentation hook and resolved safe values for the server-rendered element. */
+  p(key: string, label: string, kind?: PresentationElement["kind"], empty?: boolean): string;
+  /** Presentation hook plus the existing editable-name attributes. */
+  e(key: string, def: string, kind?: PresentationElement["kind"]): string;
 }
-const NO_NAMES: Names = { t: (_key, def) => def, a: () => "" };
-function makeNames(doc: ChartDocument): Names {
+const NO_NAMES: Names = { t: (_key, def) => def, a: () => "", p: () => "", e: () => "" };
+function makeNames(doc: ChartDocument, elements?: Map<string, PresentationElement>): Names {
   const ov = (doc.template.overrides ?? {}) as {
     labels?: Record<string, string>;
     labelsAll?: Record<string, string>;
   };
   const byKey = ov.labels ?? {};
   const byText = ov.labelsAll ?? {};
+  const a = (key: string, def: string): string => {
+    if (key === "" || def === "") return "";
+    const ovr = byKey[key] !== undefined ? "element" : byText[def] !== undefined ? "all" : "";
+    return ` data-label="${h(key)}" data-default="${h(def)}"${ovr ? ` data-override="${ovr}"` : ""}`;
+  };
+  const p = (key: string, label: string, kind: PresentationElement["kind"] = "label", empty = false): string => {
+    const resolved = resolvePresentation(doc, key);
+    elements?.set(key, { key, label, kind, ...(empty ? { empty: true } : {}) });
+    const attrs = [` data-presentation="${h(key)}"`, ` data-presentation-kind="${kind}"`];
+    if (resolved.horizontalAlign) attrs.push(` data-horizontal-align="${resolved.horizontalAlign}"`);
+    if (resolved.verticalAlign) attrs.push(` data-vertical-align="${resolved.verticalAlign}"`);
+    if (resolved.hidden !== undefined) attrs.push(` data-presentation-hidden="${String(resolved.hidden)}"`);
+    if (resolved.compact !== undefined) attrs.push(` data-compact="${String(resolved.compact)}"`);
+    return attrs.join("");
+  };
   return {
     t: (key, def) => byKey[key] ?? byText[def] ?? def,
     // data-override marks WHICH scope is currently renaming this element, so the popover can
     // pre-select the matching radio (blank + right scope = a real revert, not a no-op).
-    a: (key, def) => {
-      if (key === "" || def === "") return "";
-      const ovr = byKey[key] !== undefined ? "element" : byText[def] !== undefined ? "all" : "";
-      return ` data-label="${h(key)}" data-default="${h(def)}"${ovr ? ` data-override="${ovr}"` : ""}`;
-    },
+    a,
+    p,
+    e: (key, def, kind = "label") => def === "" ? "" : `${a(key, def)}${p(key, def, kind)}`,
   };
 }
 
@@ -166,7 +184,7 @@ function renderGroups(
     const titleDef = g.label && !hideLabel ? (g.label.dutyTitleMr ?? "") : "";
     const titleKey = g.label ? `grp.${g.label.assignmentId}` : "";
     const title = titleDef === "" ? "" : disp(n.t(titleKey, titleDef));
-    const titleAttr = n.a(titleKey, titleDef);
+    const titleAttr = n.e(titleKey, titleDef, "label");
     if (g.label) count(1);  // no-loss accounting: the label row materialises as block heading/group anchor
     if (g.rows.length === 0) {
       if (hideLabel) continue; // represented by the block heading
@@ -212,7 +230,7 @@ function renderGroups(
       // The label cell is always emitted — an empty one keeps the role column aligned between
       // labelled runs (रायटर / बिमा) and the rows the source leaves without a role. Named cells
       // carry data-label/data-default; an unnamed (empty) cell gets no attributes at all.
-      const th = `<th class="${cls}" rowspan="${run.rows.length}"${n.a(key, def)}>${text}</th>`;
+      const th = `<th class="${cls}" rowspan="${run.rows.length}"${n.e(key, def, "label")}>${text}</th>`;
       run.rows.forEach((r, yi) => {
         const trCls = yi === 0 ? ` class="g"` : "";
         html += `<tr${trCls}>${yi === 0 ? th : ""}<td${slotAttrs(r)}>${valueHtml(r)}</td></tr>\n`;
@@ -414,8 +432,8 @@ function headHtml(doc: ChartDocument, n: Names): string {
   const t1 = "नाशिक शहर पोलीस आयुक्तालय", t2 = "दैनिक कर्तव्य वाटप";
   return `<div class="head">
     <div class="hc">
-      <div class="h1"${n.a("head.h1", t1)}>${disp(n.t("head.h1", t1))}</div>
-      <div class="h2"${n.a("head.h2", t2)}>${disp(n.t("head.h2", t2))}</div>
+      <div class="h1"${n.e("head.h1", t1)}>${disp(n.t("head.h1", t1))}</div>
+      <div class="h2"${n.e("head.h2", t2)}>${disp(n.t("head.h2", t2))}</div>
       <div class="h3">${dateLine}</div>
     </div>
     <div class="hr"><span class="lc lc-${lc}">${doc.lifecycle}</span></div>
@@ -425,18 +443,19 @@ function headHtml(doc: ChartDocument, n: Names): string {
 // One printed A4 sheet. `dense` marks the two composite pages whose real source content
 // cannot fit the mock's screen type scale on one sheet; the print-only density rules live in
 // web/authoring.css (.page.dense) and never drop, truncate or reorder a row.
-function page(title: string, doc: ChartDocument, body: string, opts?: { dense?: boolean }): string {
+function page(title: string, doc: ChartDocument, body: string, opts: { dense?: boolean } | undefined, n: Names): string {
   return `<div class="page${opts?.dense ? " dense" : ""}">
-  ${headHtml(doc, makeNames(doc))}
+  ${headHtml(doc, n)}
 ${body}
 </div>`;
 }
 
-export function renderChart(doc: ChartDocument): { html: string; stats: RenderStats } {
+export function renderChart(doc: ChartDocument): { html: string; stats: RenderStats; presentationElements: PresentationElement[] } {
   const stats: RenderStats = { rowsTotal: doc.assignments.length, rowsRendered: 0 };
   const count = (n: number) => { stats.rowsRendered += n; };
   // Per-chart editable names for every section/table/column/left-row title below.
-  const n = makeNames(doc);
+  const elementMap = new Map<string, PresentationElement>();
+  const n = makeNames(doc, elementMap);
   const col = (shift: "DAY" | "NIGHT", c: number) =>
     doc.assignments.filter((a) => a.shift === shift && a.columnNo === c);
   const dtTable = (rows: DocAssignment[], opts?: { hideLocationLabels?: boolean }) =>
@@ -463,20 +482,21 @@ export function renderChart(doc: ChartDocument): { html: string; stats: RenderSt
       <span class="chip c-sr">ठाणे प्रमुख</span>
     </div>
     <div class="sr-pi-body">
-      <div class="grp">
-        <span class="lb">रायटर:</span>
-        <div class="ln">${writer ? `<span>${personLine(writer)}</span>` : `<span class="blank"></span>`}</div>
-      </div>
-      <div class="grp">
-        <span class="lb">चालक:</span>
-        <div class="ln"><span class="k">दिवस:</span><span class="blank"></span></div>
-        <div class="ln"><span class="k">रात्र:</span><span class="blank"></span></div>
-      </div>
-      <div class="grp">
-        <span class="lb">RTPC:</span>
-        <div class="ln"><span class="k">दिवस:</span><span class="blank"></span></div>
-        <div class="ln"><span class="k">रात्र:</span><span class="blank"></span></div>
-      </div>
+       <div class="grp"${n.p("support.srpi.writer", "रायटर", "support", !writer)}>
+         <span class="lb">रायटर:</span>
+         <div class="ln">${writer ? `<span>${personLine(writer)}</span>` : `<span class="blank"></span>`}</div>
+       </div>
+       <div class="grp"${n.p("support.srpi.driver", "चालक", "support", true)}>
+         <span class="lb">चालक:</span>
+         <div class="ln"><span class="k">दिवस:</span><span class="blank"></span></div>
+         <div class="ln"><span class="k">रात्र:</span><span class="blank"></span></div>
+       </div>
+       <div class="grp"${n.p("support.srpi.rtpc", "RTPC", "support", true)}>
+         <span class="lb">RTPC:</span>
+         <div class="ln"><span class="k">दिवस:</span><span class="blank"></span></div>
+         <div class="ln"><span class="k">रात्र:</span><span class="blank"></span></div>
+       </div>
+       <div class="grp presentation-support-empty" aria-hidden="true"${n.p("support.srpi.operator", "ऑपरेटर", "support", true)}></div>
     </div>
   </div>` : "";
 
@@ -524,7 +544,7 @@ export function renderChart(doc: ChartDocument): { html: string; stats: RenderSt
     // value row is printed — both counted exactly once, here.
     count(all.length);
     const roleKey = `box.${box.label}.role`;
-    const th = `<th class="role"${rows.length > 1 ? ` rowspan="${rows.length}"` : ""}${n.a(roleKey, box.writerRole)}>${disp(n.t(roleKey, box.writerRole))}</th>`;
+     const th = `<th class="role"${rows.length > 1 ? ` rowspan="${rows.length}"` : ""}${n.e(roleKey, box.writerRole)}>${disp(n.t(roleKey, box.writerRole))}</th>`;
     const body = rows.length === 0
       // no verified writer row for this post — an open slot, never an invented name
       ? `<tr class="g">${th}<td><span class="blank"></span></td></tr>`
@@ -537,7 +557,7 @@ export function renderChart(doc: ChartDocument): { html: string; stats: RenderSt
     // (it is a person's name, not a table/column name — the master stays the authority).
     const name = head ? personLine(head) : disp(n.t(nameKey, nameDef));
     return `<div class="blk">
-      <div class="bh"><div class="nm"${head ? "" : n.a(nameKey, nameDef)}>${name}</div><span class="chip c-off"${n.a(`box.${box.label}`, box.label)}>${disp(n.t(`box.${box.label}`, box.label))}</span></div>
+       <div class="bh"><div class="nm"${head ? "" : n.e(nameKey, nameDef, "section")}>${name}</div><span class="chip c-off"${n.e(`box.${box.label}`, box.label)}>${disp(n.t(`box.${box.label}`, box.label))}</span></div>
       <div class="body"><table class="dt"><tbody>\n        ${body}\n      </tbody></table></div>
     </div>`;
   };
@@ -569,7 +589,7 @@ export function renderChart(doc: ChartDocument): { html: string; stats: RenderSt
 
   const deskBlock = (key: string, title: string, win: string | undefined, rows: DocAssignment[]) =>
     `<div class="blk core">
-      <div class="bh"><div class="nm"${n.a(key, title)}>${disp(n.t(key, title))}</div>${win ? `<span class="win">${win}</span>` : ""}</div>
+      <div class="bh"><div class="nm"${n.e(key, title, "section")}>${disp(n.t(key, title))}</div>${win ? `<span class="win">${win}</span>` : ""}</div>
       <div class="body">${dtTable(rows)}</div>
     </div>`;
 
@@ -585,7 +605,7 @@ export function renderChart(doc: ChartDocument): { html: string; stats: RenderSt
   const page1 = page("", doc, `  ${srPiCard}
 ${officerGrid}
 ${officerAddBox}
-${p1Lower}`, { dense: true });
+${p1Lower}`, { dense: true }, n);
 
   // ---- page 2: location blocks (chowkis + folded marshal posts) ------------------
   const blockHtml = (b: Block): string => {
@@ -620,7 +640,7 @@ ${p1Lower}`, { dense: true });
       const table = cells.includes("<tr") ? `<table class="dt"><tbody>\n${cells}</tbody></table>` : "";
       const stKey = `blk.${b.key}.${shift}`;
       return `<div class="sub-col${closed ? " shut" : ""}">
-            <div class="sub-col-title"><span${n.a(stKey, title)}>${disp(n.t(stKey, title))}</span></div>
+            <div class="sub-col-title"><span${n.e(stKey, title)}>${disp(n.t(stKey, title))}</span></div>
             ${st}
             ${mrshSt}
             ${table}
@@ -633,7 +653,7 @@ ${p1Lower}`, { dense: true });
       return `<div class="of">अधि. ${personLine(b.incharge)}${tm}</div>`;
     })() : "";
     return `<div class="blk">
-      <div class="ch-head"><div class="nm"${n.a(`blk.${b.key}`, b.name)}>${disp(n.t(`blk.${b.key}`, b.name))}</div>${incharge}</div>
+      <div class="ch-head"><div class="nm"${n.e(`blk.${b.key}`, b.name, "section")}>${disp(n.t(`blk.${b.key}`, b.name))}</div>${incharge}</div>
       <div class="body"><div class="sub-shift-wrap">
         ${sub("DAY", "दिवसपाळी")}
         ${sub("NIGHT", "रात्रपाळी")}
@@ -641,13 +661,13 @@ ${p1Lower}`, { dense: true });
     </div>`;
   };
   const looseHtml = loose.length
-    ? `<div class="blk"><div class="ch-head"><div class="nm"${n.a("blk.loose", "इतर")}>${n.t("blk.loose", "इतर")}</div></div>
+    ? `<div class="blk"><div class="ch-head"><div class="nm"${n.e("blk.loose", "इतर", "section")}>${n.t("blk.loose", "इतर")}</div></div>
       <div class="body">${dtTable(loose)}</div></div>` : "";
   const page2 = page("", doc, `  <div class="grid g-chowki">
     ${blocks.map(blockHtml).join("\n    ")}
     ${looseHtml}
     <button type="button" class="add-box" data-add="chowki">+ चौकी जोडा</button>
-  </div>`);
+   </div>`, undefined, n);
 
   // ---- page 3: availability (leave section + court/bandobast section) + notices ----
   // One block per SOURCE sub-group (category); the source's own column groups decide which
@@ -678,7 +698,7 @@ ${p1Lower}`, { dense: true });
       return `<div class="p"><span class="n">${personLine(a.person)}</span>${win}</div>`;
     }).join("\n        ");
     return `<div class="blk">
-      <div class="bh"><div class="nm"${n.a(`avail.${name}`, name)}>${disp(n.t(`avail.${name}`, name))}</div><span class="chip num">${toMr(String(items.length))}</span></div>
+      <div class="bh"><div class="nm"${n.e(`avail.${name}`, name, "section")}>${disp(n.t(`avail.${name}`, name))}</div><span class="chip num">${toMr(String(items.length))}</span></div>
       <div class="body">
         ${lines}
       </div>
@@ -692,11 +712,11 @@ ${p1Lower}`, { dense: true });
   }
   const noticeBlocks = [...noticeGroups.entries()].map(([k, lines]) =>
     `<div class="blk">
-      <div class="bh"><div class="nm"${n.a(`notice.${k}`, k)}>${disp(n.t(`notice.${k}`, k))}</div><span class="chip num">${toMr(String(lines.length))}</span></div>
+      <div class="bh"><div class="nm"${n.e(`notice.${k}`, k, "section")}>${disp(n.t(`notice.${k}`, k))}</div><span class="chip num">${toMr(String(lines.length))}</span></div>
       <div class="body">
         ${lines.map((t) => `<div class="p"><span class="n">${raw(t)}</span></div>`).join("\n        ")}
       </div>
-    </div>`).join("\n    ");  const availSectionsHtml = buckets.map((blocks, i) => blocks.length === 0 ? "" : `  <div class="sec"${i === 0 ? "" : ` style="margin-top:10px;"`}><h2${n.a(`sec.avail.${i}`, availSections[i].title)}>${disp(n.t(`sec.avail.${i}`, availSections[i].title))}</h2></div>
+    </div>`).join("\n    ");  const availSectionsHtml = buckets.map((blocks, i) => blocks.length === 0 ? "" : `  <div class="sec"${i === 0 ? "" : ` style="margin-top:10px;"`}><h2${n.e(`sec.avail.${i}`, availSections[i].title, "section")}>${disp(n.t(`sec.avail.${i}`, availSections[i].title))}</h2></div>
   <div class="grid g4">
     ${blocks.map(([k, v]) => availBlock(k, v)).join("\n    ")}
   </div>`).join("\n\n");
@@ -704,18 +724,18 @@ ${p1Lower}`, { dense: true });
   // Page 3 splits into the leave/court sheet (dense — real leave lists are long) and a notices
   // sheet. The mock omits the source's notice rows entirely, so nothing in the mock is violated;
   // keeping them here gives every printed sheet a coherent section instead of raw spill-over.
-  const page3 = page("", doc, availSectionsHtml, { dense: true });
+  const page3 = page("", doc, availSectionsHtml, { dense: true }, n);
 
-  const page4 = page("", doc, `  <div class="sec"><h2${n.a("sec.notices", "सूचना व निर्देश")}>${disp(n.t("sec.notices", "सूचना व निर्देश"))}</h2></div>
+  const page4 = page("", doc, `  <div class="sec"><h2${n.e("sec.notices", "सूचना व निर्देश", "section")}>${disp(n.t("sec.notices", "सूचना व निर्देश"))}</h2></div>
   <div class="grid g4">
     ${noticeBlocks}
-  </div>`);
+   </div>`, undefined, n);
 
   // ---- page 4: manpower matrix + shift summary + sudden changes ----
   const mcols = (doc.template.layout.matrixColumns as MatrixColumn[] | undefined) ?? [];
   // Matrix headers/row names are editable NAMES; cell VALUES stay verbatim source data (never
   // digit-transformed, never renamed) — header text keeps h() only, exactly as before.
-  const matrixHead = `<tr><th${n.a("mcol.detail", "तपशील")}>${h(n.t("mcol.detail", "तपशील"))}</th>${mcols.map((c) => `<th class="num"${n.a(`mcol.${c.key}`, c.label)}>${h(n.t(`mcol.${c.key}`, c.label))}</th>`).join("")}</tr>`;
+  const matrixHead = `<tr><th${n.e("mcol.detail", "तपशील")}>${h(n.t("mcol.detail", "तपशील"))}</th>${mcols.map((c) => `<th class="num"${n.e(`mcol.${c.key}`, c.label)}>${h(n.t(`mcol.${c.key}`, c.label))}</th>`).join("")}</tr>`;
   const rowOrder = [...new Set(doc.manpower.map((c) => c.displayOrder))].sort((a, b) => a - b);
   const matrixBody = rowOrder.map((ord) => {
     const cells = doc.manpower.filter((c) => c.displayOrder === ord);
@@ -726,7 +746,7 @@ ${p1Lower}`, { dense: true });
       const muted = v === ".." || v === "" ? " muted" : "";
       return `<td class="num${muted}">${h(v)}</td>`;  // verbatim source values — NEVER toMr
     }).join("");
-    return `<tr><th${n.a(`mrow.${rowKey}`, rowKey)}>${disp(n.t(`mrow.${rowKey}`, rowKey))}</th>${tds}</tr>`;
+    return `<tr><th${n.e(`mrow.${rowKey}`, rowKey)}>${disp(n.t(`mrow.${rowKey}`, rowKey))}</th>${tds}</tr>`;
   }).join("\n      ");
 
   const sumLabel: Record<string, string> = {
@@ -738,14 +758,14 @@ ${p1Lower}`, { dense: true });
       const cell = doc.shiftSummaries.find((s) => s.summaryKey === k && s.columnKey === c);
       return `<td class="num">${disp(cell?.valueText ?? "")}</td>`;
     }).join("");
-    return `<tr><th${n.a(`ssum.row.${k}`, sumLabel[k])}>${disp(n.t(`ssum.row.${k}`, sumLabel[k]))}</th>${tds}</tr>`;
+    return `<tr><th${n.e(`ssum.row.${k}`, sumLabel[k])}>${disp(n.t(`ssum.row.${k}`, sumLabel[k]))}</th>${tds}</tr>`;
   }).join("\n      ");
 
   const changeBody = doc.suddenChanges.map((c) =>
     `<tr><td class="num">${toMr(String(c.seq))}</td><td>${disp(c.detailMr)}</td><td>${disp(c.noteMr ?? "")}</td></tr>`)
     .join("\n      ") || `<tr><td class="num">—</td><td class="nil">नोंद नाही</td><td></td></tr>`;
 
-  const page5 = page("", doc, `  <div class="sec"><h2${n.a("sec.matrix", "मनुष्यबळ स्थिती दर्शक मॅट्रिक्स")}>${disp(n.t("sec.matrix", "मनुष्यबळ स्थिती दर्शक मॅट्रिक्स"))}</h2></div>
+  const page5 = page("", doc, `  <div class="sec"><h2${n.e("sec.matrix", "मनुष्यबळ स्थिती दर्शक मॅट्रिक्स", "section")}>${disp(n.t("sec.matrix", "मनुष्यबळ स्थिती दर्शक मॅट्रिक्स"))}</h2></div>
   <div class="tbl-wrap">
   <table class="tbl">
     <thead>
@@ -757,11 +777,11 @@ ${p1Lower}`, { dense: true });
   </table>
   </div>
 
-  <div class="sec" style="margin-top:10px;"><h2${n.a("sec.summary", "पाळीनिहाय सारांश व अचानक बदल नोंद")}>${disp(n.t("sec.summary", "पाळीनिहाय सारांश व अचानक बदल नोंद"))}</h2></div>
+  <div class="sec" style="margin-top:10px;"><h2${n.e("sec.summary", "पाळीनिहाय सारांश व अचानक बदल नोंद", "section")}>${disp(n.t("sec.summary", "पाळीनिहाय सारांश व अचानक बदल नोंद"))}</h2></div>
   <div class="two">
     <div class="tbl-wrap">
       <table class="tbl">
-        <thead><tr><th${n.a("ssum.lbl", "पाळी")}>${disp(n.t("ssum.lbl", "पाळी"))}</th>${sumCols.map((c) => `<th class="num"${n.a(`ssum.col.${c}`, c)}>${h(n.t(`ssum.col.${c}`, c))}</th>`).join("")}</tr></thead>
+        <thead><tr><th${n.e("ssum.lbl", "पाळी")}>${disp(n.t("ssum.lbl", "पाळी"))}</th>${sumCols.map((c) => `<th class="num"${n.e(`ssum.col.${c}`, c)}>${h(n.t(`ssum.col.${c}`, c))}</th>`).join("")}</tr></thead>
         <tbody>
       ${sumBody}
         </tbody>
@@ -769,19 +789,19 @@ ${p1Lower}`, { dense: true });
     </div>
     <div class="tbl-wrap">
       <table class="tbl">
-        <thead><tr><th class="num" style="width:32px"${n.a("chg.h.n", "अ.नं.")}>${disp(n.t("chg.h.n", "अ.नं."))}</th><th${n.a("chg.h.d", "अचानक बदल तपशील")}>${disp(n.t("chg.h.d", "अचानक बदल तपशील"))}</th><th style="width:40%"${n.a("chg.h.note", "नोंद / कारण")}>${disp(n.t("chg.h.note", "नोंद / कारण"))}</th></tr></thead>
+        <thead><tr><th class="num" style="width:32px"${n.e("chg.h.n", "अ.नं.")}>${disp(n.t("chg.h.n", "अ.नं."))}</th><th${n.e("chg.h.d", "अचानक बदल तपशील")}>${disp(n.t("chg.h.d", "अचानक बदल तपशील"))}</th><th style="width:40%"${n.e("chg.h.note", "नोंद / कारण")}>${disp(n.t("chg.h.note", "नोंद / कारण"))}</th></tr></thead>
         <tbody>
       ${changeBody}
         </tbody>
       </table>
     </div>
-  </div>`);
+   </div>`, undefined, n);
 
   // ---- page 5: officer summary + scan schedule + sign-off ----
   const offHalf = Math.ceil(doc.officerSummary.length / 2);
   const officerTable = (rows: typeof doc.officerSummary) => `<div class="tbl-wrap">
       <table class="tbl">
-        <thead><tr><th class="num" style="width:30px"${n.a("off.h.n", "अ.नं.")}>${disp(n.t("off.h.n", "अ.नं."))}</th><th${n.a("off.h.o", "अधिकारी")}>${disp(n.t("off.h.o", "अधिकारी"))}</th><th${n.a("off.h.d", "कर्तव्य वाटप")}>${disp(n.t("off.h.d", "कर्तव्य वाटप"))}</th></tr></thead>
+        <thead><tr><th class="num" style="width:30px"${n.e("off.h.n", "अ.नं.")}>${disp(n.t("off.h.n", "अ.नं."))}</th><th${n.e("off.h.o", "अधिकारी")}>${disp(n.t("off.h.o", "अधिकारी"))}</th><th${n.e("off.h.d", "कर्तव्य वाटप")}>${disp(n.t("off.h.d", "कर्तव्य वाटप"))}</th></tr></thead>
         <tbody>
         ${rows.map((o) => `<tr><td class="num">${toMr(String(o.rowNo))}</td><td>${disp(o.officerText)}</td><td>${disp(o.dutyText)}</td></tr>`).join("\n        ")}
         </tbody>
@@ -795,7 +815,7 @@ ${p1Lower}`, { dense: true });
   const hazari = doc.assignments.filter((a) => a.dutyCode === "OFFICE_HAZARI_MASTER" && a.person).map((a) => personLine(a.person!));
   // Sign-off LABELS are rename-able (span-wrapped so the value below <br> is never touched).
   const sig = (key: string, label: string, value: string): string =>
-    `<div class="sig"><span${n.a(key, label)}>${disp(n.t(key, label))}</span><br>${value}</div>`;
+    `<div class="sig"><span${n.e(key, label, "section")}>${disp(n.t(key, label))}</span><br>${value}</div>`;
   const signoff = `<div class="signoff">
     ${sig("signoff.1", "तक्ता तयार करणारे हजेरी लेखनिक:", hazari.map((p) => `<b>${p}</b>`).join(" / ") || "<b>—</b>")}
     ${sig("signoff.2", "तपासणी अधिकारी (प्रभारी):", srpi ? `<b>${h(srpi.nameMr)}</b> · वरिष्ठ पोलीस निरीक्षक` : "<b>—</b>")}
@@ -808,7 +828,7 @@ ${p1Lower}`, { dense: true });
   const scanSessions = (doc.template.layout.scanSessions as ScanSession[] | undefined) ?? [];
   const sessionTable = scanSessions.length ? `<div class="tbl-wrap">
       <table class="tbl">
-        <thead><tr><th${n.a("scan.s.t", "सत्र व वेळ")}>${disp(n.t("scan.s.t", "सत्र व वेळ"))}</th><th${n.a("scan.s.p", "पेट्रोलिंग मोबाईल")}>${disp(n.t("scan.s.p", "पेट्रोलिंग मोबाईल"))}</th><th${n.a("scan.s.b", "बीट मार्शल नेमणूक")}>${disp(n.t("scan.s.b", "बीट मार्शल नेमणूक"))}</th></tr></thead>
+        <thead><tr><th${n.e("scan.s.t", "सत्र व वेळ")}>${disp(n.t("scan.s.t", "सत्र व वेळ"))}</th><th${n.e("scan.s.p", "पेट्रोलिंग मोबाईल")}>${disp(n.t("scan.s.p", "पेट्रोलिंग मोबाईल"))}</th><th${n.e("scan.s.b", "बीट मार्शल नेमणूक")}>${disp(n.t("scan.s.b", "बीट मार्शल नेमणूक"))}</th></tr></thead>
         <tbody>
         ${scanSessions.map((s) => `<tr><th class="win">${disp(s.session)}</th><td>${disp(s.patrol)}</td><td>${disp(s.beat)}</td></tr>`).join("\n        ")}
         </tbody>
@@ -816,23 +836,23 @@ ${p1Lower}`, { dense: true });
     </div>` : "";
   const scanTable = `<div class="tbl-wrap">
     <table class="tbl">
-      <thead><tr><th class="num"${n.a("scan.h.t", "वेळ")}>${disp(n.t("scan.h.t", "वेळ"))}</th><th${n.a("scan.h.l", "स्कॅन चौकी हद्द")}>${disp(n.t("scan.h.l", "स्कॅन चौकी हद्द"))}</th><th${n.a("scan.h.p", "नियुक्त अंमलदार")}>${disp(n.t("scan.h.p", "नियुक्त अंमलदार"))}</th></tr></thead>
+      <thead><tr><th class="num"${n.e("scan.h.t", "वेळ")}>${disp(n.t("scan.h.t", "वेळ"))}</th><th${n.e("scan.h.l", "स्कॅन चौकी हद्द")}>${disp(n.t("scan.h.l", "स्कॅन चौकी हद्द"))}</th><th${n.e("scan.h.p", "नियुक्त अंमलदार")}>${disp(n.t("scan.h.p", "नियुक्त अंमलदार"))}</th></tr></thead>
       <tbody>
         ${scanBody}
       </tbody>
     </table>
   </div>`;
 
-  const page6 = page("", doc, `  <div class="sec"><h2${n.a("sec.officers", "पोलीस अधिकारी कर्तव्य सारांश")}>${disp(n.t("sec.officers", "पोलीस अधिकारी कर्तव्य सारांश"))}</h2></div>
+  const page6 = page("", doc, `  <div class="sec"><h2${n.e("sec.officers", "पोलीस अधिकारी कर्तव्य सारांश", "section")}>${disp(n.t("sec.officers", "पोलीस अधिकारी कर्तव्य सारांश"))}</h2></div>
   <div class="two">
     ${officerTable(doc.officerSummary.slice(0, offHalf))}
     ${officerTable(doc.officerSummary.slice(offHalf))}
   </div>
 
-  <div class="sec" style="margin-top:10px;"><h2${n.a("sec.scan", "सुरक्षित नाशिक: गस्त व स्कॅनिंग वेळापत्रक")}>${disp(n.t("sec.scan", "सुरक्षित नाशिक: गस्त व स्कॅनिंग वेळापत्रक"))}</h2></div>
+  <div class="sec" style="margin-top:10px;"><h2${n.e("sec.scan", "सुरक्षित नाशिक: गस्त व स्कॅनिंग वेळापत्रक", "section")}>${disp(n.t("sec.scan", "सुरक्षित नाशिक: गस्त व स्कॅनिंग वेळापत्रक"))}</h2></div>
   ${sessionTable ? `<div class="two">\n    ${sessionTable}\n    ${scanTable}\n  </div>` : scanTable}
 
-  ${signoff}`);
+   ${signoff}`, undefined, n);
 
   const html = `<!DOCTYPE html>
 <html lang="mr">
@@ -842,6 +862,7 @@ ${p1Lower}`, { dense: true });
 <title>पंचवटी दैनिक कर्तव्य तक्ता — ${doc.chartDate}</title>
 <link rel="stylesheet" href="__CSS_HREF__">
 <link rel="stylesheet" href="__AUTH_CSS_HREF__">
+<link rel="stylesheet" href="__PRESENTATION_CSS_HREF__">
 </head>
 <body data-chart-date="${doc.chartDate}" data-lifecycle="${doc.lifecycle}">
 
@@ -885,5 +906,5 @@ ${page6}
 </body>
 </html>`;
 
-  return { html, stats };
+  return { html, stats, presentationElements: [...elementMap.values()] };
 }

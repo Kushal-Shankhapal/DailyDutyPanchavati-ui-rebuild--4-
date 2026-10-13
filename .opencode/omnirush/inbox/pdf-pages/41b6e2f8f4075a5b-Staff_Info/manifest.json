@@ -1,0 +1,94 @@
+{
+  "version": 3,
+  "sha256": "41b6e2f8f4075a5ba4f8a5bc79ad12763a82bb98654955fed7de2b1c9755f3ad",
+  "filename": "Staff_Info.pdf",
+  "pageCount": 9,
+  "textPages": 9,
+  "textBudgetExhausted": false,
+  "pagesWithoutText": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "renderedPages": [
+    {
+      "page": 1,
+      "width": 1211,
+      "height": 1568,
+      "bytes": 294306,
+      "mime": "image/jpeg",
+      "fileName": "page-001.jpg"
+    },
+    {
+      "page": 2,
+      "width": 1211,
+      "height": 1568,
+      "bytes": 282167,
+      "mime": "image/jpeg",
+      "fileName": "page-002.jpg"
+    },
+    {
+      "page": 3,
+      "width": 1211,
+      "height": 1568,
+      "bytes": 282678,
+      "mime": "image/jpeg",
+      "fileName": "page-003.jpg"
+    },
+    {
+      "page": 4,
+      "width": 1211,
+      "height": 1568,
+      "bytes": 295856,
+      "mime": "image/jpeg",
+      "fileName": "page-004.jpg"
+    },
+    {
+      "page": 5,
+      "width": 1211,
+      "height": 1568,
+      "bytes": 291125,
+      "mime": "image/jpeg",
+      "fileName": "page-005.jpg"
+    },
+    {
+      "page": 6,
+      "width": 1211,
+      "height": 1568,
+      "bytes": 280151,
+      "mime": "image/jpeg",
+      "fileName": "page-006.jpg"
+    },
+    {
+      "page": 7,
+      "width": 1211,
+      "height": 1568,
+      "bytes": 219391,
+      "mime": "image/png",
+      "fileName": "page-007.png"
+    },
+    {
+      "page": 8,
+      "width": 1211,
+      "height": 1568,
+      "bytes": 8554,
+      "mime": "image/png",
+      "fileName": "page-008.png"
+    },
+    {
+      "page": 9,
+      "width": 1211,
+      "height": 1568,
+      "bytes": 170421,
+      "mime": "image/png",
+      "fileName": "page-009.png"
+    }
+  ],
+  "renderBudgetExhausted": false
+}
