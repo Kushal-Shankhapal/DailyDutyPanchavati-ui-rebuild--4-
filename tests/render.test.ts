@@ -39,7 +39,12 @@ describe("renderChart (10/09)", () => {
   });
 
   it("matrix cells stay verbatim (escaped, Latin digits, OCR artifacts preserved)", () => {
-    expect(html).toContain("12&lt;br&gt;04 Proण्");
+    // Renderer contract (2026-10-14, chart-html.ts matrix cell): each part of a source cell
+    // that contains the source's own <br> is escaped separately and the break is re-emitted
+    // as a REAL <br> — the literal text "12&lt;br&gt;04" must never appear (it printed as
+    // "<br>" on the sheet, the reported bug).
+    expect(html).toContain("12<br>04 Proण्");
+    expect(html).not.toContain("12&lt;br&gt;04");
     expect(html).toContain(">..</td>"); // '..' cells verbatim (muted)
     expect(html).toContain("muted");
     expect(html).toContain("मनुष्यबळ स्थिती दर्शक मॅट्रिक्स");

@@ -317,3 +317,29 @@ assert the schedule is NOT on the chowki sheet.
 `/charts/2026-09-10` for the bilingual pair (suggestion → accept), the centred card header, the
 single-scroll date menu and the WIP advanced-search icon. Both databases were restored to the
 documented baseline (212 assignments, `presentation_overrides = {}`).
+
+## Fact-check + red-build repair (2026-10-14)
+
+Two same-day commits (`a87b4d1` TLS, `9e7db4f` renderer/seed) had left `npm run check` **RED** at
+session start. Both fixed here; **96/96 + doctor green re-verified after the fixes**, plus
+`npm run print:audit` 6/6 (655/496/685/663/579/664px) against a live dev server:
+
+1. **`db/migrate.ts`** — the unconditional `process.env.PGSSLMODE = "require"` (added for Render's
+   TLS-only Postgres; user-confirmed intent) leaked into local test connections via
+   `tests/invariants.test.ts`'s import → *“server does not support SSL connections”* → 19 tests
+   skipped. Fix: gated on `process.env.DATABASE_URL` — **Render deploy behavior unchanged**
+   (Render always sets it), local trust-auth works again.
+2. **`tests/render.test.ts`** — stale assertion expected escaped `12&lt;br&gt;04…`, but commit
+   `9e7db4f` deliberately made the renderer re-emit a REAL `<br>` (each part still escaped; literal
+   “<br>” on paper was the reported bug). Assertion updated to the intentional contract
+   (`12<br>04 Proण्` present, `12&lt;br&gt;04` absent).
+
+**Latent issue recorded, NOT fixed (authority call needed):** the seed now writes
+`12<br>04 Pro.` / `हजर मनुष्यबळ` while the test DB + 3 tests hold `Proण्` / `मनुश्यबळ`
+(SEMANTIC/10.md) — a fresh reseed would break the suite. Logged as **OPEN_QUESTIONS T25**
+(Tier-1 PDF check needed; do not reseed first).
+
+**Docs:** `docs/SITE_OVERHAUL_BRAINSTORM.md` fact-checked line-by-line against the actual repos
+(new §9 Verification Log V1–V20; §1 fork-divergence table; §2.2 page-count table; §2.4 staff-count
+rewrite; §8.1 authority tiers corrected per AGENTS.md; §6/§7 relabelled as unapproved options).
+`docs/OPEN_QUESTIONS.md` gained T25.

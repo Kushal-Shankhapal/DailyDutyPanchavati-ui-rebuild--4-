@@ -1,8 +1,8 @@
 <!--
   Purpose: Comprehensive analysis of the four codebases, their architectures, the legacy 6-page chart domain model, the North Star problem statement, and concrete recommendations for how to use v0/Bolt/Cursor to execute an overhaul.
   Current role: Planning document — the single artifact a fresh session or AI coding agent can read.
-  Last meaningful change: 2026-10-14 — complete rewrite with accurate repo mapping and north star.
-  Constraint: This is analysis + recommendation, not a commitment to implement.
+  Last meaningful change: 2026-10-14 — fact-verified line-by-line against the actual repos (§9 Verification Log); §1 repo comparison, §2.4 staff numbers, §8.1 authority table and several file paths corrected.
+  Constraint: This is analysis + recommendation, not a commitment to implement. §7 options are UNAPPROVED until the user signs off.
 -->
 
 # Site Overhaul Brainstorm — Panchavati Daily Duty
@@ -10,6 +10,8 @@
 > **Purpose:** One document that captures (A) what the four repos are, (B) the North Star problem statement, (C) the legacy 6-page chart domain model from source evidence, (D) a code architecture comparison, and (E) concrete recommendations for using v0/Bolt/Cursor to execute an overhaul.
 
 > **Reading order:** Read `docs/CURRENT_STATE.md` and `docs/TRACEABILITY.md` first. This is the "what could be" layer.
+>
+> **⚠ Verification status (2026-10-14):** every factual claim in this document was checked against the actual files on disk (see §9). Claims that could not be executed here are labelled *unverified*. Repository-comparison claims supersede the earlier draft — the nested repos are **divergent forks, not copies**.
 
 ---
 
@@ -19,23 +21,35 @@
 ```
 DailyDutyPanchavati-ui-rebuild (4)/          ← MAIN REPO (current work target)
 ├── server/, web/, db/, tests/, docs/        ← main repo contents
-└── DailyDutyPanchavati-ui-rebuild/           ← ARJISH REPO (Kushal's full implementation)
+└── DailyDutyPanchavati-ui-rebuild/           ← ARJISH REPO (Arjish's React implementation)
     ├── src/server/, src/web/, db/, tests/    ← Arjish contents
-    └── NEW DATA/kushals repo/archive/        ← KUSHAL'S REPO (archived reference data + docs)
-        ├── src/server/, src/web/             ← Kushal's archived codebase
+    └── NEW DATA/kushals repo/archive/        ← KUSHAL'S REPO (archived fork + reference data + docs)
+        ├── src/server/, src/web/             ← fork of Arjish's codebase — BUT DIVERGED (see note)
         └── Durvesh_Work/                     ← DURVESH REPO (Python Flask + SQLite alternative)
-            ├── app.py, gen_duty_chart.js     ← Durvesh's Flask app
+            ├── app.py, gen_duty_chart.js     ← Durvesh's Flask app (app.py = 189,639 bytes)
             └── templates/, static/           ← Durvesh's frontend templates
 ```
 
+**⚠ Fork divergence (verified 2026-10-14 by `diff -rq`):** the archive is NOT a nested copy of Arjish's repo. 24 files differ and each side has files the other lacks:
+
+| | Arjish repo | Kushal's archive |
+|---|---|---|
+| Chart formats | `standardized-compact-v2.ts` + `standardized-daily-duty-v1.ts` rendering profiles (the **v2 format suggested by sir**) | `StandardizedView.tsx` + `StandardizedAbsence/Manpower/ExtraSectionsView.tsx` (the **older Stitch-generated standardized chart**) — no v2 profiles |
+| Comparison window | `Page1View.tsx` has तक्ता तुलना (Compare Chart Formats) | absent |
+| Navbar | overflow/hamburger-style menu (`MoreVertical`/`overflowMenuOpen`) | flat grouped horizontal nav — `AppNav.tsx:571` literally says *"HORIZONTAL NAV BAR (flat, click-to-expand dropdowns, no hamburger)"* |
+| Migrations | 18 | 20 |
+| Standardized UI views | absent | present (see above) |
+
+Both carry `Page1View.tsx`–`Page6View.tsx` (the legacy six-page chart with 10-Sept CRUD). Kushal's archive additionally holds the reference corpus (`EXCEL_RECONSTRUCTION/`, `ORIGINAL_VISUAL/`, `SEMANTIC/`), north-star docs and `UI_V0/`.
+
 | Repo | Path (from main repo root) | Role | Frontend | Backend | Status |
 |---|---|---|---|---|---|
-| **Main repo** | `./` | Production system: server-rendered chart authoring, dense print-optimized CSS, 96+ tests | Vanilla JS (`web/chart-authoring.js`) + dormant React (`src/app/`); server-rendered HTML | Fastify 5 + raw `pg` + 8 migrations + DB triggers | Active; Page 1 authoring/preview/PDF, print audit 6/6, 212/212 no-loss |
-| **Arjish repo** | `./DailyDutyPanchavati-ui-rebuild/` | Full React + Tailwind reference implementation with Kysely ORM and domain layer | React 19 + Tailwind + lucide-react (13+ views) | Fastify 5 + Kysely + 20+ migrations + `domain/` layer | Complete; all major features |
-| **Kushal's repo** | `./DailyDutyPanchavati-ui-rebuild/NEW DATA/kushals repo/archive/` | Archived version with reference data, documentation, north star docs | Same as Arjish (nested copy) | Same as Arjish (nested copy) | Archived; source of reference data and docs |
-| **Durvesh repo** | `./DailyDutyPanchavati-ui-rebuild/NEW DATA/kushals repo/archive/Durvesh_Work/` | Python Flask + SQLite alternative with offline-first philosophy | Flask Jinja2 templates + vanilla JS | Python Flask + SQLite | Alternative/experimental; offline-capable Windows .exe |
+| **Main repo** | `./` | Production system: server-rendered chart authoring, dense print-optimized CSS, 96 tests | Vanilla JS (`web/chart-authoring.js`) + dormant React (`src/app/`); server-rendered HTML | Fastify 5 + raw `pg` + 8 migrations + DB triggers | Active; whole-chart authoring (not just Page 1) + preview/PDF, print audit 6/6, 212/212 no-loss — verified 2026-10-14 (§9) |
+| **Arjish repo** | `./DailyDutyPanchavati-ui-rebuild/` | React reference implementation with Kysely ORM and domain layer | React 19 + Tailwind + lucide-react (13+ views/routes in `App.tsx`) | Fastify 5 + Kysely + 18 migrations + `domain/` layer + Playwright config | Structure verified on disk; suite NOT executed here (*unverified*: “all major features”) |
+| **Kushal's repo** | `./DailyDutyPanchavati-ui-rebuild/NEW DATA/kushals repo/archive/` | Diverged fork of Arjish's code + north-star docs + reference corpus + older standardized chart UI | Fork of Arjish's React + 4 extra `Standardized*View.tsx`; grouped no-hamburger nav | Same lineage, 20 migrations | Archive; source of north star docs, `UI_V0/`, reference data — divergences listed in §1 note |
+| **Durvesh repo** | `./…/kushals repo/archive/Durvesh_Work/` | Python Flask + SQLite alternative with offline-first philosophy | Flask Jinja2 templates + vanilla JS | Python Flask + SQLite (`app.py` 189KB, `gen_duty_chart.js`) | Alternative/experimental; `.bat`/`.vbs` Windows launchers present (no `.exe` found on disk) |
 
-**Key insight:** The main repo has superior correctness discipline (no-loss 212/212, print audit 6/6, freeze-on-finalize DB triggers, 96 tests). The Arjish repo has superior architectural vision (domain-driven design, Kysely ORM, events-first model, 13+ React views). The overhaul path is to **selectively port Arjish's architectural patterns** — or adopt Arjish as the foundation and port the main repo's print audit and no-loss invariants into it.
+**Key insight:** The main repo has superior correctness discipline (no-loss 212/212, print audit 6/6, freeze-on-finalize DB triggers, 96 tests — all re-verified 2026-10-14). The Arjish repo has the richer architectural vision (domain-driven design, Kysely ORM, events-first model, 13+ React views — *structure verified, behavior unverified here*). The overhaul path is **an option to evaluate, not a decision**: selectively port Arjish's architectural patterns — or adopt Arjish as the foundation and port the main repo's print audit and no-loss invariants into it. Both options need user approval before any work starts (§7).
 
 ---
 
@@ -73,6 +87,16 @@ The reference charts (10/09/2026, 11/09/2026, 12/09/2026, 16/09/2026) and the St
 
 **Key architectural invariant from the 11/09 chart:** Logical sections are canonical; physical PDF page counts are fluid. When an Equipment & Dress Rehearsal Table (रंगीत तालीम) is inserted for special events, it expands the page count but doesn't change the logical structure. The database schema must never hardcode PDF cell coordinates.
 
+**Page-count precision (2026-10-14 verification — three different numbers, do not conflate):**
+
+| What | Count | Evidence |
+|---|---|---|
+| Logical sections | 6 | domain model above |
+| Source chart sheets (10/09) | 6 | `reference/ORIGINAL_VISUAL/10.pdf`, TRACEABILITY R-19 |
+| Source chart sheets (11/09, with event page) | 7 | event annex inserts one physical sheet |
+| Current renderer output (compact-v5) | **6** | `npm run print:audit` 6/6 (655/496/685/663/579/664px ≤ 775) + `tests/render.test.ts` asserts `pages.length === 6`, re-run 2026-10-14 |
+| Earlier compact-v4 renderer output | 7 | stale line still in `docs/CURRENT_STATE.md` §Print pagination — **known doc contradiction, CURRENT_STATE not yet cleaned** |
+
 ### 2.3 Daily Copy Policy (What gets copied vs. recalculated vs. input daily)
 
 | Data Element | Classification | Meaning |
@@ -87,24 +111,18 @@ The reference charts (10/09/2026, 11/09/2026, 12/09/2026, 16/09/2026) and the St
 
 ### 2.4 Staff Master Data
 
-The staff directory (16/06/2026) contains 169 active staff across 12 ranks:
+**Do not trust a single number here yet — the sources disagree (verified 2026-10-14):**
 
-| Rank Code | Marathi Prefix | English | Count |
-|---|---|---|---|
-| PI | वपोनि / पोनि | Police Inspector | 2 |
-| API | सपोनि | Assistant PI | 6 |
-| PSI | पोउनि | Police Sub-Inspector | 9 |
-| GPS | ग्रेपोउनि | Grade-I PI | 1 |
-| ASI | सपोउनि | Assistant Sub-Inspector | 4 |
-| LASI | मसपोउनि | Lady ASI | 4 |
-| HC | पोहवा | Head Constable | 46 |
-| LHC | मपोहवा | Lady HC | 53 |
-| PN | पोना | Probationary Constable | 3 |
-| LPN | मपोना | Lady Probationary | 4 |
-| PC | पोशि | Police Constable | 123 |
-| LPC | मपोशि | Lady Police Constable | 150 |
+| Source | Count | Notes |
+|---|---|---|
+| `reference/SEMANTIC/Staff_Info.md` (16/06/2026) | **176** numbered person rows | secondary extraction; per-rank recount needed |
+| Our DB seed (`db/seed/*.sql`, `npm run doctor`) | **179** staff, **17** ranks | what the app actually uses |
+| Old/Apjish DB import (`docs/INITIAL_AUDIT.md`, `docs/ASTRA_TRANSITION_PACKET.md`) | **169** `staff_members` | historical import — the source of the old “169” figure |
+| ⚠ Earlier draft of this doc | “169 across 12 ranks” with a table summing to **405** | **WRONG — withdrawn.** The rank table mixed manpower-matrix sanctioned counts (HC 46, PC 123…) with directory counts and cannot be reconciled as written. |
 
-**Identity matching rule:** Primary key = buckle/service number where present; secondary = conservative normalized name + rank. Four daily-chart-only identities (badges 39, 1061, 1799, 2699) are not in the Staff_Info directory and must be retained as daily-source identities until confirmed.
+**Action required before any layout/staffing calculation:** rebuild the per-rank table from `Staff_Info.md` with explicit counting rules (one row = one person; officers appear once in Table 1; duplicates reported, never merged), reconcile 176 vs 179 vs 169, and only then publish numbers. Until that is done, use **179 (seed)** as the operational figure because that is what the renderer and tests use.
+
+**Identity matching rule (verified):** Primary key = buckle/service number where present; secondary = conservative normalized name + rank. Four daily-chart-only identities (badges 39, 1061, 1799, 2699) are indeed absent from Staff_Info and are already retained in `db/seed/0002_source_evidenced_staff.sql` as daily-source identities.
 
 ### 2.5 The 5 Hard Domain Invariants
 
@@ -133,7 +151,7 @@ The main repo is a **correctness-first, server-rendered** system:
 | Database | PostgreSQL 17 | Single store, no ORM |
 | Migrations | 8 forward-only SQL files | `db/migrate.ts` with SHA-256 checksum guard |
 | Rendering | Server-rendered HTML | `server/render/chart-html.ts` — the print authority |
-| Testing | Vitest | 96+ tests (invariants, no-loss rendering, render fidelity) |
+| Testing | Vitest | **96** tests (verified green 2026-10-14: typecheck + 96 tests + doctor ×2 DBs) |
 | CSS | Flat CSS with semantic class names | `web/authoring.css`, `web/chart-presentation.css` — no Tailwind, no Bootstrap |
 
 ### 3.2 Directory Structure (MAIN REPO)
@@ -168,18 +186,21 @@ DailyDutyPanchavati-ui-rebuild (4)/
 │       ├── 0001_reference_data.sql  — Layer-A masters (ranks, staff, locations, duties)
 │       └── seed-chart-1009.ts       — 10/09 chart seed from SEMANTIC/10.md
 ├── tests/
-│   ├── invariants.test.ts          — 31 schema/invariant tests
+│   ├── invariants.test.ts          — 19 schema/invariant tests (suite total: 96)
 │   ├── chart-document.test.ts      — 12 projection fidelity tests
 │   ├── render.test.ts              — No-loss 212/212
 │   ├── render-fidelity.test.ts     — Structure/grammar parity with mock
+│   ├── authoring.test.ts           — Bilingual, names, CRUD
+│   └── presentation.test.ts        — Presentation overrides
+│   ├── assignments.test.ts, structure.test.ts — assignment + table/column CRUD
 │   ├── authoring.test.ts           — Bilingual, names, CRUD
 │   └── presentation.test.ts        — Presentation overrides
 ├── tools/
 │   └── print-audit.mjs             — Per-section A4 height measurement
 ├── scripts/
 │   └── doctor.mjs                  — 14 objective environment checks
-├── reference/                      — Source evidence (ORIGINAL_VISUAL, SEMANTIC)
-├── docs/                           — Project docs (CURRENT_STATE, IMPLEMENTATION_CONTRACT)
+├── reference/                      — Source evidence (ORIGINAL_VISUAL, EXCEL_RECONSTRUCTION, SEMANTIC)
+├── docs/                           — Project docs (CURRENT_STATE, ARCHITECTURE, DOMAIN, OPEN_QUESTIONS, …)
 ├── package.json                    — Dependencies + scripts
 └── render.yaml                     — Deploy blueprint for Render.com
 ```
@@ -195,8 +216,8 @@ DailyDutyPanchavati-ui-rebuild/         ← Arjish repo
 │   │   ├── index.ts                    — Fastify 5 (full operational API)
 │   │   ├── db/
 │   │   │   ├── kysely.ts               — Kysely typed ORM instance
-│   │   │   └── schema.generated.ts     — Auto-generated typed schema (35+ tables)
-│   │   ├── domain/                     — Domain-driven layer (260+ KB)
+│   │   │   └── schema.generated.ts     — Auto-generated typed schema (44 interfaces)
+│   │   ├── domain/                     — Domain-driven layer (~763 KB on disk)
 │   │   │   ├── chart-lifecycle.ts      — ChartRepository (create, validate, finalize, amend)
 │   │   │   ├── chart-copy.ts           — Copy previous chart with conflict resolution
 │   │   │   ├── assignments.ts          — Slot allocation with ledger
@@ -222,7 +243,7 @@ DailyDutyPanchavati-ui-rebuild/         ← Arjish repo
 │   │   └── integrations/whatsapp/
 │   │       └── gowa-adapter.ts         — WhatsApp HTTP adapter
 │   └── web/
-│       ├── api/charts.ts              — Typed API client (40+ endpoint wrappers)
+│       ├── api/charts.ts              — Typed API client (~39 endpoint wrappers)
 │       ├── components/                — AppNav, ShiftCard, DutyAuthoring, etc.
 │       ├── App.tsx                    — React Router (13+ routes)
 │       ├── Page1View–Page6View.tsx    — Full page authoring views
@@ -234,7 +255,7 @@ DailyDutyPanchavati-ui-rebuild/         ← Arjish repo
 │       ├── i18n.ts                    — Marathi-first i18n
 │       └── index.css                  — Tailwind imports
 ├── db/
-│   ├── migrations/                    — 20+ forward-only SQL migrations
+│   │   ├── migrations/                    — 18 forward-only SQL migrations
 │   └── seed/
 ├── tests/
 └── package.json (dependencies: kysely, fastify, react@19, tailwindcss, lucide-react, i18next, playwright)
@@ -269,17 +290,17 @@ Durvesh's `app.py` (190KB) uses SQLite for zero-dependency deployment. Its `gen_
 | Aspect | Main Repo | Arjish Repo |
 |---|---|---|
 | Server | Fastify 5, REST API, server-rendered HTML, raw `pg` | Fastify 5, full operational API, Kysely ORM |
-| ORM | Raw `pg` queries with manual typing | Kysely typed ORM with `schema.generated.ts` (35+ interfaces) |
+| ORM | Raw `pg` queries with manual typing | Kysely typed ORM with `schema.generated.ts` (44 interfaces) |
 | Frontend | Vanilla JS (`chart-authoring.js`); dormant React (`src/app/`) | React 19 full SPA with 13+ views |
 | Routing | Server-rendered `/charts/:date` + API routes; WIP flyers for unfinished features | Client-side React Router with 13+ routes |
-| Data model | Compact chart as primary product; 8 migrations | Events-first: operational events link to daily charts; 20+ migrations |
+| Data model | Compact chart as primary product; 8 migrations | Events-first: operational events link to daily charts; 18 migrations (Arjish) / 20 (archive) |
 | Views | 1 active view (chart rendering); React dormant | 13+ views: Page1-6, Dashboard, Search, MasterData, Import |
 | Styling | Flat CSS (`authoring.css`, `chart-presentation.css`); no Tailwind | Tailwind utility classes |
 | Components | `chart-authoring.js` (vanilla DOM); `src/app/` stubs | React components with lucide-react icons |
-| API design | REST API + server-rendered HTML | Typed API client with 40+ endpoint wrappers |
+| API design | REST API + server-rendered HTML | Typed API client with ~39 endpoint wrappers in `api/charts.ts` |
 | CRUD | Narrow, focused on 10/09 compact chart | Full CRUD across 6 pages + events + master data |
 | Print | `server/render/chart-html.ts` server-rendered HTML; `print-audit.mjs` | Same server-rendered approach; `standardized-*.ts` renderers |
-| Testing | 96 Vitest tests (invariants, no-loss 212/212, render fidelity) | Similar test coverage; Playwright E2E |
+| Testing | 96 Vitest tests (invariants, no-loss 212/212, render fidelity) in main repo; Arjish ships a larger suite (`tests/domain|unit|invariants|e2e` + Playwright) — **not executed here, unverified** |
 | Domain layer | Minimal (`server/` files only) | Full domain layer: `domain/operational/`, `domain/audit/`, etc. |
 | DB Triggers | Freeze-on-finalize on 7 working tables | Application-level finalize |
 | Dev output | `LOG_LEVEL=warn`; calm development | Logger configured separately |
@@ -321,7 +342,7 @@ Durvesh's `app.py` (190KB) uses SQLite for zero-dependency deployment. Its `gen_
 | `/masters` | Read-only viewer | MasterDataManagementView (full CRUD) |
 | `/import` | WIP badge | LegacyImportView (OCR pipeline) |
 
-**The gap:** The main repo has one active surface (the compact chart) with everything else badged WIP/Coming Soon. The Arjish repo has all 13+ views fully implemented but with the "wrong" visual aesthetic for this project.
+**The gap:** The main repo has one active surface (the compact chart) with everything else badged WIP/Coming Soon. The Arjish repo ships all 13+ views as code (structure verified; runtime behavior *unverified* here) but with the "wrong" visual aesthetic for this project.
 
 ### 4.4 API Design Comparison
 
@@ -338,7 +359,7 @@ Durvesh's `app.py` (190KB) uses SQLite for zero-dependency deployment. Its `gen_
 - `GET /charts/:date` — Server-rendered chart HTML
 
 **Arjish repo API client (web/api/charts.ts):**
-- 40+ typed endpoint wrappers with `requestJson<T>()`
+- ~39 typed endpoint wrappers with `requestJson<T>()`
 - Per-page document endpoints: `/api/charts/:id/page1-document` through `page6-document`
 - Slot-level CRUD: `allocateSlot`, `vacateSlot`, `setBima`, `setNote`, `replaceAssignment`
 - Support seat CRUD: `addSupportSeat`, `removeSupportSeat`
@@ -359,7 +380,7 @@ Durvesh's `app.py` (190KB) uses SQLite for zero-dependency deployment. Its `gen_
 
 ### 5.1 Page 1 — Day Shift Core (09:00–21:00)
 
-From `SEMANTIC/10.md` Table 1 and `reference/EXCEL_RECONSTRUCTION/10th_sept_page_1`:
+From `SEMANTIC/10.md` Table 1 and `reference/EXCEL_RECONSTRUCTION/10th_sept_daily_duty_chart_page_1/` (Tier-2 exact text for this page):
 
 **Structure:** 4-column × 27-row banded table (A4 landscape, 1122×794px)
 
@@ -519,12 +540,12 @@ From `SEMANTIC/Page 6.md`:
 - **Strength:** Cursor can do this incrementally, understanding both codebases and finding the right mapping points
 
 **v0 — Visual Component Generation (Phase 2):**
-- Generate the 13+ React views as TypeScript components from the design mockups (`design/panchavati-compv3.html`, `reference/UI_V0/`)
+- Generate the 13+ React views as TypeScript components from the design mockups (`design/panchavati-compv3.html` in this repo; `UI_V0/` and `Dashboard_Visual_Reference.png` live in Arjish's repo / the archive, not here)
 - Produce Tailwind component variants matching the user's feedback ("kill the dot style", "reduce vertical padding", "no dashboard cards")
 - Generate bilingual EN/MR toggle components with Devanagari-first typography
 - Generate the operational dashboard, historical search filters, master data CRUD forms
 - Generate mobile-responsive layouts at the 3 breakpoints (1100px, 650px, 800px)
-- Import `Dashboard_Visual_Reference.png` and `panchavati-compv3.html` as design prompts
+- Import `Dashboard_Visual_Reference.png` (Arjish/archive copy) and `design/panchavati-compv3.html` as design prompts
 - **Limitation:** v0 defaults to generic "modern web app" aesthetics — would need explicit prompts to match the dense, card-free style
 
 **Bolt — Full System Prototyping (Phase 3, for new features):**
@@ -575,10 +596,10 @@ If handing this to v0 or Bolt, here is the complete problem statement prompt:
 
 **SOURCE EVIDENCE (provided in reference/):**
 - 4 duty charts (10/09, 11/09, 12/09, 16/09/2026) in PDF + DOCX + semantic markdown
-- Staff directory (169 personnel, 12 ranks, 16/06/2026)
-- Daily copy policy (`SEMANTIC/All Pages_Daily Copy Policy...md`)
-- Layout specs (`docs/layout/page-1-layout-spec.md`)
-- Visual mockups (`design/panchavati-compv3.html`)
+- Staff directory (176 rows semantic / 179 seeded — reconcile first, §2.4; 16/06/2026)
+- Human-verified Page-1 HTML/XLSX for 10/09 + 11/09 (`reference/EXCEL_RECONSTRUCTION/`)
+- Daily copy policy (`SEMANTIC/All Pages_Daily Copy Policy…md`)
+- Visual mockups (`design/panchavati-compv3.html` — frozen baseline)
 
 **SIX CANONICAL SECTIONS:**
 1. Day Shift Core (09:00–21:00): 6 chowki blocks, office duties, PSO, marshals, BIMA
@@ -597,7 +618,7 @@ If handing this to v0 or Bolt, here is the complete problem statement prompt:
 
 **VISUAL STYLE:** Dense and print-optimized. No dashboard cards. No shadows. No rounded corners. 11px/12px body text. Marathi-first. No icons in navigation.
 
-**TECH STACK:** React 19 + TypeScript + Tailwind CSS frontend, Fastify 5 + Kysely + TypeScript backend, PostgreSQL 17, Playwright for PDF.
+**TECH STACK (proposal — NOT approved):** React 19 + TypeScript + Tailwind CSS frontend, Fastify 5 + Kysely + TypeScript backend, PostgreSQL 17, Playwright for PDF. The current main repo instead runs vanilla JS + flat CSS + raw `pg` (§3.1); adopting this stack is a §7 decision awaiting user sign-off, and the user's stated direction is a **client-side Vite + React SPA (no SSR)** talking to the existing API.
 
 ---
 
@@ -606,7 +627,9 @@ If handing this to v0 or Bolt, here is the complete problem statement prompt:
 
 ## 7. Recommendations
 
-### 7.1 Strategic Recommendation: Two-Phase Approach
+> **⚠ All of §7 is an options menu, not a plan.** Nothing here is approved. The user reviews the brainstorm, picks options, and only then does any phase begin (user instruction, 2026-10-14: *ask before deciding*).
+
+### 7.1 Strategic Recommendation: Two-Phase Approach (options)
 
 **Option A (Recommended): Port Arjish's patterns into main repo**
 - Use Cursor to port the domain layer, Kysely ORM, and typed API client
@@ -620,9 +643,11 @@ If handing this to v0 or Bolt, here is the complete problem statement prompt:
 - Replace Arjish's Tailwind card aesthetic with dense CSS overrides
 - Risk: Losing the main repo's proven workflow and user feedback integration
 
-**Recommended: Option A with Option B as fallback.** The main repo's `chart-html.ts` renderer and `chart-authoring.js` are battle-tested. Start by porting Arjish's domain layer and API client using Cursor, then generate views with v0.
+**Recommended (by analysis only): Option A with Option B as fallback — subject to user approval.** The main repo's `chart-html.ts` renderer and `chart-authoring.js` are heavily exercised (96 tests, print audit, live demo) — “battle-tested” is not claimed; the precise labels are *automated-test verified* + *browser verified* + *print verified* (§9). Start by porting Arjish's domain layer and API client using Cursor, then generate views with v0.
 
-### 7.2 Priority Matrix
+### 7.2 Priority Matrix (options — nothing scheduled until approved)
+
+> Each row is a candidate work item. “Tool” = suggested instrument, not a commitment. Effort figures are rough estimates, not commitments.
 
 | Priority | Feature | Source | Tool | Risk | Effort |
 |---|---|---|---|---|---|
@@ -688,17 +713,19 @@ However, AFFiNE would need significant customization to:
 - Integrate with the PostgreSQL backend and Kysely ORM
 - Maintain the no-loss rendering invariant (212/212 rows)
 
-**Recommendation:** Use AFFiNE concepts (floating nodes, auto-sort tables) to inform the **operational dashboard** design, but do not adopt AFFiNE directly. Instead, use **React Flow** (the engine behind `table-canvas`) to build a custom canvas for duty slot drag-and-drop within the existing React app.
+**Recommendation (preliminary — validate before adopting):** Use AFFiNE concepts (floating nodes, auto-sort tables) to inform the **operational dashboard** design, but do not adopt AFFiNE directly. Instead, evaluate **React Flow** for a custom canvas for duty slot drag-and-drop and **Canvas Datagrid** for staff roster tables — both as research spikes (fit, maintenance, accessibility, licensing, bundle size) before they become dev dependencies.
 
-| Tool | Use Case | Verdict |
+| Tool | Use Case | Verdict (preliminary) |
 |---|---|---|
 | AFFiNE | Future operational dashboard canvas | Research spike (P3) — not for chart authoring |
 | Focalboard | Task-oriented Kanban + table | Too simple; no infinite canvas |
 | Vikunja | Task planning with views | Not relevant for police duty charts |
-| React Flow | Custom canvas for slot drag-and-drop | Adopt as dev dependency for dashboard |
-| Canvas Datagrid | High-performance table rendering | Adopt for staff roster tables |
+| React Flow | Custom canvas for slot drag-and-drop | **Candidate** — research spike before adopting for dashboard |
+| Canvas Datagrid | High-performance table rendering | **Candidate** — research spike before adopting for roster tables |
 
-### 7.6 Implementation Roadmap
+### 7.6 Implementation Roadmap (draft — NOT approved; ordering TBD by user)
+
+> ⚠ ChatGPT's fact-check (2026-10-14) correctly noted this roadmap jumped ahead of the site-wide brainstorm. It stays here as a menu of phases; the sitemap/design brainstorm (navbar, CRUD pages, editor interaction) comes first and is user-gated.
 
 **Phase 1 (1-2 weeks): Backend Modernization**
 - Use Cursor to port Kysely ORM into main repo
@@ -723,9 +750,9 @@ However, AFFiNE would need significant customization to:
 - Research spike: React Flow for canvas-style dashboard editing
 - Integrate Canvas Datagrid for high-performance staff tables
 
-### 7.7 Conclusion
+### 7.7 Conclusion (working hypothesis — not a decision)
 
-The path forward is clear: **Use Cursor to port Arjish's domain layer and typed API client into the main repo, use v0 to generate React views that match the user's dense visual feedback, and use Bolt only for isolated prototyping of OCR/WhatsApp features.** Preserve the 96 tests, no-loss 212/212 invariant, and print audit throughout. For the open-source canvas tooling question, adopt React Flow at the dev-dependency level for future dashboard enhancements, but reject AFFiNE/Focalboard as not-a-fit for this project's print-optimized, Marathi-first, clerk-authority requirements.
+The path under consideration: **Use Cursor to port Arjish's domain layer and typed API client into the main repo, use v0 to generate React views that match the user's dense visual feedback, and use Bolt only for isolated prototyping of OCR/WhatsApp features.** Preserve the 96 tests, no-loss 212/212 invariant, and print audit throughout. For the open-source canvas tooling question, React Flow and Canvas Datagrid remain research candidates; AFFiNE/Focalboard are currently assessed as not-a-fit for this project's print-optimized, Marathi-first, clerk-authority requirements. **None of this is approved until the user says so.**
 
 ---
 
@@ -733,38 +760,46 @@ The path forward is clear: **Use Cursor to port Arjish's domain layer and typed 
 
 ### 8.1 Source Evidence (Authority)
 
-| File | Path (from main repo) | Purpose |
-|---|---|---|
-| 10/09 chart | `reference/ORIGINAL_VISUAL/10.pdf` | Visual authority |
-| 11/09 chart | `reference/ORIGINAL_VISUAL/11.pdf` | Visual authority (with event page) |
-| 12/09 chart | `reference/ORIGINAL_VISUAL/12.pdf` | Visual authority |
-| 16/09 chart | `reference/ORIGINAL_VISUAL/16.pdf` | Visual authority |
-| 10/09 semantic | `reference/SEMANTIC/10.md` | Exact text authority |
-| 11/09 semantic | `reference/SEMANTIC/11.md` | Exact text authority |
-| 16/09 semantic | `reference/SEMANTIC/16.md` | Exact text authority |
-| Page 3 analysis | `reference/SEMANTIC/Page 3.md` | Leave & special duties structure |
-| Page 4 analysis | `reference/SEMANTIC/Page 4.md` | Manpower matrix |
-| Page 5 analysis | `reference/SEMANTIC/Page 5.md` | Officer roster |
-| Page 6 analysis | `reference/SEMANTIC/Page 6.md` | Scan schedule |
-| Staff directory | `reference/SEMANTIC/Staff_Info.md` | 169 personnel, 12 ranks |
-| Copy policy | `reference/SEMANTIC/All Pages_Daily Copy Policy...md` | Copy vs. recalculate rules |
-| Reference data | `reference/PANCHAVATI_REFERENCE_DATA.v2.md` | Canonical reference |
+**Corrected authority order (per `AGENTS.md`, which overrides any earlier table):**
+1. `reference/ORIGINAL_VISUAL/` PDFs/PNGs — visual authority.
+2. `reference/EXCEL_RECONSTRUCTION/` — human-verified Unicode XLSX/HTML — exact text/cell authority **where reconstructed** (today only `10th_sept_daily_duty_chart_page_1/` and `11th_sept_daily_duty_chart_page_1/` — Page 1 only, two days only).
+3. `reference/SEMANTIC/` — **secondary semantic aid, fallible (~1% error per user)** — NOT “exact text authority” as an earlier draft claimed.
+4. `docs/` — decision authority for software behavior.
+5. Research/analysis — input only.
+6. Current code + passing tests — implementation truth, not source truth.
 
-### 8.2 Arjish Repo Key Files
+| File | Path (from main repo) | Establishes | Tier |
+|---|---|---|---|
+| 10/09 chart | `reference/ORIGINAL_VISUAL/10.pdf` (+ `…_pngs/`) | Visual authority, 6 source sheets | 1 |
+| 11/09 chart | `reference/ORIGINAL_VISUAL/11.pdf` (+ `…_pngs/`) | Visual authority (with event page) | 1 |
+| 12/09, 16/09 charts | `reference/ORIGINAL_VISUAL/12.pdf`, `16.pdf` | Visual authority | 1 |
+| Staff directory (PDF) | `reference/ORIGINAL_VISUAL/Staff_Info.pdf` | Original staff list as printed | 1 |
+| Human-verified Page 1 HTML/XLSX | `reference/EXCEL_RECONSTRUCTION/10th_sept_daily_duty_chart_page_1/` (and `11th_…`) | Exact text/cell for Page 1 of two days — **only place a “verbatim” claim is Tier-2 strong** | 2 |
+| OCR baseline report | `DailyDutyPanchavati-ui-rebuild/NEW DATA/REPORT/` (self-contained: `README.md`, `images/`, `data/`) | Offline OCR evaluation for legacy import (North-Star M14+, page-1 baseline) — candidate text + method, not truth | 3 |
+| 10/09, 11/09, 16/09 semantic | `reference/SEMANTIC/10.md`, `11.md`, `16.md` | Working transcription for navigation/hypotheses — verify before promoting to schema rules | 3 |
+| Page 3–6 analyses | `reference/SEMANTIC/Page 3.md` … `Page 6.md` | Structure hypotheses for leave/matrix/officer/scan sections | 3 |
+| Staff semantic | `reference/SEMANTIC/Staff_Info.md` | 176 rows (count needs reconciliation, §2.4) | 3 |
+| Copy policy | `reference/SEMANTIC/All Pages_Daily Copy Policy for Panchavati Police Station Duty Chart.md` | Copy vs. recalculate ideas — secondary | 3 |
+| Canonical reference data | `DailyDutyPanchavati-ui-rebuild/reference/PANCHAVATI_REFERENCE_DATA.v2.md` and the copy in `…/kushals repo/archive/` — **not present in this repo's `reference/`** | Cross-repo reference | 3 |
+
+**Conflict rule:** preserve the discrepancy, identify source + date, ask the user when evidence cannot resolve it. Never turn an extraction or an agent's interpretation into a permanent database invariant.
+
+### 8.2 Arjish Repo Key Files (paths relative to this repo's root)
 
 | File | Path | Purpose |
 |---|---|---|
-| API client | `../DailyDutyPanchavati-ui-rebuild/src/web/api/charts.ts` | 40+ typed endpoint wrappers |
-| Domain layer | `../DailyDutyPanchavati-ui-rebuild/src/server/domain/` | Operational, audit, rendering, search |
-| Schema | `../DailyDutyPanchavati-ui-rebuild/src/server/db/schema.generated.ts` | Kysely typed schema |
-| Page 1 view | `../DailyDutyPanchavati-ui-rebuild/src/web/Page1View.tsx` | Day shift authoring |
-| Page 2 view | `../DailyDutyPanchavati-ui-rebuild/src/web/Page2View.tsx` | Night shift authoring |
-| Page 3 view | `../DailyDutyPanchavati-ui-rebuild/src/web/Page3View.tsx` | Leave & special duties |
-| Page 4 view | `../DailyDutyPanchavati-ui-rebuild/src/web/Page4View.tsx` | Manpower matrix |
-| Page 5 view | `../DailyDutyPanchavati-ui-rebuild/src/web/Page5View.tsx` | Officer summary |
-| Page 6 view | `../DailyDutyPanchavati-ui-rebuild/src/web/Page6View.tsx` | Scan schedule |
-| Dashboard | `../DailyDutyPanchavati-ui-rebuild/src/web/OperationalDashboardView.tsx` | Command center |
-| Search | `../DailyDutyPanchavati-ui-rebuild/src/web/HistoricalSearchView.tsx` | Multi-faceted search |
+| API client | `DailyDutyPanchavati-ui-rebuild/src/web/api/charts.ts` | ~39 typed endpoint wrappers |
+| Domain layer | `DailyDutyPanchavati-ui-rebuild/src/server/domain/` | Operational, audit, rendering, search |
+| Schema | `DailyDutyPanchavati-ui-rebuild/src/server/db/schema.generated.ts` | Kysely typed schema (44 generated interfaces) |
+| Page 1 view | `DailyDutyPanchavati-ui-rebuild/src/web/Page1View.tsx` | Day shift authoring + तुलना comparison window |
+| Page 2–6 views | `…/src/web/Page2View.tsx` … `Page6View.tsx` | Night / leave / matrix / officer / scan |
+| Dashboard | `…/src/web/OperationalDashboardView.tsx` | Command center |
+| Search | `…/src/web/HistoricalSearchView.tsx` | Multi-faceted search |
+| Nav (hamburger-style) | `…/src/web/components/AppNav.tsx` | Arjish nav — overflow-menu pattern |
+| Nav (grouped, no hamburger) | `…/NEW DATA/kushals repo/archive/src/web/components/AppNav.tsx` | Kushal nav — flat grouped dropdowns (`AppNav.tsx:571`) |
+| Older standardized chart UI | `…/NEW DATA/kushals repo/archive/src/web/Standardized*.tsx` (4 files) | Kushal-only Stitch-era standardized format |
+| North star docs | `…/NEW DATA/kushals repo/archive/POLICE_DUTY_REGISTER_PRODUCT_MVP_and_NORTH_STAR.md` + `Manual_North_Star_By_Kushal.md` | Problem statement source |
+| OCR baseline report | `…/NEW DATA/REPORT/` | Self-contained OCR evaluation (images + raw outputs) |
 
 ### 8.3 Main Repo Key Files
 
@@ -781,3 +816,40 @@ The path forward is clear: **Use Cursor to port Arjish's domain layer and typed 
 | `tools/print-audit.mjs` | Per-section A4 height measurement |
 | `docs/IMPLEMENTATION_CONTRACT.md` | Settled implementation decisions |
 | `docs/CURRENT_STATE.md` | Current implementation state |
+| `docs/ARCHITECTURE.md` | How the pieces fit (note: `docs/IMPLEMENTATION_CONTRACT.md` was cited in an earlier draft but does not exist in this repo — it lives in the nested repos) |
+
+---
+
+## 9. Verification Log (2026-10-14)
+
+Everything below was checked directly on disk / by running the repo's own tooling this day. Statuses used: **verified** (executed and observed), **on-disk** (file exists / content read, behavior not executed), **unverified** (claimed but not re-confirmed), **corrected** (earlier draft was wrong).
+
+| # | Claim checked | Result |
+|---|---|---|
+| V1 | `npm run check` (typecheck + tests + doctor ×2 DBs) | **verified FAILING at session start** — two regressions from same-day commits; **fixed this session → 96/96 green** (see fix notes below) |
+| V2 | `npm run print:audit` 6/6 sheets | **verified** — 655/496/685/663/579/664px, all ≤ 775px A4 landscape (dev server on :3100) |
+| V3 | No-loss 212/212 | **verified** — part of green suite (`tests/render.test.ts`) |
+| V4 | `npm run doctor` — 14 checks, seed counts | **verified** — ranks=17, staff=179, locations=15, duties=61, scan_cfg=30, 10/09 chart present |
+| V5 | Repo hierarchy / nested paths (§1) | **verified** — all four repos exist at the stated paths |
+| V6 | Kushal archive = copy of Arjish | **corrected** — `diff -rq`: 24 files differ; each side has unique files (v2 profiles + compare window only in Arjish; `Standardized*View.tsx` + grouped nav only in Kushal; migrations 18 vs 20) |
+| V7 | Main repo migrations = 8 | **verified** — `db/migrations/0001–0008` |
+| V8 | Arjish migrations = “20+” | **corrected** — 18 in Arjish, 20 in archive |
+| V9 | Staff “169 across 12 ranks”, table sums 405 | **corrected** — Staff_Info.md has 176 numbered rows; our seed 179/17 ranks; old DB import 169; original table unreliable → §2.4 rewritten |
+| V10 | §8.1 semantic = “Exact text authority” | **corrected** — AGENTS.md authority order restored; EXCEL_RECONSTRUCTION = Tier 2 (only Page 1, 10/09 + 11/09); OCR report located at `New DATA/REPORT/` |
+| V11 | `reference/PANCHAVATI_REFERENCE_DATA.v2.md` in main repo | **corrected** — absent from this repo's `reference/`; exists only in Arjish root + archive |
+| V12 | `docs/layout/page-1-layout-spec.md`, `reference/UI_V0/`, `Dashboard_Visual_Reference.png` (cited in §6) | **corrected** — none exist in main repo; UI_V0 + dashboard PNG live in archive/Arjish |
+| V13 | `docs/IMPLEMENTATION_CONTRACT.md` (cited §8.3) | **corrected** — not in main `docs/`; exists in nested repos |
+| V14 | North star claims (Kruti Dev 714, ISM V6, photos→WhatsApp, Telegram) | **on-disk verified** — `Manual_North_Star_By_Kushal.md` contains all of them verbatim |
+| V15 | Durvesh = Flask + SQLite, `app.py` 190KB, `gen_duty_chart.js` | **on-disk verified** — `app.py` = 189,639 bytes; `.bat`/`.vbs` launchers present; **no `.exe` found** (corrected) |
+| V16 | Badges 39/1061/1799/2699 absent from Staff_Info, kept as daily-source identities | **verified** — all four in `db/seed/0002_source_evidenced_staff.sql` |
+| V17 | Rendered matrix cell = escaped `&lt;br&gt;` | **corrected** — renderer intentionally emits a REAL `<br>` (parts escaped separately) since commit `9e7db4f`; stale test assertion updated |
+| V18 | `PGSSLMODE=require` in `db/migrate.ts` | **fix scoped, not removed** — user confirmed it exists for Render TLS; now gated on `DATABASE_URL` so Render deploy keeps TLS while local trust-auth tests connect normally |
+| V19 | Arjish “Complete; all major features” / Playwright E2E | **unverified** — structure on disk only; suite not executed here |
+| V20 | 7-sheet vs 6-sheet output | **corrected** — current renderer = 6 sheets (test asserts 6); the 7-sheet line in CURRENT_STATE is stale compact-v4 (doc contradiction logged, not yet cleaned) |
+
+**Fix notes (both landed 2026-10-14, `npm run check` re-run green after each):**
+
+1. **`db/migrate.ts`** — `process.env.PGSSLMODE = "require"` was set unconditionally at import time (commit `a87b4d1`, for Render's free Postgres). `tests/invariants.test.ts` imports this module, so every local test connection was forced to SSL → *“The server does not support SSL connections”* → 19 tests skipped/failed. Fix: gate on `if (process.env.DATABASE_URL)` — Render always sets it (deploy behavior unchanged), local dev/test never does.
+2. **`tests/render.test.ts`** — asserted the old escaped output `12&lt;br&gt;04 Proण्`, but commit `9e7db4f` deliberately changed the renderer to re-emit a real `<br>` (literal “&lt;br&gt;” printing on paper was the reported bug; each part is still escaped, no injection possible). Fix: assert `12<br>04 Proण्` present and `12&lt;br&gt;04` absent.
+
+**Known latent issue (not fixed here, needs a user/authority call):** the seed file `db/seed-chart-1009.ts` now writes `12<br>04 Pro.` + row-key `हजर मनुष्यबळ` (changed 2026-10-14 citing SEMANTIC Page 4 + 16.md), but the **test DB still holds the old values** (`Proण्` / `मनुश्यबळ` from SEMANTIC 10.md) and tests assert the old values. `npm run db:seed` on a fresh DB would break 3 test files. Evidence is split: `SEMANTIC/10.md` (the actual 10/09 source) says `Proण्`, `16.md` (different day) says `Pro.`, Tier-2 EXCEL reconstruction covers Page 1 only (matrix is Page 4-ish, outside reconstruction). → Record in OPEN_QUESTIONS before reseeding; do not guess.

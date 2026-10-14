@@ -13,7 +13,11 @@ const migrationsDir = path.join(here, "migrations");
 
 // Render's free Postgres requires TLS. Request it explicitly for every connection pool
 // (the pool config alone does not always force it on the Node 26 pg driver).
-process.env.PGSSLMODE = "require";
+// Scoped to DATABASE_URL: this module is imported by tests and local tooling, and forcing
+// sslmode=require there breaks local trust-auth PostgreSQL ("server does not support SSL
+// connections" → the whole invariants suite fails). Render always sets DATABASE_URL, so the
+// deploy path is unchanged.
+if (process.env.DATABASE_URL) process.env.PGSSLMODE = "require";
 
 export async function migrate(pool: pg.Pool): Promise<string[]> {
   const files = fs

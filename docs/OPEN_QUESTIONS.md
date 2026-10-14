@@ -195,3 +195,25 @@ assignments and events), served at `/search` and described in `AppNav.tsx` as
 `ऐतिहासिक शोध (Search) — तारीख, कर्मचारी, स्थान, कर्तव्य व मोहीम शोध`. The user's instruction is
 explicit: learn from that implementation instead of designing a new one. Also note it needs its OWN
 data decision (which surfaces are searchable) before code.
+
+### T25 — Matrix cell `12<br>04 Proण्` vs `12<br>04 Pro.` + row-key spelling (seed/tests conflict)
+**Discovered 2026-10-14 (fact-check of SITE_OVERHAUL_BRAINSTORM.md §9).** Commit `9e7db4f` changed
+`db/seed-chart-1009.ts` to write `12<br>04 Pro.` and row-key `हजर मनुष्यबळ`, citing
+`reference/SEMANTIC/Page 4.md` (`12 (+4 Pro)`) and `reference/SEMANTIC/16.md` (`12<br>04 Pro.`).
+But: (a) the **test DB still holds the old values** (`12<br>04 Proण्`, `हजर मनुश्यबळ` from
+`reference/SEMANTIC/10.md` — the actual 10/09 source); (b) three tests assert the old values
+(`tests/invariants.test.ts:83`, `tests/chart-document.test.ts:126`, `tests/render.test.ts`);
+(c) a fresh `npm run db:seed` would therefore break the suite.
+
+**Evidence is split and none of it is Tier 2:** SEMANTIC/10.md (same day) says `Proण्`;
+SEMANTIC/16.md (different day) says `Pro.`; Page 4.md paraphrases as `(+4 Pro)`; the
+EXCEL_RECONSTRUCTION covers Page 1 only (the matrix lives on the manpower sheet — outside
+reconstruction). The original PDF `reference/ORIGINAL_VISUAL/10.pdf` is the Tier-1 tiebreaker
+(visual check of the OFFICE column of हजर मनुष्यबळ) — or the OCR report
+(`DailyDutyPanchavati-ui-rebuild/NEW DATA/REPORT/`).
+
+**Do not reseed and do not “fix” the tests until the user/source answers.** Same question applies
+to the row-key spelling मनुश्यबळ vs मनुष्यबळ (10.md uses the first; the new seed comment uses the
+second). Resolution options: (1) visual check of 10.pdf → align seed + tests to Tier 1;
+(2) treat as day-specific variants (each date's own SEMANTIC file wins for that date);
+(3) OCR-report cross-check. Option 2 is the conservative default if no check is done.
