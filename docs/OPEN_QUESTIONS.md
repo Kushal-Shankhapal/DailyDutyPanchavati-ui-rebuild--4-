@@ -217,3 +217,61 @@ to the row-key spelling मनुश्यबळ vs मनुष्यबळ (10
 second). Resolution options: (1) visual check of 10.pdf → align seed + tests to Tier 1;
 (2) treat as day-specific variants (each date's own SEMANTIC file wins for that date);
 (3) OCR-report cross-check. Option 2 is the conservative default if no check is done.
+
+## From the 2026-10-15 design round (brainstorm + tool survey)
+
+User reports recorded this round, none of them patched in the current stack by the user's own
+instruction (*"dont try to fix these, just make sure next time we use react or something better"*):
+**(a)** the server-rendered HTML + vanilla JS authoring stack costs a full page reload for every CSS/JS
+tweak; **(b)** the EN↔MR toggle is "clearly broken"; **(c)** `design/panchavati-compv3.*` is **no
+longer a frozen baseline** — the current render design is actively being optimised. Evidence for (b):
+the toggle is hand-wired as 72 `data-lang` spans in the renderer plus 41 in `web/chart-authoring.js`,
+with real Marathi strings still hard-coded (so coverage is partial by construction); the repo's own
+transliteration assertion is 175/179 names round-tripping (`tests/authoring.test.ts`), i.e. the engine
+works on seeded names but the wiring is not reliable in the UI.
+
+### T26 — Design-tool data boundary (which sanitized fixture may go to a hosted UI AI)
+The hard rule is that no police operational data leaves the machine; every UI-generating tool (v0,
+Bolt, Lovable, Figma Make / MCP, Stitch, Uizard) receives what is pasted into it. Before any design
+tool is used, three things must be decided: **(1)** may the fixture keep the real *public* place names
+(the six chowkis, court names) with everything personnel-related invented; **(2)** may a screenshot of
+a **redacted** printed sheet be used as a layout reference; **(3)** which tools are acceptable at all.
+Recommended: structure + public geography yes, personnel/notices/leave reasons invented, no live
+sheet screenshot, hosted tools only for chrome exploration. Fixture spec: `docs/UI_HANDOFF_BRIEF.md` §8.
+**Trap found while writing it:** `docs/STITCH_BRIEF.md`'s SAMPLE PEOPLE block has the right *shape* but
+contains **real personnel names** — do not paste it anywhere.
+
+### T27 — Chrome language default and persistence
+EN-first chrome with a one-at-a-time Marathi toggle is the agreed direction, and the mechanism partly
+exists (72 + 41 `data-lang` labels). Open: **(a)** is English the default for every clerk, or a
+remembered per-clerk choice; **(b)** is that choice stored per browser or on the (future) user record;
+**(c)** does the *edit-mode* chrome (flyers, pickers, toasts) count as chrome (EN-first) or as chart
+text (Marathi)? Recommended: EN default, remembered per browser for now, all editor chrome in the
+catalog. Related: T22 (transliteration) stays open and unchanged — nothing is stored as a twin yet.
+
+### T28 — Static stack → React + Vite migration for the authoring surfaces
+Direction from the user (2026-10-15): the next build of the authoring/chrome surfaces must not be
+server-rendered HTML + vanilla JS with reload-per-edit. Recommended shape: **Vite + React 19 SPA over
+the existing REST API for everything that is clicked, with `server/render/chart-html.ts` kept as the
+print authority** (a React re-implementation of the printed sheet would put 212/212 and ≤775 px at
+risk). `src/app/` already holds the dormant React + Vite stub (`npm run build:app`). Open: does the
+migration happen before or after the layout optimisation pass (T30), and does the chart preview also
+move to React or stay server-rendered (it is the same artifact that prints)?
+
+### T29 — First UI-AI run, and the throwaway CRUD sandbox
+Which tool gets the first run on the prompt pack: **v0 free tier** (7 messages/day, can read the repo,
+generates React/TS components) or a **Bolt free-tier sandbox** (1M tokens/month, includes a database)
+that recreates a clean schema and proves the CRUD flows with synthetic data before any of it touches
+this repo? Also undecided: whether the sandbox result is used *only* for interaction learnings
+(recommended) or as a code source. Lovable is the alternative but cannot import this repo and has
+documented Supabase row-level-security footguns. *Not blocked on anything — just needs a pick.*
+
+### T30 — Baseline re-opened: layout priority, and sheets vs legibility
+With `design/panchavati-compv3.*` no longer frozen, the chart layout itself is back on the table.
+Measured 2026-10-15: sheets 2 and 5 are the sparsest (64% and 75% fill; 279 px and 196 px of unused
+height) while sheet 3 is 88% full, and the dense sheets print body text at 9.5–10 px — below general
+print guidance, in a workflow that reads the chart as **phone photos of paper**. Two decisions:
+**(1)** is the priority order sheet 2 → sheet 5 → sheet 1 (measured slack), or the clerk's own pain
+first; **(2)** is a 7th sheet acceptable on a non-event day if it buys noticeably larger type, or is
+**6 sheets a hard rule** (today's render is 6, and 7 is reserved for event days with an annex)?
+Recommendation: legibility wins where the two conflict, because the photo is the real reader.

@@ -1,8 +1,8 @@
 <!--
-  Purpose: Comprehensive analysis of the four codebases, their architectures, the legacy 6-page chart domain model, the North Star problem statement, and concrete recommendations for how to use v0/Bolt/Cursor to execute an overhaul.
+  Purpose: Comprehensive analysis of the four codebases, their architectures, the legacy 6-page chart domain model, the North Star problem statement, concrete tool/option recommendations — and (§10) the design-first workflow brainstorm: order of operations, tool chain incl. the Framer-vs-Figma verdict, the EN-first language system, the measured layout-optimization loop, the dev lab, and the flow-inventory plan.
   Current role: Planning document — the single artifact a fresh session or AI coding agent can read.
-  Last meaningful change: 2026-10-14 — fact-verified line-by-line against the actual repos (§9 Verification Log); §1 repo comparison, §2.4 staff numbers, §8.1 authority table and several file paths corrected.
-  Constraint: This is analysis + recommendation, not a commitment to implement. §7 options are UNAPPROVED until the user signs off.
+  Last meaningful change: 2026-10-15 — §10 "The Brainstorm" added (design-first workflow + measured optimization loop; baseline re-measured live: 6 sheets, 655/496/685/663/579/664px, 212/212). 2026-10-14 — fact-verified line-by-line against the actual repos (§9 Verification Log); §1 repo comparison, §2.4 staff numbers, §8.1 authority table and several file paths corrected.
+  Constraint: This is analysis + recommendation, not a commitment to implement. §7 options and §10 are UNAPPROVED until the user signs off.
 -->
 
 # Site Overhaul Brainstorm — Panchavati Daily Duty
@@ -599,7 +599,7 @@ If handing this to v0 or Bolt, here is the complete problem statement prompt:
 - Staff directory (176 rows semantic / 179 seeded — reconcile first, §2.4; 16/06/2026)
 - Human-verified Page-1 HTML/XLSX for 10/09 + 11/09 (`reference/EXCEL_RECONSTRUCTION/`)
 - Daily copy policy (`SEMANTIC/All Pages_Daily Copy Policy…md`)
-- Visual mockups (`design/panchavati-compv3.html` — frozen baseline)
+- Visual mockups (`design/panchavati-compv3.html` — historical visual reference, **no longer a frozen baseline**, T30)
 
 **SIX CANONICAL SECTIONS:**
 1. Day Shift Core (09:00–21:00): 6 chowki blocks, office duties, PSO, marshals, BIMA
@@ -628,6 +628,8 @@ If handing this to v0 or Bolt, here is the complete problem statement prompt:
 ## 7. Recommendations
 
 > **⚠ All of §7 is an options menu, not a plan.** Nothing here is approved. The user reviews the brainstorm, picks options, and only then does any phase begin (user instruction, 2026-10-14: *ask before deciding*).
+>
+> **→ Read §10 first.** §10 (2026-10-15) turns this menu into a design-first workflow and says which row of it is actually worth doing; where §6–§7 and §10 disagree, §10 is the newer reading. The one §7 decision that gates everything downstream is §7.1 (Option A vs B).
 
 ### 7.1 Strategic Recommendation: Two-Phase Approach (options)
 
@@ -853,3 +855,345 @@ Everything below was checked directly on disk / by running the repo's own toolin
 2. **`tests/render.test.ts`** — asserted the old escaped output `12&lt;br&gt;04 Proण्`, but commit `9e7db4f` deliberately changed the renderer to re-emit a real `<br>` (literal “&lt;br&gt;” printing on paper was the reported bug; each part is still escaped, no injection possible). Fix: assert `12<br>04 Proण्` present and `12&lt;br&gt;04` absent.
 
 **Known latent issue (not fixed here, needs a user/authority call):** the seed file `db/seed-chart-1009.ts` now writes `12<br>04 Pro.` + row-key `हजर मनुष्यबळ` (changed 2026-10-14 citing SEMANTIC Page 4 + 16.md), but the **test DB still holds the old values** (`Proण्` / `मनुश्यबळ` from SEMANTIC 10.md) and tests assert the old values. `npm run db:seed` on a fresh DB would break 3 test files. Evidence is split: `SEMANTIC/10.md` (the actual 10/09 source) says `Proण्`, `16.md` (different day) says `Pro.`, Tier-2 EXCEL reconstruction covers Page 1 only (matrix is Page 4-ish, outside reconstruction). → Record in OPEN_QUESTIONS before reseeding; do not guess.
+
+---
+
+## 10. The Brainstorm (2026-10-15) — design-first, real-data-first, measured
+
+> **What this section is.** §1–§5 analyse, §6–§7 list tools and options, §8–§9 catalogue evidence. This section is the *brainstorm* those sections were missing: **the order of operations, which tool does which job, how the language switch works, how a chart-layout optimization actually gets measured, where manual tinkering should happen, and what the first design artifact should be.**
+>
+> **It deliberately respects three user decisions** (2026-10-14): finalized records are **versioned**; the **first design deliverable is flows** (not screens); and the chrome is **English-first with an EN|मराठी toggle** for UI and forms. Nothing here is approved — §7 still needs a sign-off, and §10 does not start any work.
+>
+> **Where §10 and §6–§7 disagree, §10 is the newer reading.** Its one-line thesis: **the printed sheet *is* the product; no design tool can design it — the chrome can be designed, the sheet has to be measured.**
+
+### 10.1 The order of operations (and why this order, specifically)
+
+The tempting order — open a design tool, mock screens, then wire data — is wrong for this product, and there is already evidence in this repo for why.
+
+**Evidence: the mock lied.** `design/panchavati-compv3.html` fits every page on one A4 sheet only because its sample data is smaller than the real 10/09 chart. With the real 212 assignments the same visual grammar needed a print-density pass, an extra sheet, and six-column leave/court grids (OPEN_QUESTIONS T18, resolved 2026-10-12). A screenshot-clean design exploration on mock data would have reproduced that lie — and any AI design tool fed *that* mock would have produced a beautiful, unfittable design.
+
+**The measured baseline (re-captured live 2026-10-15, this repo, dev server on :3100):**
+
+| Signal | Measured value | Command |
+|---|---|---|
+| Sheets produced for 10/09 | **6** (sheet 1/3/4 dense) | `npm run print:audit` |
+| Extent vs 775px A4 landscape | 655 · 496 · 685 · 663 · 579 · 664 | `npm run print:audit` |
+| Slack per sheet (unused height) | **−120 · −279 · −90 · −112 · −196 · −111 px** | `npm run print:audit` |
+| Fill ratio per sheet | 84.5% · **64.0%** · 88.4% · 85.5% · **74.7%** · 85.7% | derived from the above |
+| Row no-loss | **212/212** | `npm run render:chart` |
+| Suite + environment | typecheck + 96 tests + doctor ×2 DBs, green | `npm run check` |
+| Seed shape | ranks 17 · staff 179 · locations 15 · duties 61 · scan_cfg 30 | `npm run doctor` |
+
+So the design pipeline for *this* product is:
+
+```
+DATA (real 10/09, in a live route)
+  → FLOWS (what the clerk does; artifact #1, user-chosen)
+    → DENSITY SPEC (per-sheet row plan + numbers, artifact #2)
+      → CHROME SPEC (navbar / forms / search / dashboard, artifact #3)
+        → CODE (renderer + CSS + React surfaces)
+          → VERIFY (print:audit ≤775px, 212/212, browser pass)
+            ↺ iterate
+```
+
+| Stage | Artifact | Authority that already exists | Done-when gate |
+|---|---|---|---|
+| 0 · Truth | live chart route with real data | `server/render/chart-html.ts`, `db/seed-chart-1009.ts` | `npm run print:audit` prints 6 sheets; `render:chart` 212/212 |
+| 1 · Flows | `docs/FLOWS.md` v1 | `DESIGN_INTERACTION_NOTES.md` §1–8, `PRODUCT_UI_ARCHITECTURE.md` §3/§7/§8 | every flow has entry / happy path / empty / error / exit written down |
+| 2 · Density | `docs/DENSITY_SPEC.md` v1 | `DENSITY_AUDIT_1009.md`, `BRIEF_DENSE_TABLES.md`, `COMPACT_V4_DECISIONS.md` | each sheet has a row plan **and** a numeric budget |
+| 3 · Chrome | `docs/CHROME_SPEC.md` v1 | `UI_SPEC.md`, `design/panchavati-compv3.*`, `COMPACT_V4_DECISIONS.md` | EN-first strings listed; every control maps to a flow |
+| 4 · Code | renderer/CSS/React | the docs above | §7.1 approved, then the ordinary gates |
+| 5 · Verify | evidence | `tools/print-audit.mjs` | all six sheets ≤ 775px, no row added/dropped |
+
+**Rule that falls out of the table:** no design work happens on data that is not the real chart, and no design is "done" until a command in this repo says so.
+
+### 10.2 Which tool does which job
+
+| Job | Tool | Verdict | Why |
+|---|---|---|---|
+| The printed sheet (all 6) | **the repo's own renderer** (`server/render/chart-html.ts` + `web/authoring.css` + `print-audit`) | **Only candidate** | It is the print authority, it is measured, and its output is what the clerk prints. No design tool produces it. |
+| Density exploration | `/dev/lab` scratch route (§10.6) + `print:audit` | **Build this** | One sheet at true A4 with a ruler overlay and a variant switch beats any canvas tool. |
+| App chrome (navbar, toolbar, flyers) | CSS-first today; **React + Vite next** (§10.2 stack verdict) | **Recommended** | ~1 navbar + a handful of flyers; the grammar is settled but the implementation path is the one being replaced. |
+| Chrome *if* the app grows to 13+ views (§7.1 Option B) | **Figma** (agent + Make + MCP/Code Connect) | **Option, not now** | Only pays off when there are many screens; then design there and hand-code, never export. |
+| Concept exploration on a synthetic fixture | Google Stitch / Uizard | **Tolerated, low value** | Screenshot-to-screen tools are mobile/"vibe" oriented; they cannot express a 27-row banded print table. Use only for loose chrome ideas, never for the sheet. |
+| Website sections | Relume, Framer | **Not applicable** | Website/marketing generators. |
+| Repo-aware implementation | Cursor / Claude Code (this agent) | **Yes** | Has `npm run check` as an objective grader (§10.8). |
+
+#### The full tool survey (every tool in `docs/External_UI_Tools.txt` + this doc's own list)
+
+> **Added 2026-10-15** at the user's request: *cover every tool in the research file, not just Figma and Framer*. Columns: **Free?** (what the free tier actually is, October 2026) · **Local?** (*does my data have to leave the machine* — the project's hard rule) · **Verdict for Panchavati**.
+
+**(a) Design canvases**
+
+| Tool | What it is | Free? | Local? | Verdict |
+|---|---|---|---|---|
+| **Penpot** | The open-source Figma alternative | **Free + MPL-2.0**, self-host anywhere; Enterprise paid | **Yes — the only design canvas that can be fully local** (self-hosted + its self-hostable MCP server) | **The free/OSS design canvas to pick** *if* a canvas is ever needed. Exports CSS/HTML/SVG snippets, not React components. |
+| **Brilliant Design** | Local-file design tool with JSX export | **Full tool free forever** (public projects, 2 GB); Personal $20/mo | Local files on disk — **not self-hosted but offline-capable**; its MCP can drive the canvas locally | **Strong candidate for hands-on tinkering**: real local files + JSX/HTML export. Proprietary, so no lock-in risk to the repo — its output is a starting point, never a build artifact. |
+| **Open Design** (`nexu-io/open-design`) | Agent-driven prototype workspace | **Free + Apache-2.0**, Windows desktop + Docker | Local-first; offline depends on the model you point it at | Worth a look for agent-generated HTML prototypes. Verify the repo — "Open Design" is an ambiguous name. |
+| **Figma** (design agent GA 2026-10-06, Make, MCP, Code Connect) | The industry canvas + design→code bridges | Starter **500 AI credits/mo**; Pro seat 3,000; Make ≈100+ credits per generated app | **No** — remote MCP endpoint (`mcp.figma.com`), Code Connect uploads repo metadata | **Only under §7.1 Option B** (13+ chrome screens), and only with a sanitized fixture (§10.8). Never for the printed sheet. |
+| **Google Stitch** | AI design canvas + `DESIGN.md` | Free daily credits (no official pricing page; treat numbers as unverified) | **No** — cloud | Exploration only, on the geometry fixture. Its **`DESIGN.md` format is worth stealing** as the shape of our own fixture/spec file. |
+| **Uizard** | Screenshot/wireframe → mockups, incl. desktop software | **3 AI generations/month**, 2 projects, 5 screens; Pro $12/mo (React handoff is paid) | **No** — cloud | No. Cannot express a 27-row banded print table. |
+| **Relume** | Website sitemap/wireframes → React+Tailwind/shadcn export | Free with 30 React components; Starter $18/mo | **No** — cloud | No — website sections, not app grids. |
+| **Flowstep** | Multi-screen user flows | Unverified | **No** — cloud | Maybe for the flows artifact *if* sanitized — but our flow list is 14 rows and can be drawn locally instead (see Excalidraw below). |
+| **Moda** | Editable graphics/slides/PDFs | Free 500 credits/mo (**watermark on free exports**); Pro $30/mo | **No** — cloud | No — collateral, not app UI. |
+| **Animos** | Animated templates | Pricing unverified | Cloud | No. |
+| **Excalidraw** | Hand-drawn diagrams/wireframes | **Free/open-source**, works offline as a PWA | **Yes** (local-first; collaboration is the only networked part) | **Yes — for the flow diagrams** (artifact #1) and for quick wireframes of the popups. No code export, which is fine. |
+| **tldraw** | Canvas SDK | Source-available: **production requires a license key** (100-day trial) | Local-capable | **Avoid** — the license trap. |
+| **AFFiNE / Focalboard / Vikunja** | Notion-ish canvas / Kanban / task planner | OSS (AFFiNE AGPL-3.0) | Self-hostable | Unchanged from §7.5: AFFiNE concepts only; the others are not a fit. |
+
+**(b) UI-generating AIs ("give me screens")**
+
+| Tool | What it is | Free? | Local? | Verdict |
+|---|---|---|---|---|
+| **v0 (Vercel)** | Prompt → React/Tailwind/shadcn, **imports a GitHub repo**, branches + PRs | Free **7 messages/day** (or a $5 allowance); $20–30/mo | **No** — cloud sandbox | **Best of this group for generating chrome components into the real repo** — it can see our code. Ask for plain CSS, not Tailwind, and one component per message (7/day is tight). |
+| **Bolt.new** | Full-stack generator + hosting + databases | Free **1M tokens/month** (300k/day), includes hosting and unlimited databases | **No** — cloud | **The sandbox for the CRUD/DB experiment** (§7 of `UI_HANDOFF_BRIEF.md`): clean schema, real CRUD, synthetic data. Never the real chart. |
+| **Lovable** | Prompt → full-stack app with built-in backend or your Supabase | Free **5 build credits/day** (~30/mo) | **No** — cloud | Alternative sandbox. **Cannot import an existing repo** (sync only goes one way), and its Supabase integration has documented RLS footguns — fine for a throwaway prototype, wrong for us to build on. |
+| **Figma Make** | Prompt → interactive app; can edit a local repo **in closed beta** | Starter 500 credits/mo (150/day cap) | No (beta local-repo flow is the exception) | Later, maybe. Its normal GitHub push only updates a repo Make itself created. |
+| **Framer 3.0** | Hosted website builder with canvas agents | Basic $10/mo, Pro $30/mo (1,000/3,000 credits; ~300 credits per landing page) | **No** — hosted, **and no HTML export for self-hosting** | **Not usable here** — see the verdict below. Excellent for a public marketing/landing site if one is ever needed. |
+| **Dovetail AI / UXia** | Synthetic-persona usability testing | Paid | No | Not yet — could test a *sanitized* fixture once flows exist. Low value for a one-clerk tool. |
+
+**(c) Coding agents ("write it in my repo")**
+
+| Tool | Free? | Runs offline? | Verdict |
+|---|---|---|---|
+| **Aider** | **Free, OSS** (you pay a model if cloud) | **Yes, with Ollama/LM Studio** — the only fully-local route | Best *free + local* option for careful, Git-reviewable edits. |
+| **Cline** | **Free, OSS (Apache-2.0)** | **Yes, with a local model** | Good autonomous multi-file agent inside VS Code. |
+| **Zed** | Editor free forever; Pro $10/mo | Yes — supports local providers | Fine free editor if its Windows build suits you. |
+| **Claude Code / this agent** | Paid | No (prompts go to the provider) | What we are already using; the objective grader (`npm run check`) makes it effective here. |
+| **Cursor** | Paid; Privacy Mode ≠ local | No | Not needed on top of what we have. |
+| **Gemini CLI** | **Disputed** — the quota page says 1,000 req/day but Google's own notice says consumer sign-in stopped 2026-06-18 | No | Do not build a workflow on it without testing. |
+| **GitHub Copilot Free** | 2,000 completions/month | No | Fallback completion only. |
+| **Windsurf / Trae** | Free tier exists; both **unverified** (Windsurf's pricing page now redirects to Devin) | No | Unverified — ignore for planning. |
+| ~~Roo Code~~ / ~~Void~~ / ~~Continue.dev~~ | **Dead**: Roo Code shut down 2026-05-15; Void deprecated; Continue.dev repo archived/read-only | — | Do not adopt. |
+
+**(d) Libraries (all local code — none of these send anything anywhere)**
+
+| Library | Licence | Verdict |
+|---|---|---|
+| **TanStack Table v8** (`react-table` v7 is its predecessor — the npm package name is the same family) | **MIT**, headless | **The table foundation if a React grid is built** — you own the markup, which print fidelity requires. Grouped/multi-row headers via nested column defs; `rowSpan` needs manual handling; **never print a virtualized table** (unrendered rows cannot print). |
+| **MUI / MUI X Data Grid Community** | MIT core (Pro/Premium paid) | Alternative if speed beats fit; its Material grid fights the dense grammar, and print export ≠ matching the paper form. |
+| **React Flow** | MIT | Candidate for a future canvas editing surface (unchanged from §7.5). |
+| **Canvas Datagrid** | Verify licence before adopting | Candidate for very large rosters only. |
+| **TanStack Charts 1.0/1.1** | **MIT** | Optional later; use its **SVG** path for print. Nothing in the north star needs charts today. |
+| **Sanscript** (`@indic-transliteration/sanscript`) | **MIT**, pure JS | **Already in use** and the fix path for the transliteration complaint — offline, no API. Caveat: it is a *formal scheme converter*, not a Marathi spell-checker (no schwa deletion model for Marathi). |
+| **AI4Bharat `@indic-transliterate`** | MIT component, **but its default mode calls an API** | **Do not use its default** — sending a typed name to a cloud endpoint violates the data rule. A local IndicXlit model would be a separate project. |
+| **Aksharamukha / Aksharamukha.js** | AGPL-3.0 (original); JS package licence unverified | **Avoid** until the licence question is settled. |
+| **typesafe-i18n** | **MIT**, ~1 kB | **Recommended for the EN-first chrome catalog** — generated types make a missing Marathi string a compile error. |
+| **i18next + react-i18next** | **MIT**, ~22 kB | Alternative when ecosystem matters more than compile-time completeness. |
+| **Lingui / FormatJS** | MIT / BSD-3 | Also fine; not needed for a two-language catalog. |
+| **Devanagari fonts**: Noto Sans Devanagari (v2.007, Sep 2026, fixes Marathi **Rakar**), **Hind** (best for dense UI), Mukta, Tiro Devanagari Marathi (literary print) | **OFL-1.1** | **Self-host WOFF2; never a font CDN.** Baloo Bhai 2 / Gotu are **display** faces — not for duty-chart rows. |
+
+**(e) Sources worth following** (the user asked for the creator list too): Mizko, DesignCourse, Michal Malewicz, Griffin Wooldridge, Juxtopposed, Punit Chawla — plus **Hacker News** (the ASCII-first sketching idea below), **r/UXDesign** and **r/LocalLLaMA** for workflow reality checks, and **Mobbin** for pattern references. Treat creator videos as *leads*: in the research run for this document, most YouTube/Reddit pages could not be read as text, so nothing here is attributed to a creator's specific claim.
+
+**The practical shortlist for this project (free/OSS first):**
+
+1. **Excalidraw** (free, offline) — draw the flow diagrams and popup wireframes by hand.
+2. **Penpot** or **Brilliant** — only if a real canvas is wanted; Penpot to stay fully open-source, Brilliant for local files + JSX snippets.
+3. **v0 free tier** — generate one chrome component at a time against the repo (7 messages/day).
+4. **Bolt free tier** — a throwaway sandbox to prove a clean-schema CRUD flow.
+5. **Aider/Cline + a local model** — the only route where nothing leaves the machine.
+6. **Nothing at all for the six printed sheets.** They are measured, not designed.
+
+#### The Framer vs Figma question, answered directly
+
+**Framer does have AI support** — Framer 3.0 ships canvas agents that generate/revise pages and sections, work with your content, styles and CMS, and run SEO checks, billed in AI credits (Basic $10 / Pro $30 per month with 1,000 / 3,000 credits; ~300 credits for a landing page). **But Framer is the wrong tool for this project**: it is a *hosted website builder*, and Framer's own help says it does **not** offer HTML export for self-hosting. There is no path from Framer into a Fastify + PostgreSQL + server-rendered HTML repository, so its excellent AI sits on the wrong side of the wall.
+
+**Figma is the better fit** for design-and-handoff work: its design agent went GA in October 2026, Figma Make turns prompts into an interactive app, and the **MCP server + Code Connect** let a coding agent consume real design context (components, variables, layout) and map it to real repo components — framework-agnostic, so a plain-CSS design system is not a blocker. Two caveats: (a) the "Make in your local codebase" flow that edits a real repository was in **closed beta** at the time of writing, and (b) the Bud acquisition (July 2026) is **not** a shipped Figma capability — the team was acquired, the product was shut down.
+
+**The verdict for Panchavati:** *neither tool touches the sheet.* Use Figma **only if and when** the chrome grows into many screens (i.e. only under §7.1 Option B); otherwise the honest answer is that **the design tool this project needs is a ruler and a measurement script**, both of which it already has. Sources: [Framer agents](https://www.framer.com/agents/) · [Framer pricing](https://www.framer.com/pricing) · [Framer export policy](https://www.framer.com/help/articles/can-i-export-my-website-to-html-and-self-host-it/) · [Figma agent](https://help.figma.com/hc/en-us/articles/37998629035799-Work-with-the-Figma-agent-in-design-files) · [Figma Make](https://help.figma.com/hc/en-us/articles/31304412302231-Explore-Figma-Make) · [Figma MCP](https://help.figma.com/hc/en-us/articles/32132100833559-Guide-to-the-Figma-MCP-server) · [Code Connect](https://help.figma.com/hc/en-us/articles/23920389749655-Code-Connect) · [Bud acquisition](https://techcrunch.com/2026/07/07/figma-acquires-team-behind-a-vibe-coding-app/).
+
+**On libraries** (asked in the pasted research): if a real clerk-facing data grid ever needs to be built, **TanStack Table v8** is the fit — MIT, headless, you own the markup, which is exactly what a print-fidelity project requires. MUI X Data Grid Community is also MIT and comes with a print export, but its prebuilt Material grid fights the dense grammar. **TanStack Charts** (past 1.0, MIT, server-rendered SVG) is a later, optional addition — charts are not the paper form, and nothing in §2's north star needs them. Neither library sends data anywhere; TanStack is local code, which respects the project's data rule.
+
+#### The stack verdict: React + Vite, not reload-per-edit HTML
+
+The user's complaint is a real, dated diagnosis, not a preference: **the authoring UI is server-rendered HTML + vanilla JS, so every CSS or JS tweak costs a full page reload** — and the EN↔MR toggle (72 `data-lang` spans plus 41 in the client flyers) is hand-wired inside that same reload-bound code, which is exactly why it keeps breaking.
+
+The fix is already half-present in the repo: `src/app/` is a **dormant React 19 + Vite stub** (`npm run build:app` builds it), and the server already exposes a REST API for everything the UI edits. So the direction is:
+
+| Keep | Change |
+|---|---|
+| `server/render/chart-html.ts` as **print authority** (server-rendered, measured by `print:audit`) | The **authoring + chrome surfaces** move to a React SPA on **Vite** (`npm run dev` → HMR, state preserved, sub-50 ms updates, no reload) |
+| The normalized B-layer tables + narrow REST API (already built) | The **language switch** becomes catalog-driven (typesafe-i18n) instead of duplicated inline spans |
+| The 6 sheets' geometry and all invariants | The **date/nav/flyer** code that currently lives in a 110 kB `chart-authoring.js` becomes typed components |
+
+Notes that make this cheap rather than risky: Vite does **not** type-check (run `tsc --noEmit --watch` beside it), React Fast Refresh still falls back to a full reload when a module's exports change shape, and the print path must **not** be re-implemented in React — a React print view that drifts from the server renderer would break the 212/212 and ≤775px guarantees. The safest split is therefore: **server renderer for what prints, React for what is clicked.**
+
+This is a real migration decision, not a task for today (the user said explicitly: *don't fix it now, make sure the next build uses it*). It is logged as **OPEN_QUESTIONS T28**.
+
+### 10.3 The language system: English-first chrome, Marathi sheet
+
+The user's direction — *English-first UI and forms, with an EN|मराठी toggle* — is **half-built already** and the remaining half is small, provided the three text authorities are kept apart.
+
+**Already in the repo (verified 2026-10-15):** the chrome markup carries **72 `data-lang` spans** — 36 MR/EN pairs — in `server/render/chart-html.ts` (e.g. `<span data-lang="mr">पंचवटी पोलीस ठाणे</span><span data-lang="en">Panchavati Police Station</span>`), and the client flyers in `web/chart-authoring.js` use the **same rule** for 41 more labels (the comment at `chart-authoring.js:288` states it: *one language at a time, no emoji*). The toggle shows one language at a time (never both), and it is **chrome-only — the chart always prints Marathi** (CURRENT_STATE 2026-10-13).
+
+**Three text authorities — keep them apart:**
+
+| # | Text | Language | Where it lives |
+|---|---|---|---|
+| 1 | **Chrome strings** (nav, toolbar, buttons, flyers, form labels, picker, toast, empty states) | **EN is the source; MR is a translation** | new: one catalog keyed by string id, consumed by the renderer + flyers |
+| 2 | **Chart presentation text** (section titles, role labels, column heads, sign-off block) | **Marathi only** on the sheet; tooltips may carry the full form | Layer C — `template_versions.labels` + `charts.presentation_overrides` (already exists) |
+| 3 | **Chart data** (names, notices, duties, matrix numbers) | **Marathi source text, never translated, never transliterated silently** | Layer A staff masters + Layer B chart rows |
+
+**What is actually missing (the work item):**
+
+1. **Extract the inline pairs into one catalog** — today the strings are hand-written pairs scattered across the renderer and the client JS, so the chrome cannot be reviewed as a language set and a new control can ship with one language missing. One catalog, `en` complete and authoritative, `mr` verified, is the EN-first refactor.
+2. **Finish the coverage, and flip the source direction.** The mechanism is shared but partial: some strings are still hard-coded Marathi with no EN twin (e.g. the flyer title `कर्मचारी निवडा`, several `aria-label`s in `web/chart-authoring.js`). EN-first means every chrome string resolves through the catalog, with Marathi as the translation rather than the source.
+3. **Default = EN, with a remembered choice.** Decide where the clerk's toggle is stored (per-browser or per-user) — **OPEN_QUESTIONS T27**.
+4. **Flip the page default** — `<html lang="mr">` (`chart-html.ts:1152`) becomes `en` for the chrome, while the sheet's own container keeps `lang="mr"` (a printed sheet is Marathi by definition, whatever the chrome shows).
+
+**Hard rules unchanged:** protected tokens (CCTNS, Dial 112 MERS, DB, MERS, TOTAL, Office, ME, PI/API/PSI/GPS/ASI/LASI/HC/LHC/PN/PC/LPC) are never translated; Devanagari digits stay a display transform; `बिमा` is never `विमा`; and the sheet itself never switches language.
+
+**Do not decide yet:** whether chart-local text (element names, notice lines, free-table titles) gets a *stored* English twin. That is **T22.1**, still open — today the Latin field is an entry aid, and nothing is stored as a twin.
+
+### 10.4 The layout optimization loop (real data, measured)
+
+This is the "optimized chart layout with real data" the user asked for, as a loop rather than an opinion.
+
+**The objective function (all measurable today):**
+
+| Metric | Target | Current | Where measured |
+|---|---|---|---|
+| Sheets | 6 normal days; 7 only for event/day with an annex | 6 | `print:audit` + `tests/render.test.ts` |
+| Per-sheet extent | ≤ 775px (A4 landscape; 794 − 19px padding) | 655/496/685/663/579/664 | `print:audit` |
+| No row added/dropped | 212/212 exactly once | 212/212 | `render:chart` |
+| Page-level horizontal overflow | 0 | 0 | browser/print check |
+| Minimum print type | ≥ 9.5px | 9.5–10px on dense sheets | CSS + T18 decision |
+| Largest internal gap | ≲ 80px (from `BRIEF_DENSE_TABLES` §5) | **not yet instrumented** | *new metric* |
+| Ink coverage / photo legibility | *to be defined on the first measurement* | **not yet instrumented** | `tools/png-ink.py` exists |
+
+**The single most important insight: slack is a budget, not waste.** Sheets 2 and 5 have 279px and 196px of unused height — but the north-star workflow is *print → photograph → WhatsApp*, so a sheet's real reader is looking at a phone photo of paper. A page with 36% slack is a page whose type could be **larger**, not a page that needs more content squeezed in. So the loop has two legitimate moves and one forbidden one:
+
+- **Allowed:** spend slack on legibility (type scale / leading / band spacing) — decide per sheet.
+- **Allowed:** re-balance sheets — move content from a sheet at 88% fill (sheet 3) toward a sparse neighbour (sheet 2 or 5) when the sheet boundaries allow it.
+- **Forbidden:** dropping, merging or reclassifying rows to make a sheet fuller (no-loss rule), or inventing content to fill whitespace.
+
+**Candidate queue, ranked by measured slack:**
+
+| Order | Sheet | Slack | What to try first |
+|---|---|---|---|
+| 1 | Sheet 2 | −279px (64% fill) | absorb sheet-3 pressure or raise the type scale of the scan/session cards |
+| 2 | Sheet 5 | −196px (75% fill) | notices + officer summary; candidates for absorption of sheet-6 summary rows |
+| 3 | Sheet 1 | −120px | dense already — leave unless type grows |
+| 4 | Sheet 4 | −112px | leave/court grids, currently 6 columns in print (T18) |
+| 5 | Sheet 6 | −111px | manpower + ledger |
+| 6 | Sheet 3 | −90px (88% fill) | the *source* of pressure — look here for what to move out |
+
+**Loop mechanics (one sheet per iteration):**
+
+1. Pick exactly one sheet from the queue.
+2. Render a variant behind a **dev-only** switch (a `?variant=` query parameter read by the renderer; **never** a Layer C `presentation_overrides` write — variants are not chart data and must not leak into the domain).
+3. Run the grader: `npm run print:audit` (extent + slack), `npm run render:chart` (212/212), screenshot the sheet (`tools/print-pages.mjs`).
+4. Compare **on the same real 10/09 data**, then keep or drop.
+5. Record the outcome in the density spec's variant log (one line: variant, sheet, before/after extent, kept/rejected, reason).
+
+**Instrumentation to add before this loop is worth running** (small, self-contained, no domain change): teach `tools/print-audit.mjs` to also print **fill ratio**, **largest internal gap** and **ink coverage** per sheet. Right now it prints `extent 496px (-279px vs the sheet)` — the interface is already the right shape; the extra numbers just make the grader complete. Until then the loop's "before/after" is one number, not a curve.
+
+### 10.5 System-design planning: what "design first" concretely produces
+
+Design-first fails when it produces pictures. It works when it produces **versioned written artifacts with numbers and states**, which is also what this repo already does everywhere else (COMPACT_V4_DECISIONS.md, UI_SPEC.md, BRIEF_DENSE_TABLES.md).
+
+The user chose **flows** as deliverable #1. The flow inventory should be assembled from what already exists rather than invented:
+
+| # | Flow | Already specified in | Missing |
+|---|---|---|---|
+| F1 | Open today's chart (preview) | PRODUCT_UI_ARCHITECTURE §2 | — |
+| F2 | Enter/leave edit mode, save-state | DESIGN_INTERACTION_NOTES frame | — |
+| F3 | Assign a person (pick / replace) | DESIGN_INTERACTION_NOTES §1, §3 | — |
+| F4 | Create a staff member in context | DESIGN_INTERACTION_NOTES §2 | — |
+| F5 | Clear a seat → रिक्त | DESIGN_INTERACTION_NOTES §4 | — |
+| F6 | Toggle बिमा (never inferred) | DESIGN_INTERACTION_NOTES §5 | — |
+| F7 | Close a chowki/column → बंद + चार्ज → | DESIGN_INTERACTION_NOTES §6 | — |
+| F8 | Contextual `+` (add person / officer box / chowki) | DESIGN_INTERACTION_NOTES §7–8 | — |
+| F9 | Switch date / create from previous | PRODUCT_UI_ARCHITECTURE §3 | copy-findings presentation |
+| F10 | Finalize / amend (version) | PRODUCT_UI_ARCHITECTURE §9 | the *screen* for version history |
+| F11 | Print / PDF | §7 of this doc (print authority) | browser print affordance spec |
+| F12 | Search historical charts | **T24 — read Kushal's `HistoricalSearchView.tsx` first** | the whole screen |
+| F13 | Master data CRUD | PRODUCT_UI_ARCHITECTURE §5 | the whole screen set |
+| F14 | Dashboard / duty board (WIP leaves) | badge exists, implementation does not | the whole screen set |
+
+So deliverable #1 is **assembly + 4 unwritten flows (F11–F14)**, not a blank sheet. Each flow needs: entry point, happy path, empty state, error/conflict state, exit, and the *data decision* it depends on. That is a day of writing, not a design project — and it is the artifact that makes the chrome spec cheap to write.
+
+### 10.6 Where manual tinkering should happen (the dev lab)
+
+The user wants to get hands dirty by hand. The surfaces that exist today:
+
+| Surface | What it is |
+|---|---|
+| `http://127.0.0.1:3100/charts/2026-09-10` | the real chart, live (server-rendered) |
+| `http://127.0.0.1:3100/design/panchavati-compv3.html` | the compact-v3 mock — **a historical visual reference, NOT a frozen baseline** (user, 2026-10-15: *v3 is not a frozen mock anymore, we have problems, that's why I'm optimizing the current render design*) |
+| `http://127.0.0.1:3100/legacy/2026-09-10` | the old six-page app, linked only (T19) |
+| `web/authoring.css` | dense print/screen CSS — the real tinkering surface |
+| `npm run print:audit` / `tools/print-pages.mjs` | heights, and per-sheet PNGs |
+| `tools/density-audit-1009.mjs` | DOM geometry on the live page |
+
+The missing surface is small and worth building first: **`/dev/lab`** — render **one sheet** at true A4 (1122×794) with (a) a mm/px ruler and the 775px extent line drawn over the page, (b) markers for any gap over ~80px, (c) a variant selector, and (d) a side-by-side compare. That turns hand-tinkering from "change CSS and squint" into "change CSS and read the number", and it is a *dev-only route* — no domain, no migration, no risk to the print authority.
+
+Why not tinker inside a design tool instead: everything in this repo's UI is either (i) the print grammar of the six measured sheets — which no canvas tool reproduces, or (ii) a thin chrome whose source of truth is CSS + server-rendered HTML. A tool that cannot export into that stack turns hand-tinkering into re-typing. (Once the chrome is React + Vite per §10.2, this calculus changes for the chrome only — hot reload tinkering gets *better*, not worse.)
+
+### 10.7 The AI-tool workflow, calibrated to this repo
+
+The pasted research's "3-level AI integration" maps cleanly, and this repo is unusually well set up for levels 2–3 because it owns an **objective grader**:
+
+| Level | What it means here | Asset that already exists |
+|---|---|---|
+| L1 · Prompt | Write spec text (flows, density budgets, chrome copy) from docs | the whole `docs/` corpus + `reference/SEMANTIC` (secondary, ~1% error, T10/§8.1) |
+| L2 · Chained | agent edits → `npm run check` → `print:audit` → screenshot → next edit | `npm run check`, `print:audit`, `render:chart`, `doctor` |
+| L3 · Agentic | skills that carry the *method*, not just the prompt | `skills/` (source-forensics, db-change, current-chart-ui, print-check, verify-slice, session-handoff, event-annex) |
+
+**On the `design.md` anchor hack from the research — do not adopt it.** The counter-argument in the same research is the correct one: a single thin markdown file fails on complex systems and long files confuse the model; targeted, modular skills win. This repo *already implements that shape*: `AGENTS.md` = rules and hard constraints, `docs/UI_SPEC.md` = element/component grammar, `COMPACT_V4_DECISIONS.md` = token + rejected-approach record, `web/authoring.css` = the actual tokens, `skills/` = method. Adding a `design.md` would create a fifth partial source of truth.
+
+**Two skills worth adding** (the method, not the prompt):
+
+- `layout-variant` — the §10.4 loop: pick a sheet, render a dev variant, run the grader, compare before/after on the same data, record keep/drop.
+- `design-flow-spec` — produce/maintain a flow entry with entry, happy path, empty, error, exit, and the data decision it depends on.
+
+**And the drift audit:** the research's best practical tip is auditing designs for *drift* from the source of truth. This repo already has the pattern (`docs/COHERENCE_AUDIT_1013.md`) — repeat it after each design pass, comparing the specs against the renderer, not against each other.
+
+### 10.8 The privacy boundary — the constraint the pasted research ignores
+
+Every tool in the pasted research is a hosted service, and this project's hard rule is that **no police operational data leaves the machine** (AGENTS.md; the only exception is the demo deployment of the station's own 10/09 chart, T23). A setting that stops *training* is not a setting that stops *transmission* — Figma's MCP endpoint is remote, Stitch/Uizard/Relume are online, v0 runs in a cloud sandbox, and even local editors send prompts to a model provider.
+
+**Therefore the rule for design tools:**
+
+1. **Never** feed a real chart, a real printed-sheet screenshot, a real staff name, or a database connection to a hosted design tool or MCP server.
+2. **Do** use a **geometry-true, data-free fixture** for exploration — but note the trap: `docs/STITCH_BRIEF.md`'s COMMON BLOCK + SAMPLE PEOPLE block has exactly the right *shape* (six chowkis in fixed order, rank + buckle + surname geometry, the fixed state vocabulary) and its own header calls them sample people, yet several of those names are **real personnel from the source chart** (e.g. `वपोनि गजेंद्र पाटील`). So do not paste it: reuse its *geometry* with invented names. The fixture spec lives in `docs/UI_HANDOFF_BRIEF.md` §8.
+3. Anything that reaches a hosted tool must first pass the check: *could a stranger learn anything operational from this?* If yes, it does not go.
+
+That is a real cost — it means the "paste the design tool a screenshot of my app" workflow is off the table — and it is worth an explicit decision rather than an assumption: **OPEN_QUESTIONS T26**.
+
+### 10.9 Recommended next steps (small, verifiable, in order)
+
+1. **Build `/dev/lab`** (one sheet, true A4, ruler + extent line + gap markers + variant switch). Small, dev-only, no domain change; it is the tool the user's "hands dirty" ask actually needs.
+2. **Extend `tools/print-audit.mjs`** with fill ratio, largest internal gap and ink coverage per sheet — the grader for the loop.
+3. **Write `docs/FLOWS.md` v1** (deliverable #1): assemble F1–F10 from the existing interaction docs, write F11–F14, flag the data decision behind each. No code.
+4. **Freeze the §7.1 decision** (Option A vs B). Everything about chrome scope — including whether Figma is worth adopting at all — hangs on this one choice.
+5. **Then** the density spec (artifact #2) with a numeric budget per sheet, and only then a design tool, and only on the sanitized fixture.
+
+**What I would do first, if asked:** steps 1–3, in that order. They are each under a day, they produce artifacts the user can react to, and none of them commits the project to a design tool.
+
+### 10.10 Community-sourced working tips (and what to ignore)
+
+Researched 2026-10-15 across vendor docs, Hacker News, practitioner blogs and creator channels (Reddit blocked automated reading, so no Reddit claim is presented as verified).
+
+**Do:**
+
+- **Sketch in ASCII/text before generating.** Draw the intended layout in characters, decide structure and states, *then* let the UI AI style it (Hacker News *ASCII-driven development* discussion). This matches how §10.5 already works: flows and row plans are text artifacts.
+- **Specify geometry, not vibes.** "Dense operations console, 1440×900, 224 px left nav, 36 px row height, sticky header, fixed column widths, subtle rules, no hero, no cards" beats "make a dashboard" — v0's own guide says vague visual intent gets filled with generic defaults.
+- **One component per prompt, one change per turn.** Both v0 and Bolt guidance: broad "make it better" edits disturb unrelated regions.
+- **Hand the tool real components, not a mood board.** Bolt's design-system docs say *code* is the stronger context than documentation alone — so for us: paste the actual CSS tokens and one real rendered sheet, not adjectives.
+- **Promote a sanitized fixture into a single file** and reuse it across tools (shape stolen from Stitch's `DESIGN.md` idea; hostile to nothing, and it keeps the data rule).
+- **Read the real PDF/print result, never a screen screenshot.** Our `print:audit` + `tools/print-pages.mjs` already do this; any UI-AI-generated chrome must be checked against the same gate.
+- **Verify "CRUD" before believing it.** Generated apps frequently fake persistence; ask for a named schema + a test that survives refresh, then verify the database (Bolt/Lovable sandboxes especially). Lovable's own Supabase docs warn that missing row-level-security policies can expose data — a throwaway sandbox is fine, a real deployment is not.
+- **Legibility is measurable even without a universal rule.** There is no WCAG minimum font size, but general print guidance lands at ~11–12 pt body text (16 pt for low-vision audiences), and WCAG's contrast floor is 4.5:1. Our dense sheets print at 9.5–10 px — **that gap is the real argument for spending the measured slack (§10.4) on type size**, and the acceptance test is a *phone photo of the printed sheet*, not a screenshot.
+- **Keep authoring on the printed geometry, with editing as overlays.** Practitioners do not agree on one-view vs two-views WYSIWYG, but the safe pattern is: real page size / section order / page breaks preserved while editing, controls as overlay affordances that never print, and a separate print-preview verification step (which this repo already has as a command).
+
+**Ignore:**
+
+- **A single `design.md` as the source of truth** — the same research that popularised it also shows it fails on complex systems and confuses models when long. This repo already has the modular version (rules → `AGENTS.md`, components → `docs/UI_SPEC.md`, rejected approaches → `COMPACT_V4_DECISIONS.md`, tokens → `web/authoring.css`, method → `skills/`).
+- **Tailwind/shadcn as a "design system"** — they are implementation defaults, not a house style, and this project deliberately prints from flat CSS.
+- **Screenshot-only prompting** — the tool guesses which of geometry/hierarchy/colour you meant; say which, and say what must *not* change.
+- **Marketing-site tooling for an internal tool** (Relume, Framer, hero/landing generators).
+
+**The one artefact this section produced beyond the analysis:** `docs/UI_HANDOFF_BRIEF.md` — the interface/CRUD/interaction specification written *as ready-to-paste prompts* for Figma Make / v0 / Bolt / Lovable / Stitch, grounded in the real `ChartDocument` shapes and a current-vs-legacy layout comparison.
+
+---

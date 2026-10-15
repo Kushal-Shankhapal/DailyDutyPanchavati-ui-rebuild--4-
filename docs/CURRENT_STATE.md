@@ -343,3 +343,40 @@ session start. Both fixed here; **96/96 + doctor green re-verified after the fix
 (new §9 Verification Log V1–V20; §1 fork-divergence table; §2.2 page-count table; §2.4 staff-count
 rewrite; §8.1 authority tiers corrected per AGENTS.md; §6/§7 relabelled as unapproved options).
 `docs/OPEN_QUESTIONS.md` gained T25.
+
+## Design brainstorm + tool survey (2026-10-15)
+
+Documentation round — **no application code changed**, so the full suite was not re-run for this round;
+the layout baseline was re-measured live anyway (below). Trigger: the user asked for the actual
+brainstorm the overhaul doc was missing, a survey of **every** tool in `docs/External_UI_Tools.txt`
+(free/open-source preferred), and the interface/CRUD/interaction work written up so it can be handed to
+UI-generating AIs.
+
+**Added**
+
+- `docs/SITE_OVERHAUL_BRAINSTORM.md` **§10 "The Brainstorm"** — design-first order of operations
+  (data → flows → density spec → chrome → code → verify), the measured objective function, the
+  slack-is-a-budget insight (sheets 2 and 5 carry 279 px / 196 px of unused height while sheet 3 is
+  88% full; the print→photo→WhatsApp workflow means slack should buy *type size*, not whitespace), the
+  full tool survey (design canvases, UI-generating AIs, coding agents, libraries, creator sources — with
+  free-tier and data-locality verdicts), the Framer-vs-Figma verdict, the React + Vite stack verdict,
+  `/dev/lab`, the flow inventory, the AI-level mapping, the privacy boundary, and community-sourced tips.
+- **`docs/UI_HANDOFF_BRIEF.md` (new)** — the interface/CRUD/interaction spec written as a **copy-paste
+  prompt pack** for v0 / Bolt / Figma Make / Stitch, grounded in the real `ChartDocument` field names
+  (§2), a current-render vs legacy-six-page comparison (§3), a 14-screen inventory (§4), the interaction
+  grammar (§5), the component list (§6), prompts P0–P9 (§7), the sanitized fixture (§8), tool routing +
+  the Bolt/Lovable CRUD-sandbox experiment (§9), and the open decisions (§10).
+- `docs/OPEN_QUESTIONS.md` **T26–T30** — design-tool data boundary; chrome language default +
+  persistence; the React + Vite migration decision; which UI AI gets the first run; the re-opened layout
+  baseline (priority order + the 6-vs-7-sheet trade).
+- `docs/PRODUCT_UI_ARCHITECTURE.md` — its "FROZEN baseline" note superseded (see T30).
+
+**Baseline re-measured live this round** (dev server on :3100, then stopped):
+`npm run print:audit` → **6 sheets**, extents 655 / 496 / 685 / 663 / 579 / 664 px of 775 px A4 landscape
+(fill 84.5 / 64.0 / 88.4 / 85.5 / 74.7 / 85.7 %); `npm run render:chart` → **212/212 rows lossless**;
+`npm run check` (run earlier in the same session after the TLS + renderer-assertion repairs) →
+**typecheck + 96 tests + doctor on both DBs, green**.
+
+**User reports recorded, not patched** (per the user's explicit instruction): the static HTML/JS stack's
+reload-per-edit cost, and the EN↔MR toggle being visibly broken. Both are captured in OPEN_QUESTIONS
+T27/T28 as decisions for the next build rather than as bug tickets against the current one.

@@ -2,7 +2,7 @@
 Purpose: Product/UI architecture — the three data layers, editing grammar, navigation, versioning and component design for the real application.
 Current role: Required pre-P0 deliverable (user decision 2026-10-08: architecture before any DB work). Awaiting user approval.
 Last meaningful change: Created 2026-10-08 from the user's 21-point architecture directive.
-Constraint/dependency: AGENTS.md hard rules; visual baseline = design/panchavati-compv3.html + compv3.css (FROZEN, no further chart redesign); supersedes changes/0002-site-plan/proposal.md.
+Constraint/dependency: AGENTS.md hard rules; visual baseline = design/panchavati-compv3.html + compv3.css — **NOTE (2026-10-15): no longer "FROZEN".** The user re-opened layout work (*"v3 is not frozen mock anymore, we have problems, that's why I am trying to optimize and improve our current render design"*); treat the mock as a historical visual reference and see OPEN_QUESTIONS T30 + docs/SITE_OVERHAUL_BRAINSTORM.md §10. Supersedes changes/0002-site-plan/proposal.md.
 -->
 
 # PRODUCT_UI_ARCHITECTURE
@@ -238,4 +238,4 @@ While editing, the normalized B tables are the source of truth (sane CRUD/search
 - `design/panchavati-compv3-stress.html` — **deleted** (user decision: discarded, no dead fixtures).
 - `design/compv3-edit.js` — **deleted**; edit-only CSS (`body.edit`, `.ed`, `.picker`, `.toast`, `.add-box`, `.vac-line`, `.chg-flash`, `.closed-banner`) and edit-only markup (संपादन button, save indicator, `+ जोडा` boxes) **removed** from the mock. The mock is now a pure frozen visual/print baseline (CSS + HTML + native print button only).
 - Interaction grammar survives in docs/DESIGN_INTERACTION_NOTES.md and this document — that is its only home now.
-- No further chart redesign; compact-v3 is the accepted visual baseline.
+- No further chart redesign; compact-v3 is the accepted visual baseline. **Superseded 2026-10-15** — the baseline is re-opened and the layout optimisation pass is a live workstream (OPEN_QUESTIONS T30).
