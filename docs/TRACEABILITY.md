@@ -108,3 +108,19 @@ The 12 old INV rules (old repo `docs/decisions/INVARIANTS.md`) are carried into 
 | R-21e | “implement that marathi to eng and eng to marathi autotype converter … separate fields for everything editable writable … maybe use external tools or libraries instead of making that urself from scratch … see, verify and edit the converted text before moving on” | user | Sanscript 1.3.3 (MIT) served from the repo (`/vendor/sanscript.js`, `__VENDOR_JS_SRC__`) + Marathi convention layer + protected-token guard + `bilingualPair()` review strip + `mountBilingualCompanions()` on every flyer prose field | ✅ `tests/authoring.test.ts` (conversion table, protected tokens, digit passthrough, 175/179 name round-trip, review gate, no CDN) + 🔨 browser: suggestion → वापरा → field updated |
 | R-21f | Items 3–13 of the same list (nav layering, seamless nav text, login toggle, officer card, abbreviation tooltips, removed empty rows, date selector copy, column/table CRUD, clerk sign-off, Option-A dense tables) | user list, `reference/SEMANTIC/10.md`, mock | renderer: `dropEmptyHeadings`, `dropPersons`, `structure` tables/columns, `notice` CRUD, `personText` sign-off values, scan session cards + hourly chunks, court cards; client: structure/notice flyers; CSS: nav/dropdown/abbr/card/dense rules | ✅ `npm run check` (96 tests) incl. `render-fidelity.test.ts` (removed rows stay gone, sheet-2/3 placement), `render.test.ts` (no-loss 212/212) + 🔨 browser |
 | R-21g | Print-fit must hold after those changes (regression found by tooling) | `npm run print:audit` measured 810px vs 775px | schedule moved off the chowki sheet to the court/special sheet + print density for the new scan cards/strip | ✅ `npm run print:audit` 6/6 (658/498/688/663/579/649px); structural guards in `render.test.ts` + `render-fidelity.test.ts`; `tools/print-audit.mjs` now reports per-section heights |
+
+## Design hand-off round (2026-10-15 → 2026-10-16) — artifacts, not code
+
+No source evidence changed and no code changed, so no row above moves. What this round produced is the
+design-side corpus that the next implementation slice will be traced against:
+
+| Artifact | Purpose | Verification |
+|---|---|---|
+| `docs/SITE_OVERHAUL_BRAINSTORM.md` §10 | the brainstorm the overhaul doc lacked: order of operations, the measured objective function, the full tool survey (free/OSS/local), the React + Vite stack verdict, `/dev/lab` | doc only; repo untouched |
+| `docs/UI_HANDOFF_BRIEF.md` | interface/CRUD/interaction spec + P0–P9 paste-ready prompts, grounded in the real `ChartDocument` fields and the current-vs-legacy layout comparison | doc only |
+| `docs/AI_HANDOFF.md` | read-first dossier for the external collaborating AI: mission, invariants, authorized boundaries, measured state, feedback register, traps, questions | doc only |
+| `docs/OPEN_QUESTIONS.md` | T26–T30 answered by the owner; T31–T34 opened (data sharing, one-layout-two-renders, chrome toggle coverage, layout-as-data model) | doc only |
+
+Traces forward to: the owner's asks in `docs/BACKLOG.md` (statuses unchanged) and the render baseline in
+§10.1 of the brainstorm (6 sheets, 655/496/685/663/579/664 px, 212/212 rows). `npm run check` was last run
+green after the 2026-10-14 code repairs; this round changed only `docs/` and `AGENTS.md`.

@@ -275,3 +275,85 @@ print guidance, in a workflow that reads the chart as **phone photos of paper**.
 first; **(2)** is a 7th sheet acceptable on a non-event day if it buys noticeably larger type, or is
 **6 sheets a hard rule** (today's render is 6, and 7 is reserved for event days with an annex)?
 Recommendation: legibility wins where the two conflict, because the photo is the real reader.
+
+## From the 2026-10-16 hand-off round (the owner's answers, and what they open)
+
+The owner answered the six decisions listed in `docs/UI_HANDOFF_BRIEF.md` §10. They are recorded here so
+they outlive that document; the dossier written for the receiving AI is `docs/AI_HANDOFF.md`.
+
+**T26 — ✅ RESOLVED 2026-10-16 (owner).** *"Use everything real, yeah you can paste, we can use this
+data and we have permission."* Real chart content — personnel names, buckle numbers, the seeded database
+snapshot, screenshots of real sheets — may be used by and pasted into the collaborating AI and the tools
+it uses. Two guards stay: nothing is published publicly, and no live database connection or credential
+leaves the machine. This **supersedes the sanitized-fixture requirement** in `UI_HANDOFF_BRIEF` §8; a
+fixture is now optional, useful only for a throwaway public sandbox.
+
+**T27 — ✅ RESOLVED 2026-10-16 (owner), one sub-decision moved to T33.** Chrome defaults to **English**;
+a Marathi chrome toggle is **optional**; the chart stays **Marathi always**, on screen and on paper. If the
+toggle ships it must be **complete** — nav, toolbar, flyers, popovers, table headers, empty states, errors,
+aria-labels.
+
+**T28 — ✅ RESOLVED 2026-10-16 (owner).** React + Vite (or better) for the authoring/chrome surfaces.
+The owner **explicitly removed** the earlier "server renderer is the print authority" constraint:
+*"whatever optimized chart we will build in react, same looking thing should be printed."* That opens **T32**.
+
+**T29 — ✅ CLOSED 2026-10-16 (owner).** The first UI-AI run is neither v0 nor Bolt: *"my friend has his
+custom AI, we gonna use that."* The Bolt/Lovable CRUD-sandbox experiment in `UI_HANDOFF_BRIEF` §9 stays
+documented but is no longer scheduled.
+
+**T30 — ✅ RESOLVED 2026-10-16 (owner).** (1) Optimise **top to bottom across the whole chart** — plan and
+visualise all six sheets against the real 10/09 data first, then implement in that order. (2) The page
+count **may** exceed 6 when the content needs it: event days get their own annex (the source 11/09 Ganapati
+bandobast is 7 pages) and *the tool must handle that*, not treat 7 as an exception to be avoided.
+
+### T31 — Repo + real-data sharing with the collaborating AI — ✅ RESOLVED 2026-10-16 (owner)
+The owner authorized sending this repository — including real personnel data — to the external AI that
+built `DailyDutyPanchavati-ui-rebuild/`, for planning, design and implementation help. Guards the owner
+still expects: no public publication of the repo or its data; no live DB connection or credential in the
+hand-off; the runtime keeps making no outbound call (T23's scope is unchanged). Recorded in `AGENTS.md`.
+
+### T32 — Screen design vs printed sheet: one layout rendered twice? (**new**, opened by T28's answer)
+With the server renderer no longer the print authority, the printed sheet must come from the same design
+as the screen. Options: **(A)** one set of shared sheet components rendered client-side for the screen and
+server-side (`renderToStaticMarkup`) into the paginated print document — *recommended: one geometry, one
+grader, no drift*; **(B)** a React print route printed from the browser with `@page` + per-sheet
+containers, measured by headless Chromium; **(C)** two implementations (**rejected** by the owner).
+Whichever is chosen, the machine grader survives: sheet count, per-sheet extent, fill ratio, row parity.
+
+### T33 — Does the Marathi chrome toggle ship before its coverage is complete? (**new**)
+The owner accepted an *optional* Marathi chrome toggle, on condition that it is complete when it exists.
+Recommended: **ship English-only, with no toggle, until coverage is 100%**, then enable it — a partial
+toggle is precisely the defect being fixed (72 hand-wired `data-lang` spans + 41 in the client, with
+Marathi still hard-coded in places). Open only in the sense that the build order is the receiving AI's call.
+
+### T34 — The layout-editing model (**new**, replaces the float/align UI)
+The current per-element `horizontalAlign / verticalAlign / compact / hidden` control is acknowledged as
+badly presented and too limited. The Oct-2026 research verdict (recorded in `docs/AI_HANDOFF.md` §6.3) is
+**layout as data over finite slots** — pages → rows → slots → block ids, with column presets, named
+templates, allow-listed block types, a `schemaVersion` and pure migrations — plus a non-drag alternative
+(move up/down buttons) and, optionally, drag-and-drop as a convenience on top of the slots. Free
+coordinates as the source of truth are ruled out by print pagination itself (`react-grid-layout` #589).
+Tools that fit if a canvas is wanted: **dnd-kit** (MIT), **pragmatic-drag-and-drop** (Apache-2.0), or
+**Puck** (MIT) for a real page-builder; **Gridstack 13.1+** is the only one with first-party print mode,
+but it abandons pixel-exact packing.
+
+**Owner clarification (2026-10-16, second round):** the "drag and drop" the owner wants is
+**snapping/tiling, not free placement** — moving a block to another page or beside another block must make
+the layout auto-arrange itself symmetrically and follow the layout rules, *"like adjusting or tiling
+windows in Windows 11"*. So: drag is a **gesture over slots**, the slot arrangement is the stored data,
+the pixels are output. Decided — the remaining choice (which drag library, if any) belongs to the build.
+
+### T35 — Menu-driven CRUD pages (raised for Durvesh) — **required**, from the 2026-10-16 round
+Besides in-place editing on the chart, separate **menu/nav-reachable pages** are wanted for adding,
+updating and deleting duties, officers and the rest — the pattern in Durvesh's repo navbar and the
+"master data" + CRUD surfaces that existed in the Arjish and Kushal repos. Shape: one table per entity
+(list / search / create / edit / deactivate) with an in-use guard that names the affected charts; the
+chart's in-place editor and the management pages are two doors into the same data, neither replacing the
+other. Also un-badges the currently WIP "मास्टर डेटा" leaf.
+
+### T36 — Deployable demo boot (fixed 2026-10-16, recorded here for the trace)
+A Render deploy failed with *"no open ports detected"* because the demo chart had been **FINALIZED** and
+`db/seed-chart-1009.ts` checked the non-DRAFT guard *before* `PANCHAVATI_KEEP_EXISTING=1`, so `db:seed:chart`
+threw, exited 1, and the start command (`db:migrate && db:seed && npm start`) never reached `npm start`.
+Fixed by evaluating the keep-existing skip first; both branches verified (FINALIZED + flag → skip, exit 0;
+FINALIZED without flag → refuses, exit 1). **Do not reorder those guards.** Docs: `docs/DEPLOY.md`, `render.yaml`.

@@ -12,6 +12,10 @@
 #                    the 10/09 chart is the station's real allocation and the user authorised it on
 #                    the demo deployment. PANCHAVATI_KEEP_EXISTING=1 makes the seed skip a chart that
 #                    is already populated, so a redeploy can never wipe the clerk's edits.
+#                    That skip is evaluated BEFORE the non-DRAFT guard in db/seed-chart-1009.ts on
+#                    purpose: a demo chart the clerk has FINALIZED is populated and non-DRAFT, and the
+#                    earlier order threw — which failed the start command before `start` and took the
+#                    whole deploy down (2026-10-16). Do not reorder those two guards.
 #                    (Recorded in docs/OPEN_QUESTIONS.md T23 + docs/DEPLOY.md; AGENTS.md's data rule
 #                    is unchanged for every other environment.)
 #

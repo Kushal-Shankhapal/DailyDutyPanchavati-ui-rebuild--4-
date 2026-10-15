@@ -588,19 +588,25 @@ export async function seedChart1009(pool: pg.Pool): Promise<void> {
   // Idempotency = wipe-and-reseed (never half-seed): chart-owned rows are replaced
   // wholesale so a previously failed run cannot leave partial data behind. Refuses to
   // touch a non-DRAFT chart (immutability rules still hold for FINALIZED snapshots).
-  const lc = await pool.query(`SELECT lifecycle FROM daily_charts WHERE chart_id=$1`, [chartId]);
-  if (lc.rows[0].lifecycle !== "DRAFT") {
-    throw new Error(`chart ${DATE} is ${lc.rows[0].lifecycle} — refusing to reseed a non-DRAFT chart`);
-  }
   // A DEPLOYED demo must never lose the clerk's edits to a redeploy: the blueprint sets
   // PANCHAVATI_KEEP_EXISTING=1, and this run then leaves an already-populated chart alone
   // (fresh databases still get the full chart). Local runs keep the documented wipe-and-reseed.
+  //
+  // ORDER MATTERS: this guard comes BEFORE the lifecycle check below. A demo chart the clerk has
+  // FINALIZED is populated *and* non-DRAFT; checked the other way round it threw, the seed exited 1,
+  // and the Render start command (`db:migrate && db:seed && start`) never reached `start` — the deploy
+  // failed with "no open ports detected". Keep-existing first, immutability second.
   if (process.env.PANCHAVATI_KEEP_EXISTING === "1") {
     const existing = await pool.query(`SELECT count(*) AS n FROM daily_assignments WHERE chart_id=$1`, [chartId]);
     if (Number(existing.rows[0].n) > 0) {
-      console.log(`· chart ${DATE} already seeded (${existing.rows[0].n} assignments) — left untouched (PANCHAVATI_KEEP_EXISTING=1)`);
+      const cur = await pool.query(`SELECT lifecycle FROM daily_charts WHERE chart_id=$1`, [chartId]);
+      console.log(`· chart ${DATE} already seeded (${existing.rows[0].n} assignments, ${cur.rows[0].lifecycle}) — left untouched (PANCHAVATI_KEEP_EXISTING=1)`);
       return;
     }
+  }
+  const lc = await pool.query(`SELECT lifecycle FROM daily_charts WHERE chart_id=$1`, [chartId]);
+  if (lc.rows[0].lifecycle !== "DRAFT") {
+    throw new Error(`chart ${DATE} is ${lc.rows[0].lifecycle} — refusing to reseed a non-DRAFT chart`);
   }
   for (const tbl of [
     "daily_assignments", "daily_availabilities", "location_operational_states",

@@ -11,6 +11,7 @@ One station: Panchavati Police Station, Nashik City. Marathi-first, Unicode. One
 
 ## Reading order (before any task)
 
+0. `docs/AI_HANDOFF.md` — the hand-off dossier for an AI accepting this project from outside (mission, authorized boundaries, measured state, the owner's full feedback register, open questions). Read it first if you are that AI.
 1. `docs/CURRENT_STATE.md` — what is actually built and verified right now
 2. `docs/SESSION_HANDOFF.md` — long-form state, traps, open designs (read before resuming work)
 3. `docs/DOMAIN.md` — entities and rules
@@ -43,7 +44,7 @@ If evidence is ambiguous: stop, implement the representable part, record the amb
 - Unfinished features are "Coming Soon" and disabled — no half-usable controls.
 - Never modify `reference/` files.
 - Never edit an applied migration; add a new one.
-- No police operational data leaves the machine (no external AI/API calls with chart data, no cloud services in the runtime). One narrow, user-authorized exception: the demo deployment hosts the station's own 10/09 chart, approved by the user on 2026-10-13 and recorded in `docs/OPEN_QUESTIONS.md` T23 + `docs/DEPLOY.md`. Everything else (no outbound call, no key, no CDN — the transliteration engine is served from this repo) stands unchanged.
+- No police operational data leaves the machine (no external AI/API calls with chart data, no cloud services in the runtime). Two narrow, user-authorized exceptions: (a) the demo deployment hosts the station's own 10/09 chart, approved by the user on 2026-10-13 and recorded in `docs/OPEN_QUESTIONS.md` T23 + `docs/DEPLOY.md`; and (b) this repository — including real personnel data — is shared with the collaborating external AI that built the Arjish repo, approved by the user on 2026-10-16 and recorded in `docs/OPEN_QUESTIONS.md` T31 + `docs/AI_HANDOFF.md`. Everything else stands unchanged: no outbound call, no key, no CDN (the transliteration engine is served from this repo), and no public publication of the repo or its data.
 
 ## Coding mode
 

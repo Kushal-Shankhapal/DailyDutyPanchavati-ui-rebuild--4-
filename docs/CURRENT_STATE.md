@@ -380,3 +380,73 @@ UI-generating AIs.
 **User reports recorded, not patched** (per the user's explicit instruction): the static HTML/JS stack's
 reload-per-edit cost, and the EN↔MR toggle being visibly broken. Both are captured in OPEN_QUESTIONS
 T27/T28 as decisions for the next build rather than as bug tickets against the current one.
+
+## Hand-off round (2026-10-16) — the owner's answers, and the dossier for the receiving AI
+
+**Documentation round — no application code changed**, so the suite was not re-run (last green run: the
+2026-10-14 repairs, typecheck + 96 tests + doctor ×2 DBs). Trigger: the owner is handing the repo to the
+external AI that built `DailyDutyPanchavati-ui-rebuild/` and wants the whole context, every accumulated
+piece of feedback, and every unanswered question in one place.
+
+**Owner decisions recorded** (`docs/OPEN_QUESTIONS.md`, new section "From the 2026-10-16 hand-off round"):
+
+- **T26 ✅** — real data, including personnel, may be used and pasted into the collaborating AI
+  (*"Use everything real… we have permission"*); guards kept: no public publication, no live DB connection
+  or credential leaving the machine. The sanitized fixture of `UI_HANDOFF_BRIEF` §8 becomes **optional**.
+- **T27 ✅** — chrome defaults to **English**, the Marathi chrome toggle is **optional but must be complete**
+  when it exists; the chart stays **Marathi always**.
+- **T28 ✅** — React + Vite (or better) for chrome/authoring, and **the server renderer is no longer the
+  print authority**: *"whatever optimized chart we will build in react, same looking thing should be printed."*
+- **T29 ✅ closed** — the first run goes to the owner's collaborator's custom AI, not v0/Bolt.
+- **T30 ✅** — layout work goes **top to bottom across the whole chart**, planned and visualised against the
+  real 10/09 data first; and the **page count may grow** — event days get annex sheets (the source 11/09
+  Ganapati bandobast is 7 pages) and the tool must handle that.
+
+**New questions opened:** **T31** repo + real-data sharing (resolved above), **T32** one layout rendered
+twice (screen + server-side print) vs a React print route vs two implementations, **T33** whether the
+Marathi chrome toggle ships before 100% coverage (recommended: English-only until then), **T34** the
+layout-editing model (layout-as-data over slots + presets + move controls, drag as a convenience only).
+
+**Added**
+
+- **`docs/AI_HANDOFF.md` (new, read-first)** — the dossier for the receiving AI: the mission as acceptance
+  criteria, the hard invariants with their reasons, the authorized boundaries, the measured state, a
+  **six-workstream feedback register** distilled from `BACKLOG.md` + `mega.txt` + the 2026-10-16 braindump,
+  architecture guidance (keep/replace table, the one-layout-two-renders decision, layout-as-data schema),
+  13 traps already paid for, 16 questions with recommended answers, the already-decided list, a packaging
+  guide for the hand-off zip, and a file map. It also tells the receiving AI that the nested
+  `DailyDutyPanchavati-ui-rebuild/` repo is *its own* earlier work — so it should not re-analyse it.
+- `AGENTS.md` — reading-order entry 0 (`docs/AI_HANDOFF.md`) and the second authorized exception (T31).
+- `docs/UI_HANDOFF_BRIEF.md` — §10 marked resolved with the answers; §8 reworked for the T31 authorization.
+- `docs/OPEN_QUESTIONS.md` — T26–T30 resolved, T31–T34 added (incl. the Oct-2026 layout-library survey:
+  dnd-kit / pragmatic-drag-and-drop / Puck / Gridstack, and why absolute-coordinate grids cannot paginate).
+
+**Unchanged and still true:** 6 sheets (655/496/685/663/579/664 px of 775), 212/212 rows lossless,
+96 tests green at the last code change, the seeded 10/09 chart intact, `reference/` untouched.
+
+### Second round, same day (2026-10-16) — the deploy fix (code) + the follow-up answers
+
+**The deploy failure, root-caused and fixed.** The Render deploy was dying with *“no open ports
+detected”*: the demo chart had been **FINALIZED** by the clerk, and `db/seed-chart-1009.ts` checked the
+non-DRAFT guard **before** `PANCHAVATI_KEEP_EXISTING=1`. The seed therefore threw, exited 1, and the start
+command (`npm run db:migrate && npm run db:seed && npm start`) never reached `npm start`.
+
+- **Fix:** evaluate the keep-existing skip **first** in `db/seed-chart-1009.ts`; the immutability guard
+  stays second. `render.yaml` and `docs/DEPLOY.md` now carry the explicit *do not reorder these two
+  guards* note (and DEPLOY.md's build/start description was corrected to match the blueprint).
+- **Verified both branches on `panchavati3_dev`:** with the flag and a FINALIZED chart →
+  `· chart 2026-09-10 already seeded (212 assignments, FINALIZED) — left untouched`, **exit 0**; without the
+  flag → **exit 1** with `Error: chart 2026-09-10 is FINALIZED — refusing to reseed a non-DRAFT chart`
+  (a deliberate local reseed of a frozen chart still refuses). Dev DB restored to the documented baseline
+  (DRAFT, 212 assignments, 28 notices).
+- **Suite re-run after the code change:** `npm run check` → **typecheck + tests + doctor on both DBs,
+  exit 0**.
+
+**Follow-up owner answers recorded** (`docs/AI_HANDOFF.md` §10b; `docs/OPEN_QUESTIONS.md` T34 clarification
++ T35/T36): send **everything** except `node_modules` (every repo) and temp files — that cleanup was
+performed on this checkout; the first milestone, the print architecture (**T32**), retiring the old
+server-rendered authoring layer, and which repo the new build lives in are all **delegated to the
+receiving AI**; the layout model is slots + presets + **snapping (Windows-11-style tiling) drag**, never
+free pixel placement; the Marathi chrome toggle is built **as a catalog first and shipped only complete**;
+and a new required workstream — **menu-driven CRUD pages** for duties/officers/etc. (Durvesh's ask, **T35**)
+— joins in-place chart editing.

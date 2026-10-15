@@ -26,9 +26,9 @@ PostgreSQL. In Render: **New → Blueprint → pick this repository** and it rea
 | `PANCHAVATI_KEEP_EXISTING` | `1` | Deployment-only guard: `db:seed:chart` leaves an already-populated chart alone, so a redeploy preserves the clerk's edits. |
 | `PORT` | injected by the platform | Falls back to `3100`. |
 
-Build runs `npm ci --include=dev && npm run db:migrate && npm run db:seed` (the free plan has no
-`preDeployCommand`, and `tsx` is a devDependency, so dev deps must be installed). Start runs
-`npm start`.
+Build runs `npm ci --include=dev` (the free plan has no `preDeployCommand`, and `tsx` is a devDependency,
+so dev deps must be installed). The start command chains the database work before the server:
+`npm run db:migrate && npm run db:seed && npm start`.
 
 ### Seeding — part of the build, and it never wipes a live demo
 
@@ -41,6 +41,13 @@ unchanged for every other environment.
 - `npm run db:seed:chart` — the 10/09/2026 chart. Locally that is a wipe-and-reseed; with
   `PANCHAVATI_KEEP_EXISTING=1` (set in `render.yaml`) it **skips a chart that already has rows**, so a
   redeploy cannot throw away work done in the demo. Which branch it took is printed.
+
+**Guard order is load-bearing (fixed 2026-10-16).** `db/seed-chart-1009.ts` evaluates
+`PANCHAVATI_KEEP_EXISTING` **before** the "refusing to reseed a non-DRAFT chart" check. A demo chart the
+clerk has **finalized** is both populated and non-DRAFT; with the old order the seed threw, exited 1, and
+the start command never reached `npm start` — the deploy failed with *"no open ports detected"*. Keep the
+skip first and the immutability guard second; a populated demo chart is now skipped whatever its
+lifecycle, and a deliberate local reseed of a frozen chart still refuses loudly.
 
 To re-seed deliberately on a deployed demo (destructive to that chart's DRAFT edits) run
 `PANCHAVATI_KEEP_EXISTING=0 npm run db:seed:chart` from the service shell. Do not adjust a live

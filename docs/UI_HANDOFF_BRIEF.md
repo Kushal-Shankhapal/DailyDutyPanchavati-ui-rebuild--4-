@@ -1,8 +1,8 @@
 <!--
   Purpose: The interface + CRUD + interaction specification for the Panchavati duty-chart app, written so it can be pasted into UI-generating AIs (Figma Make, v0, Bolt, Lovable, Stitch) and used as the design brief for the React rebuild.
   Current role: Design hand-off artifact (companion to §10 of docs/SITE_OVERHAUL_BRAINSTORM.md; the flows artifact is deliverable #1, this is #2 and #3 merged into one source).
-  Last meaningful change: 2026-10-15 — created from the real `ChartDocument` fields + the measured render baseline (6 sheets, 655/496/685/663/579/664 px) + a current-vs-legacy layout comparison.
-  Constraint/dependency: AGENTS.md hard rules; §8 = what may leave the machine (nothing operational, ever); this document is spec + prompts, it implements nothing.
+  Last meaningful change: 2026-10-16 — §10's six decisions answered by the owner (T26–T30), §8 reworked under the owner's data-sharing authorization (T31), and the receiving-AI dossier split out into docs/AI_HANDOFF.md.
+  Constraint/dependency: AGENTS.md hard rules (with the two recorded owner authorizations: T23 demo deploy, T31 repo sharing); §8 = what may leave the machine; this document is spec + prompts, it implements nothing.
 -->
 
 # UI_HANDOFF_BRIEF — Panchavati Daily Duty
@@ -504,20 +504,22 @@ Acceptance in our repo is `npm run print:audit` (each sheet ≤775 px) plus
 
 ---
 
-## 8. The safe fixture — what may leave the machine
+## 8. What may leave the machine (updated 2026-10-16 under the owner's authorization)
 
-**Hard rule (AGENTS.md):** no police operational data leaves the machine. Every hosted tool (v0, Bolt, Lovable, Figma/Figma Make/MCP, Stitch, Uizard) receives prompts and content, so anything pasted must be **sanitized first**.
+**The rule, as the owner has now scoped it.** AGENTS.md says no police operational data leaves the machine. On 2026-10-16 the owner relaxed that for this collaboration (**T31**, recorded in `docs/OPEN_QUESTIONS.md`): *"Use everything real, yeah you can paste, we can use this data and we have permission."* So real chart content — personnel names, buckle numbers, the seeded database snapshot, screenshots of real sheets — may be shared with the collaborating AI and pasted into the tools it uses. A sanitized fixture is therefore **optional**, worth building only for a throwaway *public* sandbox where the point is to prove a CRUD flow rather than render the real chart.
 
-| May be pasted | Must be replaced |
-|---|---|
-| Structure: field names, sheet composition, row counts, column geometry | Personnel names, buckle numbers, phone numbers |
-| `रिक्त` / `बंद` / `बिमा` semantics and the state vocabulary | Real duty/leave reasons, notice text, investigation details |
-| Public place names (chowkis, court names) — *the user's call, T26* | Any screenshot of a real printed sheet |
-| Invented staff shaped like the real ones | Any database connection or export |
+**Still excluded, whatever the tool:**
+
+- publishing the repository or its data anywhere public;
+- a live database connection, export or credential leaving the machine;
+- a **runtime** call from the app itself — no key, no CDN, no outbound request; the transliteration engine is served from this repo;
+- pasting real data into a hosted sandbox whose projects are publicly visible to strangers.
+
+**If you do need the fixture** (single file, reused by every tool): six chowkis in fixed order, ~24 staff rows with realistic Devanagari shapes (e.g. `पोहवा १०२ देशपांडे`, `मपोशि ३१४ जोशी`, `पोशि २०९ कुलकर्णी`), a senior-officer line, 6 assignments per chowki across two shifts, 2 `रिक्त` seats, 1 closed chowki with a charge line, 3 `बिमा` chips, 4 leave rows, 2 notices, and a 12-row manpower matrix with `..` and `12<br>04`-shaped cells.
 
 **The fixture to build once** (a single file under `docs/`, reused by every tool): six chowkis in fixed order, ~24 **invented** staff rows with realistic Devanagari shapes (e.g. `पोहवा १०२ देशपांडे`, `मपोशि ३१४ जोशी`, `पोशि २०९ कुलकर्णी`), a senior officer line, 6 assignments per chowki across two shifts, 2 `रिक्त` seats, 1 closed chowki with a charge line, 3 `बिमा` chips, 4 leave rows, 2 notices, and a 12-row manpower matrix with `..` and `12<br>04`-shaped cells.
 
-Note the trap: `docs/STITCH_BRIEF.md`'s sample block has exactly this *shape*, and it is **not safe to paste** — several of its names are real personnel from the source chart. Reuse its geometry, never its values.
+**A trap worth knowing even now:** `docs/STITCH_BRIEF.md`'s sample block has exactly the right *shape*, and several of its names are real personnel from the source chart. That is authorized today — but if anything is ever sanitized for a public sandbox, reuse that block's geometry and replace its values.
 
 ---
 
@@ -536,7 +538,9 @@ Note the trap: `docs/STITCH_BRIEF.md`'s sample block has exactly this *shape*, a
 
 ---
 
-## 10. Open decisions (need the user)
+## 10. Open decisions — all six answered by the owner (2026-10-16)
+
+**Status: resolved.** The owner's answers are kept verbatim below; they are also recorded in `docs/OPEN_QUESTIONS.md` (T26–T30) and carried into `docs/AI_HANDOFF.md` for the receiving AI. The one sub-decision still open is whether the Marathi chrome toggle ships before its coverage is complete — `OPEN_QUESTIONS` **T33**.
 
 1. **T26** — may the sanitized fixture use the real public chowki names, and may it be pasted into a hosted tool? (Recommended: yes to structure + public place names; never personnel.) ans: Use everything real, yeah you can paste, we can use this data and we have permission.
 2. **T27** — should the chrome default to English and remember the clerk's choice **per browser** or **per user record**? ans: UI default in english (optional marathi toggle, but if we add, we have to make sure turn every text in every UI, popups, etc to marathi also), chart in marathi.
